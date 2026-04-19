@@ -17,6 +17,8 @@ namespace MoneyTransfer.Controllers
         private readonly IWalletRepository _walletRepository;
         private readonly IBeneficiaryRepository _beneficiaryRepository;
         private readonly IAccountRepository _accountRepository;
+        private readonly IAgentRepository _agentRepository;
+        private readonly IAgentApplicationRepository _applicationRepository;
         private readonly UserManager<User> _userManager;
         private readonly ApplicationDbContext _context;
 
@@ -25,6 +27,8 @@ namespace MoneyTransfer.Controllers
             IWalletRepository walletRepository,
             IBeneficiaryRepository beneficiaryRepository,
             IAccountRepository accountRepository,
+            IAgentRepository agentRepository,
+            IAgentApplicationRepository applicationRepository,
             UserManager<User> userManager,
             ApplicationDbContext context)
             : base(userManager, userRepository)
@@ -33,6 +37,8 @@ namespace MoneyTransfer.Controllers
             _walletRepository = walletRepository;
             _beneficiaryRepository = beneficiaryRepository;
             _accountRepository = accountRepository;
+            _agentRepository = agentRepository;
+            _applicationRepository = applicationRepository;
             _userManager = userManager;
             _context = context;
         }
@@ -41,26 +47,57 @@ namespace MoneyTransfer.Controllers
         {
             var userId = _userManager.GetUserId(User);
             if (userId == null)
-                return RedirectToPage("/Account/Login",
-                    new { area = "Identity" });
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
 
             var user = await _userRepository.GetByIdAsync(userId);
             if (user == null) return NotFound();
 
+            // Get admin statistics if user is admin
             if (User.IsInRole(Roles.Admin))
             {
-                return RedirectToAction("Index", "Admin");
+                var users = await _userRepository.GetAllAsync();
+                var userList = users.ToList();
+                var agents = await _agentRepository.GetApprovedAgentsAsync();
+                var pendingApps = await _applicationRepository.GetPendingAsync();
+                var pendingWallets = await _context.WalletRequests
+                    .Where(r => r.Status == WalletRequestStatus.Pending)
+                    .CountAsync();
+                var txCount = await _context.Transactions.CountAsync();
+
+                ViewBag.TotalUsers = userList.Count;
+                ViewBag.TotalAgents = agents.Count();
+                ViewBag.PendingAgents = pendingApps.Count();
+                ViewBag.PendingWallets = pendingWallets;
+                ViewBag.TotalTransactions = txCount;
+                ViewBag.PendingAgentsCount = pendingApps.Count();
             }
 
+            // Get agent statistics if user is agent
             if (User.IsInRole(Roles.Agent))
             {
-                return RedirectToAction("Dashboard", "Agent");
+                var agent = await _agentRepository.GetByUserIdAsync(userId);
+                if (agent != null)
+                {
+                    var topUps = await _context.TopUps
+                        .Where(t => t.Method == TopUpMethod.Cash)
+                        .SumAsync(t => (decimal?)t.Amount) ?? 0;
+
+                    var commissions = await _context.Commissions
+                        .Where(c => c.AgentId == agent.Id)
+                        .SumAsync(c => (decimal?)c.Amount) ?? 0;
+
+                    ViewBag.AgentStore = agent;
+                    ViewBag.AgentTotalCashIn = topUps;
+                    ViewBag.AgentTotalCommissions = commissions;
+                }
             }
 
-            if (!user.ProfileCompleted)
+            // Profile check for regular users only (admins and agents bypass)
+            if (!user.ProfileCompleted
+                && !User.IsInRole(Roles.Admin)
+                && !User.IsInRole(Roles.Agent))
             {
-                TempData["Error"] =
-                    "Please complete your profile to continue.";
+                TempData["Error"] = "Please complete your profile to continue.";
                 return RedirectToAction("Profile", "Account");
             }
 
@@ -96,8 +133,7 @@ namespace MoneyTransfer.Controllers
                 .OrderByDescending(t => t.CreatedAt)
                 .ToListAsync();
 
-            var allTransactions =
-                new List<RecentTransactionViewModel>();
+            var allTransactions = new List<RecentTransactionViewModel>();
 
             foreach (var t in sent)
             {
@@ -129,8 +165,7 @@ namespace MoneyTransfer.Controllers
                     ReceiverInitials = GetInitials(name),
                     ReceiverPictureUrl = pic,
                     Amount = t.Amount,
-                    CurrencySymbol =
-                        t.SenderCurrency?.Symbol ?? "$",
+                    CurrencySymbol = t.SenderCurrency?.Symbol ?? "$",
                     Status = t.Status.ToString(),
                     Type = FormatType(t.Type),
                     CreatedAt = t.CreatedAt,
@@ -144,8 +179,7 @@ namespace MoneyTransfer.Controllers
                     ? $"{t.SenderWallet.User.FirstName} " +
                       $"{t.SenderWallet.User.LastName}"
                     : "Unknown Sender";
-                string? pic =
-                    t.SenderWallet?.User?.ProfilePictureUrl;
+                string? pic = t.SenderWallet?.User?.ProfilePictureUrl;
 
                 allTransactions.Add(new RecentTransactionViewModel
                 {
@@ -156,8 +190,7 @@ namespace MoneyTransfer.Controllers
                     ReceiverPictureUrl = pic,
                     Amount = t.ConvertedAmount > 0
                         ? t.ConvertedAmount : t.Amount,
-                    CurrencySymbol =
-                        t.ReceiverCurrency?.Symbol ?? "$",
+                    CurrencySymbol = t.ReceiverCurrency?.Symbol ?? "$",
                     Status = t.Status.ToString(),
                     Type = FormatType(t.Type),
                     CreatedAt = t.CreatedAt,
@@ -181,43 +214,36 @@ namespace MoneyTransfer.Controllers
                   && t.CreatedAt.Year == thisYear);
 
             var totalSent = sent
-                .Where(t => t.Status
-                    == TransactionStatus.Completed)
+                .Where(t => t.Status == TransactionStatus.Completed)
                 .Sum(t => t.Amount);
             var totalReceived = received
-                .Where(t => t.Status
-                    == TransactionStatus.Completed)
+                .Where(t => t.Status == TransactionStatus.Completed)
                 .Sum(t => t.ConvertedAmount > 0
                     ? t.ConvertedAmount : t.Amount);
 
-            var defaultWallet =
-                wallets.FirstOrDefault(w => w.IsDefault)
+            var defaultWallet = wallets.FirstOrDefault(w => w.IsDefault)
                 ?? wallets.FirstOrDefault();
 
-            var walletVMs = wallets.Select(w =>
-                new WalletSummaryViewModel
-                {
-                    Id = w.Id,
-                    CurrencyCode = w.Currency?.Code ?? "",
-                    CurrencySymbol = w.Currency?.Symbol ?? "$",
-                    CurrencyName = w.Currency?.Name ?? "",
-                    Balance = w.Balance,
-                    IsDefault = w.IsDefault,
-                    SerialNumber = w.SerialNumber ?? ""
-                }).ToList();
+            var walletVMs = wallets.Select(w => new WalletSummaryViewModel
+            {
+                Id = w.Id,
+                CurrencyCode = w.Currency?.Code ?? "",
+                CurrencySymbol = w.Currency?.Symbol ?? "$",
+                CurrencyName = w.Currency?.Name ?? "",
+                Balance = w.Balance,
+                IsDefault = w.IsDefault,
+                SerialNumber = w.SerialNumber ?? ""
+            }).ToList();
 
             var beneficiaries = (await _beneficiaryRepository
                 .GetByUserIdAsync(userId)).ToList();
 
             var vm = new DashboardViewModel
             {
-                FullName =
-                    $"{user.FirstName} {user.LastName}",
-                AccountSerial =
-                    account?.SerialNumber ?? "",
+                FullName = $"{user.FirstName} {user.LastName}",
+                AccountSerial = account?.SerialNumber ?? "",
                 TotalBalance = defaultWallet?.Balance ?? 0,
-                CurrencySymbol =
-                    defaultWallet?.Currency?.Symbol ?? "$",
+                CurrencySymbol = defaultWallet?.Currency?.Symbol ?? "$",
                 Wallets = walletVMs,
                 RecentTransactions = recentTransactions,
                 TotalSent = totalSent,
@@ -226,8 +252,7 @@ namespace MoneyTransfer.Controllers
                 ReceivedThisMonth = receivedThisMonth,
                 ActiveBeneficiaries = beneficiaries.Count,
                 BeneficiaryCountries = beneficiaries
-                    .Where(b =>
-                        !string.IsNullOrEmpty(b.ReceiverCountry))
+                    .Where(b => !string.IsNullOrEmpty(b.ReceiverCountry))
                     .Select(b => b.ReceiverCountry)
                     .Distinct()
                     .Count()
@@ -237,8 +262,7 @@ namespace MoneyTransfer.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> SetDefaultWallet(
-            int walletId)
+        public async Task<IActionResult> SetDefaultWallet(int walletId)
         {
             var userId = _userManager.GetUserId(User);
             var wallets = (await _walletRepository
@@ -260,8 +284,7 @@ namespace MoneyTransfer.Controllers
             var parts = name.Trim().Split(' ',
                 StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length >= 2)
-                return $"{parts[0][0]}{parts[1][0]}"
-                    .ToUpper();
+                return $"{parts[0][0]}{parts[1][0]}".ToUpper();
             return name.Length >= 2
                 ? name.Substring(0, 2).ToUpper()
                 : name.ToUpper();
@@ -270,10 +293,8 @@ namespace MoneyTransfer.Controllers
         private static string FormatType(TransactionType t)
             => t switch
             {
-                TransactionType.WalletToWallet
-                    => "Wallet to Wallet",
-                TransactionType.MobileTransfer
-                    => "Mobile Transfer",
+                TransactionType.WalletToWallet => "Wallet to Wallet",
+                TransactionType.MobileTransfer => "Mobile Transfer",
                 TransactionType.QRPayment => "QR Payment",
                 TransactionType.PaymentLink => "Payment Link",
                 _ => t.ToString()

@@ -1,6 +1,11 @@
 ﻿@model MoneyTransfer.Models.Agent
 @{
     ViewData["Title"] = "Set Store Location";
+    var latValue = Model.Latitude != 0 ? Model.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture) : "33.8547";
+    var lngValue = Model.Longitude != 0 ? Model.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture) : "35.8623";
+    var zoomValue = Model.Latitude != 0 ? 15 : 9;
+    var hasLocation = Model.Latitude != 0;
+    var storeName = Model.StoreName?.Replace("'", "\\'") ?? "Store";
 }
 
 <div class="row justify-content-center">
@@ -86,50 +91,48 @@
 }
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js">
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
     <script>
-        var defaultLat = @(Model.Latitude != 0 ? Model.Latitude.ToString("F6", System.Globalization.CultureInfo.InvariantCulture) : "33.8547");
-        var defaultLng = @(Model.Longitude != 0 ? Model.Longitude.ToString("F6", System.Globalization.CultureInfo.InvariantCulture) : "35.8623");
-        var defaultZoom = @(Model.Latitude != 0 ? 15 : 9);
+        var defaultLat = @(latValue);
+        var defaultLng = @(lngValue);
+        var defaultZoom = @(zoomValue);
+        var hasLocation = @(hasLocation ? "true" : "false");
+        var storeName = "@Html.Raw(storeName)";
 
         var map = L.map('locationMap').setView([defaultLat, defaultLng], defaultZoom);
 
-        L.tileLayer(
-            'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-            {
-                attribution: '© OpenStreetMap contributors',
-                maxZoom: 18
-            }
-        ).addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 18
+        }).addTo(map);
 
         var marker = null;
 
-        @if (Model.Latitude != 0)
-        {
-                <text>
-                marker = L.marker([defaultLat, defaultLng])
-                    .addTo(map)
-                    .bindPopup('<b>@Html.Raw(Model.StoreName)</b><br>Current location')
-                    .openPopup();
-                </text>
+        // Add marker if location already exists
+        if (hasLocation) {
+            marker = L.marker([defaultLat, defaultLng])
+                .addTo(map)
+                .bindPopup('<b>' + storeName + '</b><br>Current location')
+                .openPopup();
         }
 
+        // Handle map click
         map.on('click', function(e) {
             var lat = e.latlng.lat;
             var lng = e.latlng.lng;
 
-            if (marker) map.removeLayer(marker);
+            if (marker) {
+                map.removeLayer(marker);
+            }
 
-            marker = L.marker([lat, lng]).addTo(map)
-                .bindPopup('<b>@Html.Raw(Model.StoreName)</b><br>' + lat.toFixed(5) + ', ' + lng.toFixed(5))
+            marker = L.marker([lat, lng])
+                .addTo(map)
+                .bindPopup('<b>' + storeName + '</b><br>' + lat.toFixed(5) + ', ' + lng.toFixed(5))
                 .openPopup();
 
             document.getElementById('latInput').value = lat.toFixed(6);
             document.getElementById('lngInput').value = lng.toFixed(6);
-            document.getElementById('coordDisplay').textContent = lat.toFixed(5) + ', ' + lng.toFixed(5);
-
-            document.getElementById('saveBtn').style.background = 'var(--teal)';
+            document.getElementById('coordDisplay').innerHTML = lat.toFixed(5) + ', ' + lng.toFixed(5);
         });
     </script>
 }

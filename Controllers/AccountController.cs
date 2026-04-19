@@ -14,21 +14,28 @@ namespace MoneyTransfer.Controllers
     [Authorize]
     public class AccountController : BaseController
     {
-        private readonly IUserRepository _userRepository;
         private readonly IAgentApplicationRepository _applicationRepository;
-        private readonly UserManager<User> _userManager;
-        private readonly ApplicationDbContext _context;
         private readonly IWalletRepository _walletRepository;
 
-        public AccountController(IUserRepository userRepository, IAgentApplicationRepository applicationRepository,
-            UserManager<User> userManager, ApplicationDbContext context, IWalletRepository walletRepository) : base(userManager, userRepository)
+        // REMOVED these duplicate fields:
+        // private readonly IUserRepository _userRepository;
+        // private readonly UserManager<User> _userManager;
+        // These are already in BaseController
+
+        public AccountController(
+            IUserRepository userRepository,
+            IAgentApplicationRepository applicationRepository,
+            UserManager<User> userManager,
+            ApplicationDbContext context,
+            IWalletRepository walletRepository)
+            : base(userManager, userRepository)
         {
-            _userRepository = userRepository;
             _applicationRepository = applicationRepository;
-            _userManager = userManager;
-            _context = context;
             _walletRepository = walletRepository;
+            _context = context;
         }
+
+        private readonly ApplicationDbContext _context;
 
         public async Task<IActionResult> Profile(bool edit = false)
         {
@@ -52,8 +59,8 @@ namespace MoneyTransfer.Controllers
 
             var roles = await _userManager.GetRolesAsync(await _userManager.FindByIdAsync(userId));
 
-            bool isAgent = roles.Contains("agent");
-            bool isAdmin = roles.Contains("admin");
+            bool isAgent = roles.Contains("Agent");
+            bool isAdmin = roles.Contains("Admin");
 
             ViewBag.IsAgent = isAgent;
             ViewBag.IsAdmin = isAdmin;

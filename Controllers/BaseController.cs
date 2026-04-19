@@ -8,18 +8,22 @@ namespace MoneyTransfer.Controllers
 {
     public class BaseController : Controller
     {
-        private readonly UserManager<User> _userManager;
-        private readonly IUserRepository _userRepository;
+        protected readonly UserManager<User> _userManager;
+        protected readonly IUserRepository _userRepository;
 
-        public BaseController(UserManager<User> userManager, IUserRepository userRepository)
+        public BaseController(
+            UserManager<User> userManager,
+            IUserRepository userRepository)
         {
             _userManager = userManager;
             _userRepository = userRepository;
         }
 
-        public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
+        public override async Task OnActionExecutionAsync(
+            ActionExecutingContext context,
+            ActionExecutionDelegate next)
         {
-            if (User.Identity != null && User.Identity.IsAuthenticated)
+            if (User.Identity != null && User.Identity.IsAuthenticated && _userRepository != null)
             {
                 var userId = _userManager.GetUserId(User);
                 if (userId != null)
@@ -29,10 +33,11 @@ namespace MoneyTransfer.Controllers
                     {
                         ViewBag.ProfilePictureUrl = user.ProfilePictureUrl;
                         ViewBag.FullName = $"{user.FirstName} {user.LastName}";
-                        ViewBag.UserInitials = $"{user.FirstName?.Substring(0, 1)}" + $"{user.LastName?.Substring(0, 1)}";
+                        ViewBag.UserInitials = $"{user.FirstName?.Substring(0, 1)}{user.LastName?.Substring(0, 1)}";
                     }
                 }
             }
+
             await next();
         }
     }

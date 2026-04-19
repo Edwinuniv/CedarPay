@@ -24,11 +24,10 @@ namespace MoneyTransfer.Repositories.Implementations
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Agent>> GetByUserIdAsync(string userId)
+        public async Task<Agent?> GetByUserIdAsync(string userId)
         {
             return await _context.Agents
-                .Where(a => a.UserId == userId)
-                .ToListAsync();
+                .FirstOrDefaultAsync(a => a.UserId == userId);
         }
 
         public async Task<IEnumerable<Agent>> GetByCityAsync(string city)

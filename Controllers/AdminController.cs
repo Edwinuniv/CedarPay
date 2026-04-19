@@ -390,9 +390,9 @@ namespace MoneyTransfer.Controllers
             var userId = _userManager.GetUserId(User);
             var user = await _userManager.FindByIdAsync(userId);
 
-            var existing = await _agentRepository.GetByUserIdAsync(userId);
+            var existingAgent = await _agentRepository.GetByUserIdAsync(userId);
 
-            if (!existing.Any())
+            if (existingAgent == null)
             {
                 await _agentRepository.AddAsync(new Agent
                 {
