@@ -1,0 +1,55 @@
+﻿@model MoneyTransfer.ViewModels.CreateWalletViewModel
+@{
+    ViewData["Title"] = "Create Wallet";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="page-header">
+            <div>
+                <h2>Create Wallet</h2>
+                <p>Add a new currency wallet to your account</p>
+            </div>
+        </div>
+
+        <div class="tp-card">
+            <form asp-action="Store" method="post" class="tp-form">
+                <div asp-validation-summary="All" class="alert-tp error"
+                     style="display:@(ViewData.ModelState.ErrorCount > 0 ? "flex" : "none")">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Select Currency</label>
+                    <select asp-for="CurrencyId" class="form-select">
+                        <option value="">— Choose a currency —</option>
+                        @foreach (var c in Model.AvailableCurrencies)
+                        {
+                            <option value="@c.Id">
+                                @c.Code — @c.Name (@c.Symbol)
+                            </option>
+                        }
+                    </select>
+                    <span asp-validation-for="CurrencyId" class="text-danger"
+                          style="font-size:12px"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Description (Optional)</label>
+                    <input asp-for="Description" class="form-control"
+                           placeholder="e.g. My USD Wallet, Savings..." />
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn-tp-primary">
+                        <i class="bi bi-plus-lg"></i> Create Wallet
+                    </button>
+                    <a asp-action="Index" class="btn-tp-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

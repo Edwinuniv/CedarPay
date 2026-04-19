@@ -1,0 +1,330 @@
+﻿@model MoneyTransfer.ViewModels.FinanceViewModel
+@{
+    ViewData["Title"] = "Finance";
+}
+
+<div class="page-header">
+    <div>
+        <h2>Finance Overview</h2>
+        <p>Your complete financial summary</p>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon sent">
+                <i class="bi bi-arrow-up-right"></i>
+            </div>
+            <div class="stat-value">
+                $@Model.TotalSent.ToString("N2")
+            </div>
+            <div class="stat-label">Total Sent</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon received">
+                <i class="bi bi-arrow-down-left"></i>
+            </div>
+            <div class="stat-value">
+                $@Model.TotalReceived.ToString("N2")
+            </div>
+            <div class="stat-label">Total Received</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon beneficiaries">
+                <i class="bi bi-plus-circle"></i>
+            </div>
+            <div class="stat-value">
+                $@Model.TotalTopUps.ToString("N2")
+            </div>
+            <div class="stat-label">Total Topped Up</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon sent">
+                <i class="bi bi-percent"></i>
+            </div>
+            <div class="stat-value">
+                $@Model.TotalFeesPaid.ToString("N2")
+            </div>
+            <div class="stat-label">Fees Paid</div>
+            <div class="stat-sub" style="color:var(--teal)">
+                <i class="bi bi-gift"></i>
+                $@Model.TotalFeesSaved.ToString("N2") saved
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="tp-card mb-3">
+    <div class="tp-card-header">
+        <span class="tp-card-title">
+            <i class="bi bi-gift"
+               style="color:var(--teal);margin-right:6px"></i>
+            Free Transaction Progress
+        </span>
+        <span class="badge-tp success">
+            @Model.FreeTransactionsUsed free used so far
+        </span>
+    </div>
+    @{
+        var progress = Model.TransactionCount % 10;
+        var progressPct = progress * 10;
+        var doneCount = Model.TransactionCount % 10;
+    }
+    <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;
+                    font-size:13px;color:var(--text-2);
+                    margin-bottom:6px">
+            <span>Progress to next free transaction</span>
+            <span style="font-weight:600;color:var(--teal)">
+                @doneCount / 10
+            </span>
+        </div>
+        <div style="height:8px;background:var(--surface-2);
+                    border-radius:20px;overflow:hidden">
+            <div style="height:100%;
+                        width:@progressPct%;
+                        background:linear-gradient(
+                            90deg,var(--teal),var(--teal-mid));
+                        border-radius:20px;
+                        transition:width .3s ease">
+            </div>
+        </div>
+        <div style="font-size:12px;color:var(--text-3);
+                    margin-top:6px">
+            @if (Model.NextFreeIn == 0)
+            {
+                <span style="color:var(--teal);font-weight:600">
+                    🎉 Your next transaction is FREE!
+                </span>
+            }
+            else
+            {
+                <span>
+                    @Model.NextFreeIn more
+                    transaction@(Model.NextFreeIn != 1 ? "s" : "")
+                    until your next free transfer
+                </span>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-lg-8">
+        <div class="tp-card">
+            <div class="tp-card-header">
+                <span class="tp-card-title">
+                    <i class="bi bi-bar-chart"
+                       style="color:var(--teal);margin-right:6px"></i>
+                    Monthly Activity (Last 6 Months)
+                </span>
+            </div>
+
+            @if (Model.MonthlyBreakdown.All(m => m.TotalSent == 0 && m.TotalReceived == 0))
+            {
+                <div class="empty-state" style="padding:30px 0">
+                    <i class="bi bi-bar-chart"></i>
+                    <p>No transaction data yet.</p>
+                </div>
+            }
+            else
+            {
+                <div style="display:flex;align-items:flex-end;gap:10px;height:180px;padding:10px 0">
+                    @{
+                        var maxVal = Model.MonthlyBreakdown.Max(m => Math.Max((double)m.TotalSent, (double)m.TotalReceived));
+                        if (maxVal == 0) maxVal = 1;
+                    }
+                    @foreach (var m in Model.MonthlyBreakdown)
+                    {
+                        var sentH = maxVal > 0 ? (double)m.TotalSent / maxVal * 140 : 0;
+                        var recH = maxVal > 0 ? (double)m.TotalReceived / maxVal * 140 : 0;
+
+                        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+                            <div style="display:flex;align-items:flex-end;gap:3px;height:140px">
+                                <div style="width:14px;height:@(Math.Max(sentH, 2))px;background:var(--red);opacity:.7;border-radius:3px 3px 0 0"
+                                     title="Sent: $@m.TotalSent.ToString("N0")">
+                                </div>
+                                <div style="width:14px;height:@(Math.Max(recH, 2))px;background:var(--teal);opacity:.8;border-radius:3px 3px 0 0"
+                                     title="Received: $@m.TotalReceived.ToString("N0")">
+                                </div>
+                            </div>
+                            <div style="font-size:10px;color:var(--text-3);text-align:center">
+                                @m.Month.Split(' ')[0]
+                            </div>
+                        </div>
+                    }
+                </div>
+                <div style="display:flex;gap:16px;justify-content:center;margin-top:8px">
+                    <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2)">
+                        <div style="width:12px;height:12px;background:var(--red);opacity:.7;border-radius:2px"></div>
+                        Sent
+                    </div>
+                    <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2)">
+                        <div style="width:12px;height:12px;background:var(--teal);opacity:.8;border-radius:2px"></div>
+                        Received
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="tp-card">
+            <div class="tp-card-header">
+                <span class="tp-card-title">
+                    <i class="bi bi-wallet2"
+                       style="color:var(--teal);margin-right:6px"></i>
+                    Wallet Balances
+                </span>
+            </div>
+            @if (!Model.WalletBalances.Any())
+            {
+                <div class="empty-state" style="padding:20px 0">
+                    <i class="bi bi-wallet2"></i>
+                    <p>No wallets yet.</p>
+                </div>
+            }
+            else
+            {
+                <div class="d-flex flex-column gap-2" id="walletBalances">
+                    @foreach (var w in Model.WalletBalances)
+                    {
+                        <div class="wallet-card @(w.IsDefault ? "default" : "")"
+                             style="cursor:pointer;transition:var(--transition)"
+                             onclick="selectWallet('@w.Id', '@w.CurrencyCode', '@w.CurrencySymbol', '@w.Balance', '@w.SerialNumber')"
+                             id="wCard_@w.Id">
+                            <div style="display:flex;justify-content:space-between;align-items:center">
+                                <div class="wallet-currency">
+                                    @w.CurrencyCode
+                                </div>
+                                @if (w.IsDefault)
+                                {
+                                    <span class="badge-tp success" style="font-size:10px">Default</span>
+                                }
+                            </div>
+                            <div class="wallet-balance">
+                                @w.CurrencySymbol@w.Balance.ToString("N2")
+                            </div>
+                            <div class="wallet-serial">
+                                @w.SerialNumber
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div id="walletDetail"
+                     style="margin-top:14px;padding:14px;background:var(--teal-light);border-radius:var(--r-md);border:1px solid rgba(0,184,148,.2);display:none">
+                    <div style="font-size:13px;font-weight:700;color:var(--teal-dark);margin-bottom:8px" id="wdTitle">
+                        Wallet Details
+                    </div>
+                    <div style="font-size:13px;color:var(--text-2);display:flex;flex-direction:column;gap:4px" id="wdContent">
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="tp-card">
+    <div class="tp-card-header">
+        <span class="tp-card-title">
+            <i class="bi bi-plus-circle"
+               style="color:var(--teal);margin-right:6px"></i>
+            Recent Top Ups
+        </span>
+        <a asp-controller="TopUp" asp-action="Create"
+           class="tp-card-link">+ Add Funds</a>
+    </div>
+    @if (!Model.RecentTopUps.Any())
+    {
+        <div class="empty-state" style="padding:24px 0">
+            <i class="bi bi-plus-circle"></i>
+            <p>No top ups yet.</p>
+            <a asp-controller="TopUp" asp-action="Create"
+               class="btn-tp-primary"
+               style="font-size:12px;padding:8px 16px">
+                Add Funds
+            </a>
+        </div>
+    }
+    else
+    {
+        <table class="tp-table">
+            <thead>
+                <tr>
+                    <th>Amount</th>
+                    <th>Method</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var t in Model.RecentTopUps)
+                {
+                    <tr>
+                        <td style="font-weight:600;color:var(--teal)">
+                            @t.CurrencySymbol@t.Amount.ToString("N2")
+                        </td>
+                        <td>
+                            <span class="badge-tp default">
+                                @t.Method
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge-tp @(t.Status == "Completed" ? "success" : t.Status == "Pending" ? "warning" : "danger")">
+                                @t.Status
+                            </span>
+                        </td>
+                        <td style="font-size:12px;color:var(--text-3)">
+                            @t.CreatedAt.ToString("MMM dd, yyyy")
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+<script>
+    function selectWallet(id, code, symbol, balance, serial) {
+        document.querySelectorAll('.wallet-card').forEach(c => {
+            c.style.borderColor = '';
+            c.style.background = '';
+        });
+
+        const card = document.getElementById('wCard_' + id);
+        if (card) {
+            card.style.borderColor = 'var(--teal)';
+            card.style.background = 'var(--teal-light)';
+        }
+
+        const detail = document.getElementById('walletDetail');
+        const content = document.getElementById('wdContent');
+        const title = document.getElementById('wdTitle');
+
+        if (detail && content && title) {
+            title.textContent = code + ' Wallet Details';
+            content.innerHTML = `
+                <div><span style="color:var(--text-3)">Balance:</span>
+                <strong> ${symbol}${parseFloat(balance).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</strong></div>
+                <div><span style="color:var(--text-3)">Currency:</span>
+                <strong> ${code}</strong></div>
+                <div><span style="color:var(--text-3)">Serial:</span>
+                <strong style="font-family:monospace;font-size:11px"> ${serial}</strong></div>
+            `;
+            detail.style.display = 'block';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const def = document.querySelector('.wallet-card.default');
+        if (def) def.click();
+    });
+</script>

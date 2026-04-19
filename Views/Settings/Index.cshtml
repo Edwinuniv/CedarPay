@@ -1,0 +1,233 @@
+﻿@{
+    ViewData["Title"] = "Settings";
+}
+
+<div class="page-header">
+    <div>
+        <h2>Settings</h2>
+        <p>Manage your account preferences</p>
+    </div>
+</div>
+
+<div class="row g-3">
+
+    <div class="col-md-6">
+        <div class="tp-card">
+            <div class="tp-card-header">
+                <span class="tp-card-title">
+                    <i class="bi bi-shield-lock"
+                       style="color:var(--teal);margin-right:6px"></i>
+                    Security
+                </span>
+            </div>
+            <div class="d-flex flex-column gap-2">
+                <a asp-controller="Settings"
+                   asp-action="ChangePassword"
+                   style="display:flex;align-items:center;
+                          justify-content:space-between;
+                          padding:12px;border-radius:var(--r-sm);
+                          background:var(--surface-2);
+                          text-decoration:none;
+                          transition:var(--transition)">
+                    <div>
+                        <div style="font-size:14px;font-weight:600;
+                                    color:var(--text-1)">
+                            Change Password
+                        </div>
+                        <div style="font-size:12px;
+                                    color:var(--text-3)">
+                            Update your login password
+                        </div>
+                    </div>
+                    <i class="bi bi-chevron-right"
+                       style="color:var(--text-3)"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="tp-card">
+            <div class="tp-card-header">
+                <span class="tp-card-title">
+                    <i class="bi bi-palette"
+                       style="color:var(--teal);margin-right:6px"></i>
+                    Appearance
+                </span>
+            </div>
+            <div style="display:flex;align-items:center;
+                        justify-content:space-between;
+                        padding:12px;background:var(--surface-2);
+                        border-radius:var(--r-sm)">
+                <div>
+                    <div style="font-size:14px;font-weight:600;
+                                color:var(--text-1)">
+                        Dark Mode
+                    </div>
+                    <div style="font-size:12px;color:var(--text-3)">
+                        Switch to dark background
+                    </div>
+                </div>
+                <label style="position:relative;display:inline-block;
+                               width:48px;height:26px;cursor:pointer">
+                    <input type="checkbox" id="darkToggle"
+                           style="display:none"
+                           onchange="toggleDarkMode(this)" />
+                    <span id="darkSlider"
+                          style="position:absolute;inset:0;
+                                 background:#d0d7e0;
+                                 border-radius:26px;
+                                 transition:.3s">
+                        <span id="darkKnob"
+                              style="position:absolute;
+                                     left:3px;top:3px;
+                                     width:20px;height:20px;
+                                     background:#fff;
+                                     border-radius:50%;
+                                     transition:.3s;
+                                     box-shadow:0 1px 4px rgba(0,0,0,.2)">
+                        </span>
+                    </span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="tp-card">
+            <div class="tp-card-header">
+                <span class="tp-card-title">
+                    <i class="bi bi-person-gear"
+                       style="color:var(--teal);margin-right:6px"></i>
+                    Account
+                </span>
+            </div>
+            <div class="d-flex flex-column gap-2">
+                <a asp-controller="Account" asp-action="Profile"
+                   style="display:flex;align-items:center;
+                          justify-content:space-between;
+                          padding:12px;border-radius:var(--r-sm);
+                          background:var(--surface-2);
+                          text-decoration:none;transition:var(--transition)">
+                    <div>
+                        <div style="font-size:14px;font-weight:600;
+                                    color:var(--text-1)">
+                            Edit Profile
+                        </div>
+                        <div style="font-size:12px;color:var(--text-3)">
+                            Update your personal information
+                        </div>
+                    </div>
+                    <i class="bi bi-chevron-right"
+                       style="color:var(--text-3)"></i>
+                </a>
+                <a asp-controller="Account"
+                   asp-action="DeleteAccount"
+                   style="display:flex;align-items:center;
+                          justify-content:space-between;
+                          padding:12px;border-radius:var(--r-sm);
+                          background:var(--red-light);
+                          text-decoration:none;
+                          transition:var(--transition)">
+                    <div>
+                        <div style="font-size:14px;font-weight:600;
+                                    color:var(--red)">
+                            Delete Account
+                        </div>
+                        <div style="font-size:12px;color:var(--red);
+                                    opacity:.7">
+                            Permanently remove your account
+                        </div>
+                    </div>
+                    <i class="bi bi-chevron-right"
+                       style="color:var(--red)"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="tp-card">
+            <div class="tp-card-header">
+                <span class="tp-card-title">
+                    <i class="bi bi-info-circle"
+                       style="color:var(--teal);margin-right:6px"></i>
+                    About CedarPay
+                </span>
+            </div>
+            <div style="font-size:13px;color:var(--text-2);
+                        line-height:1.7">
+                <div style="display:flex;
+                            justify-content:space-between;
+                            padding:8px 0;
+                            border-bottom:1px solid var(--border)">
+                    <span style="color:var(--text-3)">Version</span>
+                    <span style="font-weight:600">1.0.0</span>
+                </div>
+                <div style="display:flex;
+                            justify-content:space-between;
+                            padding:8px 0;
+                            border-bottom:1px solid var(--border)">
+                    <span style="color:var(--text-3)">
+                        Platform
+                    </span>
+                    <span style="font-weight:600">
+                        ASP.NET Core 9
+                    </span>
+                </div>
+                <div style="display:flex;
+                            justify-content:space-between;
+                            padding:8px 0;
+                            border-bottom:1px solid var(--border)">
+                    <span style="color:var(--text-3)">
+                        Licensed by
+                    </span>
+                    <span style="font-weight:600">
+                        Banque du Liban
+                    </span>
+                </div>
+                <div style="display:flex;
+                            justify-content:space-between;
+                            padding:8px 0">
+                    <span style="color:var(--text-3)">
+                        Support
+                    </span>
+                    <span style="font-weight:600;
+                                 color:var(--teal)">
+                        support@cedarpay.lb
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const isDark =
+                localStorage.getItem('darkMode') === '1';
+            const toggle = document.getElementById('darkToggle');
+            const knob = document.getElementById('darkKnob');
+            const slider = document.getElementById('darkSlider');
+
+            if (toggle) toggle.checked = isDark;
+            if (isDark) {
+                if (knob) knob.style.transform = 'translateX(22px)';
+                if (slider) slider.style.background = 'var(--teal)';
+            }
+        });
+
+        function toggleDarkMode(cb) {
+            const on = cb.checked;
+            localStorage.setItem('darkMode', on ? '1' : '0');
+            document.body.classList.toggle('dark-mode', on);
+
+            const knob = document.getElementById('darkKnob');
+            const slider = document.getElementById('darkSlider');
+            if (knob) knob.style.transform = on ? 'translateX(22px)' : '';
+            if (slider) slider.style.background = on ? 'var(--teal)' : '#d0d7e0';
+        }
+    </script>
+}

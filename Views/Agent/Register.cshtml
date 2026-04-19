@@ -1,0 +1,85 @@
+﻿@model MoneyTransfer.Models.Agent
+@{
+    ViewData["Title"] = "Register as Agent";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="page-header">
+            <div>
+                <h2>Register as Agent</h2>
+                <p>Submit your store for admin approval</p>
+            </div>
+        </div>
+        <div class="tp-card">
+            <form asp-action="Store" method="post" class="tp-form">
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Agent Name</label>
+                            <input asp-for="AgentName" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Store Name</label>
+                            <input asp-for="StoreName" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Phone Number</label>
+                            <input asp-for="PhoneNumber" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input asp-for="Email" class="form-control" type="email" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">City</label>
+                            <input asp-for="City" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Country</label>
+                            <input asp-for="Country" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-group">
+                            <label class="form-label">Street Address</label>
+                            <input asp-for="Street" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-group">
+                            <label class="form-label">Working Hours</label>
+                            <input asp-for="WorkingHours" class="form-control"
+                                   placeholder="e.g. Mon-Fri 9AM-6PM" />
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea asp-for="Description" class="form-control"
+                                      rows="2" style="resize:vertical"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn-tp-primary">
+                        <i class="bi bi-send"></i> Submit for Approval
+                    </button>
+                    <a asp-action="Index" class="btn-tp-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

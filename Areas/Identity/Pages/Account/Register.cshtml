@@ -1,0 +1,172 @@
+﻿@page
+@model RegisterModel
+@{
+    ViewData["Title"] = "Create Account";
+    Layout = "/Views/Shared/_Layout.cshtml";
+}
+
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:20px">
+    <div style="width:100%;max-width:460px">
+
+        <!-- Brand -->
+        <div style="text-align:center;margin-bottom:32px">
+            <div style="width:48px;height:48px;background:var(--teal);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:22px;color:#fff">
+                <i class="bi bi-send-fill"></i>
+            </div>
+            <h1 style="font-size:24px;font-weight:800;color:var(--text-1);letter-spacing:-0.5px;margin:0">
+                Cedar<span style="color:var(--teal)">Pay</span>
+            </h1>
+            <p style="font-size:14px;color:var(--text-3);margin-top:4px">
+                Create your account
+            </p>
+        </div>
+
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:32px;box-shadow:var(--shadow-md)">
+            <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+                <div asp-validation-summary="ModelOnly"
+                     style="background:var(--red-light);border:1px solid rgba(255,107,107,.25);border-radius:var(--r-sm);padding:12px 16px;font-size:13px;color:var(--red);margin-bottom:16px;display:@(ViewData.ModelState.ErrorCount > 0 ? "block" : "none")">
+                </div>
+
+                <div style="display:flex;flex-direction:column;gap:14px">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                        <div class="form-group">
+                            <label class="form-label">First Name</label>
+                            <input asp-for="Input.FirstName" class="form-control"
+                                   placeholder="John" />
+                            <span asp-validation-for="Input.FirstName"
+                                  class="text-danger" style="font-size:12px"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Last Name</label>
+                            <input asp-for="Input.LastName" class="form-control"
+                                   placeholder="Doe" />
+                            <span asp-validation-for="Input.LastName"
+                                  class="text-danger" style="font-size:12px"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Username</label>
+                        <div style="display:flex;align-items:center;
+                                    background:var(--surface-2);
+                                    border:1px solid var(--border-md);
+                                    border-radius:var(--r-sm);overflow:hidden">
+                            <span style="padding:0 12px;
+                                         color:var(--text-3);
+                                         font-size:14px;border-right:
+                                         1px solid var(--border)">@@</span>
+                            <input asp-for="Input.Username"
+                                   style="border:none;background:transparent;
+                                          padding:11px 12px;flex:1;
+                                          font-size:14px;
+                                          color:var(--text-1);outline:none"
+                                   placeholder="yourname" />
+                        </div>
+                        <span asp-validation-for="Input.Username"
+                              class="text-danger" style="font-size:12px"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input asp-for="Input.Email" class="form-control"
+                               autocomplete="username" placeholder="you@example.com" />
+                        <span asp-validation-for="Input.Email"
+                              class="text-danger" style="font-size:12px"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <div style="position:relative">
+                            <input asp-for="Input.Password"
+                                   class="form-control"
+                                   id="passwordInput"
+                                   type="password"
+                                   autocomplete="new-password"
+                                   placeholder="Min. 8 characters"
+                                   style="padding-right:42px" />
+                            <button type="button"
+                                    onclick="togglePassword()"
+                                    style="position:absolute;right:12px;top:50%;
+                                           transform:translateY(-50%);
+                                           background:none;border:none;
+                                           color:var(--text-3);cursor:pointer;
+                                           font-size:16px;padding:0">
+                                <i class="bi bi-eye" id="eyeIcon"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="Input.Password"
+                              class="text-danger" style="font-size:12px"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Confirm Password</label>
+                        <div style="position:relative">
+                            <input asp-for="Input.ConfirmPassword"
+                                   class="form-control"
+                                   id="confirmPasswordInput"
+                                   type="password"
+                                   autocomplete="new-password"
+                                   placeholder="Repeat password"
+                                   style="padding-right:42px" />
+                            <button type="button"
+                                    onclick="toggleConfirmPassword()"
+                                    style="position:absolute;right:12px;top:50%;
+                                           transform:translateY(-50%);
+                                           background:none;border:none;
+                                           color:var(--text-3);cursor:pointer;
+                                           font-size:16px;padding:0">
+                                <i class="bi bi-eye" id="confirmEyeIcon"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="Input.ConfirmPassword"
+                              class="text-danger" style="font-size:12px"></span>
+                    </div>
+
+                    <button type="submit" class="btn-tp-primary"
+                            style="width:100%;justify-content:center;padding:13px">
+                        Create Account
+                    </button>
+                </div>
+            </form>
+
+            <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);text-align:center">
+                <p style="font-size:13px;color:var(--text-2);margin:0">
+                    Already have an account?
+                    <a asp-page="./Login"
+                       style="color:var(--teal);font-weight:600;text-decoration:none">
+                        Sign in
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function togglePassword() {
+            const input = document.getElementById('passwordInput');
+            const icon = document.getElementById('eyeIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'bi bi-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'bi bi-eye';
+            }
+        }
+
+        function toggleConfirmPassword() {
+            const input = document.getElementById('confirmPasswordInput');
+            const icon = document.getElementById('confirmEyeIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'bi bi-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'bi bi-eye';
+            }
+        }
+    </script>
+}

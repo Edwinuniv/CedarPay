@@ -1,0 +1,219 @@
+﻿@model MoneyTransfer.ViewModels.TransactionViewModel
+@{
+    ViewData["Title"] = "Transaction Details";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="page-header">
+            <div>
+                <h2>Transaction Details</h2>
+                <p style="font-family:var(--font-mono);
+                           font-size:12px">
+                    @Model.SerialNumber
+                </p>
+            </div>
+            <a asp-action="Index" class="btn-tp-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+
+        <div class="tp-card">
+            <div style="text-align:center;
+                        padding:24px 0 20px;
+                        border-bottom:1px solid var(--border)">
+                <div class="tx-avatar @(Model.IsSent ? "sent" : "received")"
+                     style="width:60px;height:60px;
+                            font-size:22px;
+                            margin:0 auto 12px;
+                            @(!string.IsNullOrEmpty(Model.OtherPartyPictureUrl) ? "padding:0;overflow:hidden" : "")">
+                    @if (!string.IsNullOrEmpty(
+                                        Model.OtherPartyPictureUrl))
+                    {
+                        <img src="@Model.OtherPartyPictureUrl"
+                             style="width:100%;height:100%;
+                                        object-fit:cover" />
+                    }
+                    else
+                    {
+                        @Model.OtherPartyInitials
+                    }
+                </div>
+                <div style="font-size:16px;font-weight:600;
+                            color:var(--text-1);
+                            margin-bottom:6px">
+                    @(Model.IsSent ? "Sent to" : "Received from")
+                    @Model.OtherPartyName
+                </div>
+                <div style="font-size:34px;font-weight:800;
+                            letter-spacing:-0.5px"
+                     class="tx-amount @(Model.IsSent ? "sent" : "received")">
+                    @(Model.IsSent ? "−" : "+")@Model.CurrencySymbol@Model.Amount.ToString("N2")
+                </div>
+                <div style="margin-top:8px;
+                            display:flex;justify-content:center;
+                            gap:8px">
+                    <span class="tx-status @Model.Status.ToLower()"
+                          style="font-size:12px;
+                                 padding:4px 12px">
+                        @Model.Status
+                    </span>
+                    @if (Model.FeeWaived)
+                    {
+                        <span class="badge-tp success">
+                            Fee Waived 🎉
+                        </span>
+                    }
+                </div>
+            </div>
+
+            <div style="display:grid;
+                        grid-template-columns:1fr 1fr;
+                        gap:16px;padding:20px 0">
+                <div>
+                    <div style="font-size:11px;
+                                color:var(--text-3);
+                                text-transform:uppercase;
+                                letter-spacing:.5px;
+                                font-weight:600">
+                        From
+                    </div>
+                    <div style="font-size:14px;font-weight:600;
+                                margin-top:3px">
+                        @Model.SenderName
+                    </div>
+                    <div style="font-size:12px;color:var(--text-3);
+                                font-family:var(--font-mono)">
+                        @Model.SenderWalletSerial
+                    </div>
+                </div>
+                <div>
+                    <div style="font-size:11px;
+                                color:var(--text-3);
+                                text-transform:uppercase;
+                                letter-spacing:.5px;
+                                font-weight:600">
+                        To
+                    </div>
+                    <div style="font-size:14px;font-weight:600;
+                                margin-top:3px">
+                        @Model.ReceiverName
+                    </div>
+                    <div style="font-size:12px;color:var(--text-3);
+                                font-family:var(--font-mono)">
+                        @Model.ReceiverWalletSerial
+                    </div>
+                </div>
+                <div>
+                    <div style="font-size:11px;
+                                color:var(--text-3);
+                                text-transform:uppercase;
+                                letter-spacing:.5px;
+                                font-weight:600">
+                        Amount Sent
+                    </div>
+                    <div style="font-size:14px;font-weight:600;
+                                margin-top:3px">
+                        $@Model.Amount.ToString("N2")
+                        @Model.SenderCurrency
+                    </div>
+                </div>
+                <div>
+                    <div style="font-size:11px;
+                                color:var(--text-3);
+                                text-transform:uppercase;
+                                letter-spacing:.5px;
+                                font-weight:600">
+                        Amount Received
+                    </div>
+                    <div style="font-size:14px;font-weight:600;
+                                margin-top:3px">
+                        @(Model.ConvertedAmount > 0
+                                                ? Model.ConvertedAmount.ToString("N2")
+                                                : Model.Amount.ToString("N2"))
+                        @Model.ReceiverCurrency
+                    </div>
+                </div>
+                <div>
+                    <div style="font-size:11px;
+                                color:var(--text-3);
+                                text-transform:uppercase;
+                                letter-spacing:.5px;
+                                font-weight:600">
+                        Fee
+                    </div>
+                    <div style="font-size:14px;font-weight:600;
+                                margin-top:3px">
+                        @if (Model.FeeWaived)
+                        {
+                            <span style="color:var(--teal)">
+                                Free 🎉
+                            </span>
+                        }
+                        else
+                        {
+                            <span>
+                                $@Model.FeeAmount.ToString("N2")
+                            </span>
+                        }
+                    </div>
+                </div>
+                <div>
+                    <div style="font-size:11px;
+                                color:var(--text-3);
+                                text-transform:uppercase;
+                                letter-spacing:.5px;
+                                font-weight:600">
+                        Exchange Rate
+                    </div>
+                    <div style="font-size:14px;font-weight:600;
+                                margin-top:3px">
+                        @Model.ExchangeRateUsed.ToString("N4")
+                    </div>
+                </div>
+                <div>
+                    <div style="font-size:11px;
+                                color:var(--text-3);
+                                text-transform:uppercase;
+                                letter-spacing:.5px;
+                                font-weight:600">
+                        Type
+                    </div>
+                    <div style="margin-top:3px">
+                        <span class="badge-tp default">
+                            @Model.Type
+                        </span>
+                    </div>
+                </div>
+                <div>
+                    <div style="font-size:11px;
+                                color:var(--text-3);
+                                text-transform:uppercase;
+                                letter-spacing:.5px;
+                                font-weight:600">
+                        Date
+                    </div>
+                    <div style="font-size:14px;font-weight:600;
+                                margin-top:3px">
+                        @Model.CreatedAt.ToString(
+                        "MMM dd, yyyy HH:mm")
+                    </div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.Description))
+            {
+                <div style="padding:14px;
+                                background:var(--surface-2);
+                                border-radius:var(--r-sm);
+                                font-size:13px;
+                                color:var(--text-2)">
+                    <strong style="color:var(--text-1)">
+                        Note:
+                    </strong>
+                    @Model.Description
+                </div>
+            }
+        </div>
+    </div>
+</div>

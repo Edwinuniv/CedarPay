@@ -1,0 +1,80 @@
+﻿@model IEnumerable<MoneyTransfer.Models.Review>
+@{
+    ViewData["Title"] = "All Reviews";
+    double avg = ViewBag.AverageRating is double d ? d : 0;
+}
+
+<div class="page-header">
+    <div>
+        <h2>All Reviews</h2>
+        <p>
+            Average rating:
+            <strong style="color:var(--teal)">
+                @avg.ToString("F1") / 5
+            </strong>
+        </p>
+    </div>
+    <a asp-action="Index" class="btn-tp-secondary">
+        <i class="bi bi-arrow-left"></i> Back
+    </a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="tp-card">
+        <div class="empty-state">
+            <i class="bi bi-star"></i>
+            <p>No reviews yet.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="d-flex flex-column gap-3">
+        @foreach (var r in Model)
+        {
+            <div class="tp-card">
+                <div style="display:flex;
+                                    align-items:flex-start;
+                                    justify-content:space-between;
+                                    gap:12px">
+                    <div>
+                        <div style="color:#f0a500;font-size:18px;
+                                            margin-bottom:4px">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                <span>
+                                    @(i <= r.Rating
+                                                            ? "★" : "☆")
+                    </span>
+                                        }
+                        </div>
+                        <div style="font-size:14px;
+                                            color:var(--text-1);
+                                            margin-bottom:4px">
+                            @r.Comment
+                        </div>
+                        <div style="font-size:12px;
+                                            color:var(--text-3)">
+                            By @r.User?.FirstName @r.User?.LastName
+                            · @r.CreatedAt.ToString("MMM dd, yyyy")
+                        </div>
+                    </div>
+                    <form asp-action="DeleteReview"
+                          asp-route-id="@r.Id"
+                          method="post"
+                          onsubmit="return confirm(
+                                      'Delete this review?')">
+                        @Html.AntiForgeryToken()
+                        <button type="submit"
+                                class="btn-tp-danger"
+                                style="padding:6px 10px;
+                                               font-size:11px">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+}

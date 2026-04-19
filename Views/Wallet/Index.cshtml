@@ -1,0 +1,80 @@
+﻿@model List<MoneyTransfer.ViewModels.WalletViewModel>
+@{
+    ViewData["Title"] = "My Wallets";
+}
+
+<div class="page-header">
+    <div>
+        <h2>My Wallets</h2>
+        <p>Manage your currency wallets</p>
+    </div>
+    <a asp-action="Create" class="btn-tp-primary">
+        <i class="bi bi-plus-lg"></i> New Wallet
+    </a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="tp-card">
+        <div class="empty-state">
+            <i class="bi bi-wallet2"></i>
+            <p>You don't have any wallets yet.</p>
+            <a asp-action="Create" class="btn-tp-primary">
+                <i class="bi bi-plus"></i> Create Your First Wallet
+            </a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var wallet in Model)
+        {
+            <div class="col-md-4">
+                <div class="tp-card wallet-card @(wallet.IsDefault ? "default" : "")">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="wallet-currency">@wallet.CurrencyCode</div>
+                        @if (wallet.IsDefault)
+                        {
+                            <span class="badge-tp success">Default</span>
+                        }
+                    </div>
+                    <div class="wallet-balance">
+                        @wallet.CurrencySymbol@wallet.Balance.ToString("N2")
+                    </div>
+                    <div style="font-size:13px;color:var(--text-2);margin:4px 0">
+                        @wallet.CurrencyName
+                    </div>
+                    <div class="wallet-serial">@wallet.SerialNumber</div>
+                    <div class="wallet-serial" style="margin-top:2px">
+                        Created @wallet.CreatedAt.ToString("MMM dd, yyyy")
+                    </div>
+
+                    <div class="d-flex gap-2 mt-3">
+                        @if (!wallet.IsDefault)
+                        {
+                            <form asp-action="SetDefault" asp-route-id="@wallet.Id"
+                                  method="post" style="flex:1">
+                                <button type="submit" class="btn-tp-secondary w-100"
+                                        style="justify-content:center;padding:8px 12px;font-size:12px">
+                                    Set Default
+                                </button>
+                            </form>
+                        }
+                        @if (!wallet.IsDefault && wallet.Balance == 0)
+                        {
+                            <form asp-action="Delete" asp-route-id="@wallet.Id"
+                                  method="post">
+                                <button type="submit" class="btn-tp-danger"
+                                        style="padding:8px 12px;font-size:12px"
+                                        onclick="return confirm('Delete this wallet?')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

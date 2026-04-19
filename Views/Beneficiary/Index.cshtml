@@ -1,0 +1,97 @@
+﻿@model List<MoneyTransfer.ViewModels.BeneficiaryViewModel>
+@{
+    ViewData["Title"] = "Beneficiaries";
+}
+
+<div class="page-header">
+    <div>
+        <h2>Beneficiaries</h2>
+        <p>Your saved recipients</p>
+    </div>
+    <a asp-action="Create" class="btn-tp-primary">
+        <i class="bi bi-person-plus"></i> Add Beneficiary
+    </a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="tp-card">
+        <div class="empty-state">
+            <i class="bi bi-people"></i>
+            <p>No beneficiaries yet. Add someone to send money faster!</p>
+            <a asp-action="Create" class="btn-tp-primary">
+                <i class="bi bi-person-plus"></i> Add Beneficiary
+            </a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="tp-card">
+        <table class="tp-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Wallet / Phone</th>
+                    <th>Country</th>
+                    <th>Added</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var b in Model)
+                {
+                    <tr>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:10px">
+                                <div class="ben-avatar" style="width:36px;height:36px;font-size:12px">
+                                    @b.Nickname.Substring(0, 1).ToUpper()
+                                </div>
+                                <div>
+                                    <div style="font-weight:600">@b.Nickname</div>
+                                    <div style="font-size:12px;color:var(--text-3)">
+                                        @b.ReceiverName
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge-tp @(b.TransferType == "WalletTransfer" ? "info" : "default")">
+                                @b.TransferType
+                            </span>
+                        </td>
+                        <td style="font-size:12px;font-family:var(--font-mono);color:var(--text-2)">
+                            @(b.ReceiverWalletSerial ?? b.ReceiverPhoneNumber ?? "—")
+                        </td>
+                        <td style="font-size:13px;color:var(--text-2)">
+                            @(b.ReceiverCountry ?? "—")
+                        </td>
+                        <td style="font-size:12px;color:var(--text-3)">
+                            @b.CreatedAt.ToString("MMM dd, yyyy")
+                        </td>
+                        <td>
+                            <div style="display:flex;gap:6px">
+                                <a asp-controller="Transfer" asp-action="Create"
+                                   class="ben-action">Send</a>
+                                <a asp-action="Edit" asp-route-id="@b.Id"
+                                   class="btn-tp-secondary"
+                                   style="padding:6px 12px;font-size:12px">
+                                    Edit
+                                </a>
+                                <form asp-action="Delete" asp-route-id="@b.Id"
+                                      method="post" style="display:inline">
+                                    <button type="submit" class="btn-tp-danger"
+                                            style="padding:6px 10px;font-size:12px"
+                                            onclick="return confirm('Remove this beneficiary?')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

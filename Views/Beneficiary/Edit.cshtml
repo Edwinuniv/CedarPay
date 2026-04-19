@@ -1,0 +1,74 @@
+﻿@model MoneyTransfer.ViewModels.BeneficiaryViewModel
+@{
+    ViewData["Title"] = "Edit Beneficiary";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="page-header">
+            <div>
+                <h2>Edit Beneficiary</h2>
+            </div>
+            <a asp-action="Index" class="btn-tp-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+        <div class="tp-card">
+            <form asp-action="Update" method="post" class="tp-form">
+                <input type="hidden" asp-for="Id" />
+                <div asp-validation-summary="All" class="alert-tp error"
+                     style="@(ViewData.ModelState.ErrorCount > 0 ? "" : "display:none")"></div>
+
+                <div class="form-group">
+                    <label class="form-label">Nickname</label>
+                    <input asp-for="Nickname" class="form-control" />
+                    <span asp-validation-for="Nickname" class="text-danger" style="font-size:12px"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input asp-for="ReceiverName" class="form-control" />
+                    <span asp-validation-for="ReceiverName" class="text-danger" style="font-size:12px"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Transfer Type</label>
+                    <select asp-for="TransferType" class="form-select">
+                        <option value="WalletTransfer">Wallet Transfer</option>
+                        <option value="MobileTransfer">Mobile Transfer</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Wallet Serial</label>
+                    <input asp-for="ReceiverWalletSerial" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phone Number</label>
+                    <input asp-for="ReceiverPhoneNumber" class="form-control" />
+                </div>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label class="form-label">Country</label>
+                            <input asp-for="ReceiverCountry" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label class="form-label">City</label>
+                            <input asp-for="ReceiverCity" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn-tp-primary">
+                        <i class="bi bi-check-lg"></i> Update
+                    </button>
+                    <a asp-action="Index" class="btn-tp-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,278 @@
+﻿@{
+    ViewData["Title"] = "Account Report";
+    Layout = null;
+    var user = ViewBag.User as MoneyTransfer.Models.User;
+    var sent = ViewBag.Sent as List<MoneyTransfer.Models.Transaction>
+        ?? new List<MoneyTransfer.Models.Transaction>();
+    var received = ViewBag.Received as
+        List<MoneyTransfer.Models.Transaction>
+        ?? new List<MoneyTransfer.Models.Transaction>();
+    var wallets = ViewBag.Wallets as
+        List<MoneyTransfer.Models.Wallet>
+        ?? new List<MoneyTransfer.Models.Wallet>();
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>CedarPay Account Report</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 0 20px;
+            color: #1a1a2e;
+            font-size: 13px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 0 0 20px;
+            border-bottom: 3px solid #00b894;
+            margin-bottom: 24px;
+        }
+
+        .brand {
+            font-size: 28px;
+            font-weight: 800;
+        }
+
+            .brand span {
+                color: #00b894;
+            }
+
+        h2 {
+            font-size: 16px;
+            margin: 20px 0 10px;
+            color: #00b894;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th {
+            background: #f5f7fa;
+            padding: 8px 10px;
+            text-align: left;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            color: #888;
+        }
+
+        td {
+            padding: 9px 10px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .stat {
+            background: #f5f7fa;
+            padding: 14px;
+            border-radius: 8px;
+        }
+
+            .stat .val {
+                font-size: 20px;
+                font-weight: 800;
+                color: #1a1a2e;
+            }
+
+            .stat .lbl {
+                font-size: 11px;
+                color: #888;
+                margin-top: 2px;
+            }
+
+        .footer {
+            margin-top: 40px;
+            padding-top: 16px;
+            border-top: 1px solid #eee;
+            font-size: 11px;
+            color: #888;
+            text-align: center;
+        }
+
+        .print-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #00b894;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        @@media print {
+            .print-btn {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <button class="print-btn" onclick="window.print()">
+        🖨️ Print / Save PDF
+    </button>
+
+    <div class="header">
+        <div>
+            <div class="brand">Cedar<span>Pay</span></div>
+            <div style="font-size:13px;color:#888;margin-top:4px">
+                Account Activity Report
+            </div>
+        </div>
+        <div style="text-align:right;color:#888">
+            <div>Generated: @ViewBag.GeneratedAt?.ToString("MMM dd, yyyy HH:mm")</div>
+            <div>@user?.Email</div>
+        </div>
+    </div>
+
+    <h2>Account Information</h2>
+    <table>
+        <tr>
+            <td style="color:#888;width:150px">Name</td>
+            <td><strong>@user?.FirstName @user?.LastName</strong></td>
+            <td style="color:#888;width:150px">Phone</td>
+            <td>@(user?.PhoneNumber ?? "—")</td>
+        </tr>
+        <tr>
+            <td style="color:#888">Account Type</td>
+            <td>@(user?.AccountType ?? "Individual")</td>
+            <td style="color:#888">Nationality</td>
+            <td>@(user?.Nationality ?? "—")</td>
+        </tr>
+        <tr>
+            <td style="color:#888">Joined</td>
+            <td>@user?.CreatedAt.ToString("MMM dd, yyyy")</td>
+            <td style="color:#888">KYC Status</td>
+            <td>@(user?.IsVerified == true ? "Verified ✓" : "Pending")</td>
+        </tr>
+    </table>
+
+    <h2>Summary Statistics</h2>
+    <div class="stat-grid">
+        <div class="stat">
+            <div class="val">
+                $@sent.Where(t => t.Status == MoneyTransfer.Models.TransactionStatus.Completed).Sum(t => t.Amount).ToString("N2")
+            </div>
+            <div class="lbl">Total Sent</div>
+        </div>
+        <div class="stat">
+            <div class="val">
+                $@received.Where(t => t.Status == MoneyTransfer.Models.TransactionStatus.Completed).Sum(t => t.ConvertedAmount > 0 ? t.ConvertedAmount : t.Amount).ToString("N2")
+            </div>
+            <div class="lbl">Total Received</div>
+        </div>
+        <div class="stat">
+            <div class="val">@(sent.Count + received.Count)</div>
+            <div class="lbl">Total Transactions</div>
+        </div>
+        <div class="stat">
+            <div class="val">
+                $@sent.Where(t => !t.FeeWaived).Sum(t => t.FeeAmount).ToString("N2")
+            </div>
+            <div class="lbl">Total Fees Paid</div>
+        </div>
+    </div>
+
+    <h2>Wallets</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Currency</th>
+                <th>Balance</th>
+                <th>Serial</th>
+                <th>Default</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var w in wallets)
+            {
+                <tr>
+                    <td>@w.Currency?.Code — @w.Currency?.Name</td>
+                    <td><strong>@w.Currency?.Symbol@w.Balance.ToString("N2")</strong></td>
+                    <td style="font-family:monospace;font-size:11px">@w.SerialNumber</td>
+                    <td>@(w.IsDefault ? "✓" : "—")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <h2>Sent Transactions (@sent.Count)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Serial</th>
+                <th>To</th>
+                <th>Amount</th>
+                <th>Fee</th>
+                <th>Status</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var t in sent.Take(50))
+            {
+                <tr>
+                    <td style="font-family:monospace;font-size:11px">@t.SerialNumber</td>
+                    <td>@(t.ReceiverWallet?.User != null ? $"{t.ReceiverWallet.User.FirstName} {t.ReceiverWallet.User.LastName}" : t.ReceiverName ?? "Mobile")</td>
+                    <td>@t.SenderCurrency?.Symbol@t.Amount.ToString("N2")</td>
+                    <td>@(t.FeeWaived ? "Free" : "$" + t.FeeAmount.ToString("N2"))</td>
+                    <td>@t.Status</td>
+                    <td>@t.CreatedAt.ToString("MMM dd, yyyy")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <h2>Received Transactions (@received.Count)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Serial</th>
+                <th>From</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var t in received.Take(50))
+            {
+                <tr>
+                    <td style="font-family:monospace;font-size:11px">@t.SerialNumber</td>
+                    <td>@(t.SenderWallet?.User != null ? $"{t.SenderWallet.User.FirstName} {t.SenderWallet.User.LastName}" : "Unknown")</td>
+                    <td>@(t.ReceiverCurrency?.Symbol)@((t.ConvertedAmount > 0 ? t.ConvertedAmount : t.Amount).ToString("N2"))</td>
+                    <td>@t.Status</td>
+                    <td>@t.CreatedAt.ToString("MMM dd, yyyy")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>CedarPay — Licensed by Banque du Liban</p>
+        <p>This report is for informational purposes only.</p>
+    </div>
+</body>
+</html>

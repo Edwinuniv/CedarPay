@@ -1,0 +1,94 @@
+﻿@model List<MoneyTransfer.ViewModels.ReviewViewModel>
+@{
+    ViewData["Title"] = "My Reviews";
+}
+
+<div class="page-header">
+    <div>
+        <h2>My Reviews</h2>
+        <p>Your feedback history</p>
+    </div>
+    <a asp-action="Create" class="btn-tp-primary">
+        <i class="bi bi-star"></i> Write Another
+    </a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="tp-card">
+        <div class="empty-state">
+            <i class="bi bi-star"></i>
+            <p>You haven't written any reviews yet.</p>
+            <a asp-action="Create" class="btn-tp-primary">
+                Write Your First Review
+            </a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="d-flex flex-column gap-3">
+        @foreach (var r in Model)
+        {
+            <div class="tp-card">
+                <div style="display:flex;align-items:flex-start;
+                                    justify-content:space-between;gap:12px">
+                    <div style="flex:1">
+                        <div style="color:#f0a500;font-size:22px;
+                                            margin-bottom:8px;line-height:1">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                <span>@(i <= r.Rating ? "★" : "☆")</span>
+                            }
+                            <span style="font-size:13px;
+                                                 color:var(--text-3);
+                                                 margin-left:8px;
+                                                 font-weight:600;
+                                                 vertical-align:middle">
+                                @r.Rating / 5
+                            </span>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(r.Comment))
+                        {
+                            <p style="font-size:14px;color:var(--text-1);
+                                                  margin:0 0 8px;line-height:1.6">
+                                "@r.Comment"
+                            </p>
+                        }
+                        else
+                        {
+                            <p style="font-size:13px;color:var(--text-3);
+                                                  margin:0 0 8px;font-style:italic">
+                                No comment written.
+                            </p>
+                        }
+
+                        <!-- Date -->
+                        <div style="font-size:11px;color:var(--text-3)">
+                            @r.CreatedAt.ToString("MMMM dd, yyyy")
+                            at @r.CreatedAt.ToString("HH:mm")
+                        </div>
+                    </div>
+
+                    <div style="display:flex;flex-direction:column;
+                                        align-items:flex-end;gap:8px;flex-shrink:0">
+                        <span class="badge-tp success">
+                            <i class="bi bi-check-circle"></i> Submitted
+                        </span>
+                        <form asp-action="Delete"
+                              asp-route-id="@r.Id"
+                              method="post"
+                              onsubmit="return confirm('Delete this review?')">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn-tp-danger"
+                                    style="padding:5px 10px;font-size:11px">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

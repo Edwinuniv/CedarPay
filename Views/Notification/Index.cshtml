@@ -1,0 +1,81 @@
+﻿@model List<MoneyTransfer.ViewModels.NotificationViewModel>
+@{
+    ViewData["Title"] = "Notifications";
+}
+
+<div class="page-header">
+    <div>
+        <h2>Notifications</h2>
+        <p>Your recent alerts and updates</p>
+    </div>
+    @if (Model.Any(n => !n.IsRead))
+    {
+        <form asp-action="MarkAllAsRead" method="post">
+            <button type="submit" class="btn-tp-secondary">
+                <i class="bi bi-check-all"></i> Mark All Read
+            </button>
+        </form>
+    }
+</div>
+
+@if (!Model.Any())
+{
+    <div class="tp-card">
+        <div class="empty-state">
+            <i class="bi bi-bell-slash"></i>
+            <p>No notifications yet.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="tp-card">
+        @foreach (var n in Model)
+        {
+            <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);@(!n.IsRead ? "background:rgba(0,184,148,0.03);" : "")">
+                <div style="width:38px;height:38px;border-radius:var(--r-sm);background:var(--teal-light);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;color:var(--teal)">
+                    @switch (n.Type)
+                    {
+                        case "TransactionSent":
+                            <text>↑</text>
+                            break;
+                        case "TransactionReceived":
+
+                            <text>↓</text>
+                            break;
+                        case "TopUpCompleted":
+
+                            <text>+</text>
+                            break;
+                        default:
+
+                            <text>🔔</text>
+                            break;
+                    }
+                </div>
+                <div style="flex:1">
+                    <div style="font-size:14px;font-weight:@(!n.IsRead ? "700" : "500");color:var(--text-1)">
+                        @n.Title
+                        @if (!n.IsRead)
+                        {
+                            <span style="display:inline-block;width:7px;height:7px;background:var(--teal);border-radius:50%;margin-left:6px;vertical-align:middle"></span>
+                        }
+                    </div>
+                    <div style="font-size:13px;color:var(--text-2);margin-top:2px">@n.Message</div>
+                    <div style="font-size:11px;color:var(--text-3);margin-top:4px">
+                        @n.CreatedAt.ToString("MMM dd, yyyy HH:mm")
+                    </div>
+                </div>
+                @if (!n.IsRead)
+                {
+                    <form asp-action="MarkAsRead" asp-route-id="@n.Id" method="post">
+                        <button type="submit" class="btn-tp-secondary"
+                                style="padding:6px 12px;font-size:11px">
+                            Mark Read
+                        </button>
+                    </form>
+                }
+            </div>
+        }
+    </div>
+}

@@ -1,0 +1,190 @@
+﻿@model MoneyTransfer.ViewModels.KYCViewModel
+@{
+    ViewData["Title"] = "Identity Verification";
+}
+
+<div class="kyc-container">
+    <div class="kyc-header">
+        <div class="kyc-icon">
+            <i class="bi bi-shield-check"></i>
+        </div>
+        <h2>Verify Your Identity</h2>
+        <p>Help us keep CedarPay secure by verifying your identity</p>
+    </div>
+
+    @if (ViewBag.KYC != null)
+    {
+        var kyc = ViewBag.KYC as MoneyTransfer.Models.KYCDocument;
+
+        @if (kyc.Status == MoneyTransfer.Models.KYCStatus.Pending)
+        {
+            <div class="kyc-pending-card">
+                <div class="pending-icon">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+                <h3>Verification in Progress</h3>
+                <p>Your documents are being reviewed by our team. This usually takes 1-2 business days.</p>
+                <div class="pending-details">
+                    <div class="pending-item">
+                        <span>Submitted:</span>
+                        <strong>@kyc.SubmittedAt.ToString("MMMM dd, yyyy")</strong>
+                    </div>
+                    <div class="pending-item">
+                        <span>Status:</span>
+                        <strong class="status-pending">Pending</strong>
+                    </div>
+                </div>
+            </div>
+        }
+        else if (kyc.Status == MoneyTransfer.Models.KYCStatus.Approved)
+        {
+            <div class="kyc-approved-card">
+                <div class="approved-icon">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <h3>Identity Verified</h3>
+                <p>Your identity has been successfully verified. You now have full access to all CedarPay features.</p>
+                <div class="approved-details">
+                    <div class="approved-item">
+                        <span>Verified on:</span>
+                        <strong>@kyc.SubmittedAt.ToString("MMMM dd, yyyy")</strong>
+                    </div>
+                    <div class="approved-item">
+                        <span>Verification Level:</span>
+                        <strong class="status-approved">Tier 2</strong>
+                    </div>
+                </div>
+            </div>
+        }
+        else if (kyc.Status == MoneyTransfer.Models.KYCStatus.Rejected)
+        {
+            <div class="kyc-rejected-card">
+                <div class="rejected-icon">
+                    <i class="bi bi-x-circle-fill"></i>
+                </div>
+                <h3>Verification Failed</h3>
+                <p>Your verification was not approved. Please review the reason below and resubmit.</p>
+                @if (!string.IsNullOrEmpty(kyc.RejectionReason))
+                {
+                    <div class="rejection-reason">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <span>@kyc.RejectionReason</span>
+                    </div>
+                }
+            </div>
+        }
+    }
+
+    @{
+        var status = ViewBag.KYC != null ? ((MoneyTransfer.Models.KYCDocument)ViewBag.KYC).Status : MoneyTransfer.Models.KYCStatus.Pending;
+        var showForm = ViewBag.KYC == null || status == MoneyTransfer.Models.KYCStatus.Rejected;
+    }
+
+    @if (showForm)
+    {
+        <form asp-action="Submit" method="post" enctype="multipart/form-data" class="kyc-form">
+            @Html.AntiForgeryToken()
+
+            <div class="kyc-section">
+                <h4>Document Information</h4>
+
+                <div class="form-group">
+                    <label asp-for="DocumentType">Document Type</label>
+                    <select asp-for="DocumentType" class="form-control">
+                        <option value="0">National ID</option>
+                        <option value="1">Passport</option>
+                        <option value="2">Driver's License</option>
+                    </select>
+                    <span asp-validation-for="DocumentType" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="DocumentNumber">Document Number</label>
+                    <input asp-for="DocumentNumber" class="form-control" placeholder="Enter your document number" />
+                    <span asp-validation-for="DocumentNumber" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="kyc-section">
+                <h4>Upload Documents</h4>
+                <div class="document-types">
+                    <div class="document-card">
+                        <i class="bi bi-card-image"></i>
+                        <div class="document-info">
+                            <h5>Front Side of Document</h5>
+                            <p>Clear photo showing your photo, name, and document number</p>
+                        </div>
+                        <div class="file-upload">
+                            <input type="file" name="frontImage" accept="image/*" />
+                            <small>Max 10MB. JPG or PNG only</small>
+                        </div>
+                    </div>
+
+                    <div class="document-card">
+                        <i class="bi bi-card-image"></i>
+                        <div class="document-info">
+                            <h5>Back Side of Document</h5>
+                            <p>Clear photo showing the back of your document (if applicable)</p>
+                        </div>
+                        <div class="file-upload">
+                            <input type="file" name="backImage" accept="image/*" />
+                            <small>Max 10MB. JPG or PNG only</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="kyc-section">
+                <div class="kyc-terms">
+                    <label class="checkbox-container">
+                        <input type="checkbox" required />
+                        <span class="checkmark"></span>
+                        I confirm that the documents I am uploading are authentic and belong to me. I understand that providing false information may result in permanent account suspension.
+                    </label>
+                </div>
+
+                <div class="kyc-terms">
+                    <label class="checkbox-container">
+                        <input type="checkbox" required />
+                        <span class="checkmark"></span>
+                        I consent to CedarPay verifying my identity with government databases and third-party verification services.
+                    </label>
+                </div>
+            </div>
+
+            <div class="kyc-actions">
+                <button type="submit" class="btn-tp-primary">
+                    <i class="bi bi-cloud-upload"></i>
+                    Submit Verification
+                </button>
+                <button type="button" class="btn-tp-secondary" onclick="window.location.href='/Dashboard'">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    }
+
+    @if (ViewBag.KYC != null && (status == MoneyTransfer.Models.KYCStatus.Pending || status == MoneyTransfer.Models.KYCStatus.Approved))
+    {
+        <div class="kyc-info-card">
+            <div class="info-icon">
+                <i class="bi bi-info-circle-fill"></i>
+            </div>
+            <div class="info-content">
+                <h4>What happens next?</h4>
+                @if (status == MoneyTransfer.Models.KYCStatus.Pending)
+                {
+                    <p>Our compliance team is reviewing your documents. You'll receive a notification once the review is complete. You can continue using basic features while we verify your identity.</p>
+                }
+                else if (status == MoneyTransfer.Models.KYCStatus.Approved)
+                {
+                    <p>Your verified status gives you access to higher transfer limits, faster processing, and all CedarPay features. Thank you for helping us maintain a secure platform.</p>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

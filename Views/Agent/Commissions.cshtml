@@ -1,0 +1,91 @@
+﻿@model List<MoneyTransfer.Models.Commission>
+@{
+    ViewData["Title"] = "My Commissions";
+}
+
+<div class="page-header">
+    <div>
+        <h2>My Commissions</h2>
+        <p>Earnings from processed transactions</p>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon received">
+                <i class="bi bi-cash-coin"></i>
+            </div>
+            <div class="stat-value">
+                $@((ViewBag.TotalEarned as decimal? ?? 0).ToString("N2"))
+            </div>
+            <div class="stat-label">Total Earned</div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon beneficiaries">
+                <i class="bi bi-check-circle-fill"></i>
+            </div>
+            <div class="stat-value">
+                $@((ViewBag.TotalPaid as decimal? ?? 0).ToString("N2"))
+            </div>
+            <div class="stat-label">Total Paid Out</div>
+        </div>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="tp-card">
+        <div class="empty-state">
+            <i class="bi bi-cash-coin"></i>
+            <p>No commissions earned yet.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="tp-card">
+        <table class="tp-table">
+            <thead>
+                <tr>
+                    <th>Transaction</th>
+                    <th>Commission</th>
+                    <th>Rate</th>
+                    <th>Status</th>
+                    <th>Earned</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Model)
+                {
+                    <tr>
+                        <td style="font-family:monospace;
+                                           font-size:12px">
+                            @c.Transaction?.SerialNumber
+                        </td>
+                        <td style="font-weight:600;
+                                           color:var(--teal)">
+                            $@c.Amount.ToString("N2")
+                        </td>
+                        <td style="font-size:13px;
+                                           color:var(--text-2)">
+                            @(c.Percentage * 100)%
+                        </td>
+                        <td>
+                            <span class="badge-tp @(c.IsPaid
+                                                                  ? "success" : "warning")">
+                        @(c.IsPaid ? "Paid" : "Pending")
+                    </span>
+                </td>
+                <td style="font-size:12px;
+                                   color:var(--text-3)">
+                    @c.EarnedAt.ToString("MMM dd, yyyy")
+                </td>
+            </tr>
+                        }
+            </tbody>
+        </table>
+    </div>
+}

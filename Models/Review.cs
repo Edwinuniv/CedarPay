@@ -1,0 +1,25 @@
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace MoneyTransfer.Models
+{
+    public enum ReviewTarget
+    {
+        App,
+        Agent
+    }
+    public class Review
+    {
+        public int Id { get; set; }
+        public int Rating { get; set; }
+        public string? Comment { get; set; }
+        public ReviewTarget Target { get; set; }
+        public DateTime CreatedAt { get; set; }
+
+        [Required]
+        public string UserId { get; set; }
+        public int? AgentId { get; set; }
+
+        public User User { get; set; }
+        public Agent? Agent { get; set; }
+    }
+}

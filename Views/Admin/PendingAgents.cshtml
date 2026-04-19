@@ -1,0 +1,77 @@
+﻿@model IEnumerable<MoneyTransfer.Models.Agent>
+@{
+    ViewData["Title"] = "Pending Agents";
+}
+
+<div class="page-header">
+    <div>
+        <h2>Pending Agents</h2>
+        <p>Review and approve agent registrations</p>
+    </div>
+    <a asp-action="Index" class="btn-tp-secondary">
+        <i class="bi bi-arrow-left"></i> Back
+    </a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="tp-card">
+        <div class="empty-state">
+            <i class="bi bi-person-check"></i>
+            <p>No pending agent approvals.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="tp-card">
+        <table class="tp-table">
+            <thead>
+                <tr>
+                    <th>Agent</th>
+                    <th>Store</th>
+                    <th>Location</th>
+                    <th>Registered</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var a in Model)
+                {
+                    <tr>
+                        <td>
+                            <div style="font-weight:600">@a.AgentName</div>
+                            <div style="font-size:12px;color:var(--text-3)">@a.Email</div>
+                        </td>
+                        <td>@a.StoreName</td>
+                        <td style="font-size:13px;color:var(--text-2)">
+                            @a.City, @a.Country
+                        </td>
+                        <td style="font-size:12px;color:var(--text-3)">
+                            @a.RegisteredAt.ToString("MMM dd, yyyy")
+                        </td>
+                        <td>
+                            <div style="display:flex;gap:6px">
+                                <form asp-action="ApproveAgent"
+                                      asp-route-id="@a.Id" method="post">
+                                    <button type="submit" class="btn-tp-success"
+                                            style="padding:7px 14px;font-size:12px">
+                                        <i class="bi bi-check-lg"></i> Approve
+                                    </button>
+                                </form>
+                                <form asp-action="RejectAgent"
+                                      asp-route-id="@a.Id" method="post">
+                                    <button type="submit" class="btn-tp-danger"
+                                            style="padding:7px 14px;font-size:12px"
+                                            onclick="return confirm('Reject this agent?')">
+                                        <i class="bi bi-x-lg"></i> Reject
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

@@ -1,0 +1,296 @@
+﻿@model MoneyTransfer.ViewModels.BeneficiaryViewModel
+@{
+    ViewData["Title"] = "Add Beneficiary";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="page-header">
+            <div>
+                <h2>Add Beneficiary</h2>
+                <p>Save a contact for quick transfers</p>
+            </div>
+        </div>
+
+        <div class="tp-card mb-3">
+            <div style="font-size:13px;font-weight:700;
+                        color:var(--text-1);margin-bottom:12px">
+                How would you like to add?
+            </div>
+            <div style="display:grid;
+                        grid-template-columns:1fr 1fr;gap:10px">
+                <div onclick="switchMethod('username')"
+                     id="btnUsername"
+                     style="padding:14px;
+                            border-radius:var(--r-md);
+                            border:2px solid var(--teal);
+                            background:var(--teal-light);
+                            text-align:center;cursor:pointer;
+                            transition:var(--transition)">
+                    <i class="bi bi-at"
+                       style="font-size:22px;color:var(--teal);
+                              display:block;margin-bottom:4px"></i>
+                    <div style="font-size:13px;font-weight:600">
+                        Search by Username
+                    </div>
+                    <div style="font-size:11px;
+                                color:var(--text-3)">
+                        @@userName
+                    </div>
+                </div>
+                <div onclick="switchMethod('wallet')"
+                     id="btnWallet"
+                     style="padding:14px;
+                            border-radius:var(--r-md);
+                            border:2px solid var(--border);
+                            background:var(--surface-2);
+                            text-align:center;cursor:pointer;
+                            transition:var(--transition)">
+                    <i class="bi bi-wallet2"
+                       style="font-size:22px;color:var(--text-2);
+                              display:block;margin-bottom:4px"></i>
+                    <div style="font-size:13px;font-weight:600">
+                        Enter Wallet Serial
+                    </div>
+                    <div style="font-size:11px;
+                                color:var(--text-3)">
+                        WAL-2026-XXXXX
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="usernameMethod">
+            <div class="tp-card mb-3">
+                <div class="form-group">
+                    <label class="form-label">
+                        Search by Username
+                    </label>
+                    <div style="display:flex;gap:8px">
+                        <div style="display:flex;
+                                    align-items:center;
+                                    background:var(--surface-2);
+                                    border:1px solid var(--border-md);
+                                    border-radius:var(--r-sm);
+                                    overflow:hidden;flex:1">
+                            <span style="padding:0 12px;
+                                         color:var(--text-3);
+                                         font-size:14px;
+                                         border-right:1px solid var(--border)">
+                                @@
+                            </span>
+                            <input type="text"
+                                   id="usernameInput"
+                                   placeholder="username"
+                                   oninput="searchUsername(this.value)"
+                                   style="border:none;
+                                          background:transparent;
+                                          padding:11px 12px;flex:1;
+                                          font-size:14px;
+                                          color:var(--text-1);
+                                          outline:none" />
+                        </div>
+                    </div>
+                </div>
+
+                <div id="userSearchResults"
+                     style="margin-top:12px;
+                            display:none">
+                </div>
+            </div>
+        </div>
+
+        <div id="walletMethod" style="display:none">
+            <div class="tp-card">
+                <form asp-action="Store" method="post"
+                      class="tp-form">
+                    @Html.AntiForgeryToken()
+
+                    <div class="form-group">
+                        <label class="form-label">Nickname</label>
+                        <input asp-for="Nickname"
+                               class="form-control"
+                               placeholder="e.g. Mom, John" />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            Full Name
+                        </label>
+                        <input asp-for="ReceiverName"
+                               class="form-control"
+                               placeholder="Receiver's full name" />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            Transfer Type
+                        </label>
+                        <select asp-for="TransferType"
+                                class="form-select">
+                            <option value="WalletTransfer">
+                                Wallet Transfer
+                            </option>
+                            <option value="MobileTransfer">
+                                Mobile Transfer
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            Wallet Serial
+                        </label>
+                        <input asp-for="ReceiverWalletSerial"
+                               class="form-control"
+                               placeholder="WAL-2026-XXXXX" />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            Phone (for Mobile Transfer)
+                        </label>
+                        <input asp-for="ReceiverPhoneNumber"
+                               class="form-control"
+                               placeholder="+961 XX XXX XXX" />
+                    </div>
+
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    Country
+                                </label>
+                                <input asp-for="ReceiverCountry"
+                                       class="form-control"
+                                       placeholder="Lebanon" />
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    City
+                                </label>
+                                <input asp-for="ReceiverCity"
+                                       class="form-control"
+                                       placeholder="Beirut" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit"
+                                class="btn-tp-primary">
+                            <i class="bi bi-person-plus"></i>
+                            Add Beneficiary
+                        </button>
+                        <a asp-action="Index"
+                           class="btn-tp-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function switchMethod(method) {
+            const uM = document.getElementById('usernameMethod');
+            const wM = document.getElementById('walletMethod');
+            const bU = document.getElementById('btnUsername');
+            const bW = document.getElementById('btnWallet');
+
+            if (method === 'username') {
+                uM.style.display = 'block';
+                wM.style.display = 'none';
+                bU.style.borderColor = 'var(--teal)';
+                bU.style.background = 'var(--teal-light)';
+                bU.querySelector('i').style.color = 'var(--teal)';
+                bW.style.borderColor = 'var(--border)';
+                bW.style.background = 'var(--surface-2)';
+                bW.querySelector('i').style.color = 'var(--text-2)';
+            } else {
+                uM.style.display = 'none';
+                wM.style.display = 'block';
+                bW.style.borderColor = 'var(--teal)';
+                bW.style.background = 'var(--teal-light)';
+                bW.querySelector('i').style.color = 'var(--teal)';
+                bU.style.borderColor = 'var(--border)';
+                bU.style.background = 'var(--surface-2)';
+                bU.querySelector('i').style.color = 'var(--text-2)';
+            }
+        }
+
+        let searchTimer;
+        function searchUsername(q) {
+            clearTimeout(searchTimer);
+            const results = document.getElementById('userSearchResults');
+
+            if (q.length < 2) {
+                results.style.display = 'none';
+                return;
+            }
+
+            searchTimer = setTimeout(() => {
+                fetch('/Beneficiary/SearchUsers?username=' + encodeURIComponent(q))
+                    .then(r => r.json())
+                    .then(users => {
+                        if (!users.length) {
+                            results.innerHTML = '<div style="padding:12px;color:var(--text-3);font-size:13px">' +
+                                'No user found with @@' + q + '</div>';
+                        } else {
+                            results.innerHTML = users.map(u =>
+                                `<div onclick='selectUser(${JSON.stringify(u)})'
+                                    style="display:flex;align-items:center;gap:12px;padding:10px;
+                                           border-radius:var(--r-sm);cursor:pointer;transition:all .15s;
+                                           border:1px solid var(--border)"
+                                    onmouseover="this.style.background='var(--teal-light)'"
+                                    onmouseout="this.style.background=''">
+                                    <div style="width:38px;height:38px;border-radius:50%;
+                                                background:var(--teal-light);display:flex;
+                                                align-items:center;justify-content:center;
+                                                font-weight:700;color:var(--teal)">
+                                        ${u.initials}
+                                    </div>
+                                    <div>
+                                        <div style="font-weight:600">${u.name}</div>
+                                        <div style="font-size:12px;color:var(--text-3)">@@${u.userName}</div>
+                                    </div>
+                                </div>`
+                            ).join('');
+                        }
+                        results.style.display = 'block';
+                    })
+                    .catch(() => {
+                        results.innerHTML = '<div style="padding:12px;color:var(--red);font-size:13px">' +
+                            'Search error. Try again.</div>';
+                        results.style.display = 'block';
+                    });
+            }, 300);
+        }
+
+        function selectUser(user) {
+            switchMethod('wallet');
+            const nickInput = document.querySelector('[name="Nickname"]');
+            const nameInput = document.querySelector('[name="ReceiverName"]');
+            const walletInput = document.querySelector('[name="ReceiverWalletSerial"]');
+
+            if (nickInput)
+            { 
+                nickInput.value = user.userName;
+            }
+            if (nameInput)
+            {
+                nameInput.value = user.name;
+            }
+             if (walletInput && user.walletSerial)
+             {
+                 walletInput.value = user.walletSerial;
+             }
+        }
+    </script>
+}

@@ -1,0 +1,123 @@
+﻿@model MoneyTransfer.Models.Agent
+@{
+    ViewData["Title"] = "Set Store Location";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="page-header">
+            <div>
+                <h2>Set Store Location</h2>
+                <p>Click on the map to pin your store location</p>
+            </div>
+            <a asp-action="Index" class="btn-tp-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+
+        <div class="tp-card mb-3">
+            <div style="font-size:13px;color:var(--text-2);
+                        margin-bottom:12px;
+                        display:flex;align-items:center;gap:8px">
+                <i class="bi bi-info-circle"
+                   style="color:var(--teal)"></i>
+                Click anywhere on the map to set your store location.
+                Current:
+                <strong id="coordDisplay">
+                    @if (Model.Latitude != 0 && Model.Longitude != 0)
+                    {
+                        @($"{Model.Latitude:F4}, {Model.Longitude:F4}")
+                    }
+                    else
+                    {
+                        <text>Not set</text>
+                    }
+                </strong>
+            </div>
+
+            <div id="locationMap"
+                 style="height:400px;border-radius:var(--r-md);
+                        overflow:hidden;
+                        border:1px solid var(--border)">
+            </div>
+        </div>
+
+        <form asp-action="EditLocation"
+              asp-route-id="@Model.Id"
+              method="post">
+            <input type="hidden" name="latitude"
+                   id="latInput"
+                   value="@Model.Latitude" />
+            <input type="hidden" name="longitude"
+                   id="lngInput"
+                   value="@Model.Longitude" />
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn-tp-primary">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    Save Location
+                </button>
+                <a asp-action="Index" class="btn-tp-secondary">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" />
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js">
+    </script>
+    <script>
+        const initLat = @(Model.Latitude != 0
+                    ? Model.Latitude.ToString("F6")
+                    : "33.8547");
+    const initLng = @(Model.Longitude != 0
+                ? Model.Longitude.ToString("F6")
+                : "35.8623");
+
+    const map = L.map('locationMap')
+        .setView([initLat, initLng],
+            @(Model.Latitude != 0 ? 15 : 9));
+
+        L.tileLayer(
+            'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            { attribution: '© OpenStreetMap contributors' }
+        ).addTo(map);
+
+        // Show existing marker if set
+        let marker = null;
+    @if (Model.Latitude != 0 && Model.Longitude != 0)
+        {
+                <text>
+                marker = L.marker([@Model.Latitude, @Model.Longitude])
+                    .addTo(map)
+                    .bindPopup('@Html.Raw(Model.StoreName)')
+                    .openPopup();
+                </text>
+        }
+
+        // Click to place marker
+        map.on('click', function(e) {
+            const lat = e.latlng.lat;
+            const lng = e.latlng.lng;
+
+            if (marker) map.removeLayer(marker);
+            marker = L.marker([lat, lng])
+                .addTo(map)
+                .bindPopup('Your store location')
+                .openPopup();
+
+            document.getElementById('latInput').value =
+                lat.toFixed(6);
+            document.getElementById('lngInput').value =
+                lng.toFixed(6);
+            document.getElementById('coordDisplay').textContent =
+                lat.toFixed(4) + ', ' + lng.toFixed(4);
+        });
+    </script>
+}

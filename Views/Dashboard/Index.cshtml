@@ -1,0 +1,277 @@
+﻿@model MoneyTransfer.ViewModels.DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div style="margin-bottom:24px">
+    <h2 style="font-size:22px;font-weight:800;color:var(--text-1);letter-spacing:-0.4px">
+        Good @(DateTime.Now.Hour < 12 ? "Morning" : DateTime.Now.Hour < 17 ? "Afternoon" : "Evening"),
+        @Model.FullName.Split(' ')[0] 👋
+    </h2>
+    <p style="font-size:13px;color:var(--text-3);margin-top:3px">
+        Here's what's happening with your account today.
+    </p>
+</div>
+
+<div class="row g-3 mb-3">
+
+    <div class="col-lg-4">
+        <div class="balance-card h-100">
+            <div class="balance-label">Available Balance</div>
+
+            @{
+                var activeWallet = Model.Wallets
+                .FirstOrDefault(w => w.IsDefault)
+                ?? Model.Wallets.FirstOrDefault();
+            }
+
+            <div class="balance-amount">
+                @if (activeWallet != null)
+                {
+                    var wholePart = (long)activeWallet.Balance;
+                    var decPart = (int)Math.Round(
+                    (activeWallet.Balance - wholePart) * 100);
+                    <text>
+                        @activeWallet.CurrencySymbol@wholePart.ToString("N0")<span class="decimals">.@decPart.ToString("00")</span>
+                    </text>
+                }
+                else
+                {
+                    <text>$0<span class="decimals">.00</span></text>
+                }
+            </div>
+
+            <div style="font-size:11px;opacity:.75;
+                        font-family:var(--font-mono);
+                        letter-spacing:.4px;margin-top:6px">
+                Account: @Model.AccountSerial
+            </div>
+            <div style="font-size:11px;opacity:.65;
+                        font-family:var(--font-mono);
+                        letter-spacing:.4px;margin-top:2px">
+                Wallet:
+                @(activeWallet?.SerialNumber ?? "—")
+            </div>
+
+            <div class="currency-pills" style="margin-top:14px">
+                @foreach (var w in Model.Wallets)
+                {
+                    <form asp-controller="Dashboard"
+                          asp-action="SetDefaultWallet"
+                          method="post"
+                          style="display:inline;margin:0">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="walletId"
+                               value="@w.Id" />
+                        <button type="submit"
+                                class="currency-pill @(w.IsDefault ? "active" : "")"
+                                style="background:transparent;
+                                           border:1.5px solid rgba(255,255,255,@(w.IsDefault ? "1" : "0.45"));
+                                           cursor:pointer;font-weight:700;
+                                           color:rgba(255,255,255,@(w.IsDefault ? "1" : "0.8"))">
+                            @w.CurrencyCode
+                        </button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-icon sent">
+                        <i class="bi bi-arrow-up-right"></i>
+                    </div>
+                    <div class="stat-value">$@Model.TotalSent.ToString("N0")</div>
+                    <div class="stat-label">Total Sent</div>
+                    <div class="stat-sub">
+                        <i class="bi bi-arrow-up"></i>
+                        @Model.SentThisMonth this month
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-icon received">
+                        <i class="bi bi-arrow-down-left"></i>
+                    </div>
+                    <div class="stat-value">$@Model.TotalReceived.ToString("N0")</div>
+                    <div class="stat-label">Total Received</div>
+                    <div class="stat-sub">
+                        <i class="bi bi-arrow-up"></i>
+                        @Model.ReceivedThisMonth this month
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-icon beneficiaries">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <div class="stat-value">@Model.ActiveBeneficiaries</div>
+                    <div class="stat-label">Beneficiaries</div>
+                    <div class="stat-sub neutral">
+                        <i class="bi bi-globe"></i>
+                        @Model.BeneficiaryCountries countries
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="tp-card" style="padding:16px 20px">
+                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+                        <a asp-controller="Transfer" asp-action="Create"
+                           class="quick-action">
+                            <div class="qa-icon send">
+                                <i class="bi bi-send-fill"></i>
+                            </div>
+                            <span class="qa-label">Send Money</span>
+                        </a>
+                        <a asp-controller="TopUp" asp-action="Create"
+                           class="quick-action">
+                            <div class="qa-icon topup">
+                                <i class="bi bi-plus-circle-fill"></i>
+                            </div>
+                            <span class="qa-label">Top Up</span>
+                        </a>
+                        <a asp-controller="Wallet" asp-action="Index"
+                           class="quick-action">
+                            <div class="qa-icon wallet">
+                                <i class="bi bi-wallet2"></i>
+                            </div>
+                            <span class="qa-label">My Wallets</span>
+                        </a>
+                        <a asp-controller="Beneficiary" asp-action="Index"
+                           class="quick-action">
+                            <div class="qa-icon rate">
+                                <i class="bi bi-people-fill"></i>
+                            </div>
+                            <span class="qa-label">Beneficiaries</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+
+    <div class="col-lg-8">
+        <div class="tp-card">
+            <div class="tp-card-header">
+                <span class="tp-card-title">
+                    <i class="bi bi-clock-history" style="color:var(--teal);margin-right:6px"></i>
+                    Recent Transactions
+                </span>
+                <a asp-controller="Transaction" asp-action="Index"
+                   class="tp-card-link">View all →</a>
+            </div>
+
+            @if (!Model.RecentTransactions.Any())
+            {
+                <div class="empty-state">
+                    <i class="bi bi-receipt"></i>
+                    <p>No transactions yet. Make your first transfer!</p>
+                    <a asp-controller="Transfer" asp-action="Create"
+                       class="btn-tp-primary">
+                        <i class="bi bi-send"></i> Send Money
+                    </a>
+                </div>
+            }
+            else
+            {
+                @foreach (var tx in Model.RecentTransactions)
+                {
+                    <div class="transaction-item">
+                        <div class="tx-avatar @(tx.IsSent ? "sent" : "received")"
+                             style="@(!string.IsNullOrEmpty(tx.ReceiverPictureUrl) ? "padding:0;overflow:hidden" : "")">
+                            @if (!string.IsNullOrEmpty(tx.ReceiverPictureUrl))
+                            {
+                                <img src="@tx.ReceiverPictureUrl"
+                                     style="width:100%;height:100%;object-fit:cover;border-radius:var(--r-sm)" />
+                            }
+                            else
+                            {
+                                @tx.ReceiverInitials
+                            }
+                        </div>
+                        <div class="tx-info">
+                            <div class="tx-name">@tx.ReceiverName</div>
+                            <div class="tx-date">
+                                @tx.CreatedAt.ToString("MMM dd, yyyy")
+                                <span class="tx-status @tx.Status.ToLower()">
+                                    @tx.Status
+                                </span>
+                            </div>
+                        </div>
+                        <div style="text-align:right">
+                            <div class="tx-amount @(tx.IsSent ? "sent" : "received")">
+                                @(tx.IsSent ? "−" : "+")@tx.CurrencySymbol@tx.Amount.ToString("N2")
+                            </div>
+                            <a asp-controller="Transaction" asp-action="Details"
+                               asp-route-id="@tx.Id"
+                               style="font-size:11px;color:var(--teal);text-decoration:none">
+                                Details
+                            </a>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="tp-card">
+            <div class="tp-card-header">
+                <span class="tp-card-title">
+                    <i class="bi bi-wallet2" style="color:var(--teal);margin-right:6px"></i>
+                    My Wallets
+                </span>
+                <a asp-controller="Wallet" asp-action="Create"
+                   class="tp-card-link">+ New</a>
+            </div>
+
+            @if (!Model.Wallets.Any())
+            {
+                <div class="empty-state">
+                    <i class="bi bi-wallet2"></i>
+                    <p>No wallets yet</p>
+                    <a asp-controller="Wallet" asp-action="Create"
+                       class="btn-tp-primary" style="font-size:12px;padding:8px 16px">
+                        Create Wallet
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="d-flex flex-column gap-2">
+                    @foreach (var w in Model.Wallets)
+                    {
+                        <div class="wallet-card @(w.IsDefault ? "default" : "")">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="wallet-currency">@w.CurrencyCode</div>
+                                @if (w.IsDefault)
+                                {
+                                    <span class="badge-tp success"
+                                          style="font-size:10px">Default</span>
+                                }
+                            </div>
+                            <div class="wallet-balance">
+                                @w.CurrencySymbol@w.Balance.ToString("N2")
+                            </div>
+                            <div class="wallet-serial">@w.SerialNumber</div>
+                        </div>
+                    }
+                    <a asp-controller="TopUp" asp-action="Create"
+                       class="btn-tp-primary"
+                       style="justify-content:center;font-size:12px;padding:9px">
+                        <i class="bi bi-plus-circle"></i> Add Funds
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>

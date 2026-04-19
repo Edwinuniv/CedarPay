@@ -1,0 +1,185 @@
+﻿@model List<MoneyTransfer.Models.Conversation>
+@{
+    ViewData["Title"] = "Messages";
+    string currentUserId = ViewBag.CurrentUserId ?? "";
+}
+
+<div class="page-header">
+    <div>
+        <h2>Messages</h2>
+        <p>Your conversations</p>
+    </div>
+    <a asp-action="New" class="btn-tp-primary">
+        <i class="bi bi-pencil-square"></i> New Chat
+    </a>
+</div>
+
+@{
+    var benefsNotInChat =
+        ViewBag.BeneficiariesNotInChat
+        as List<MoneyTransfer.Models.Beneficiary>
+        ?? new List<MoneyTransfer.Models.Beneficiary>();
+}
+
+@if (benefsNotInChat.Any())
+{
+    <div class="tp-card mb-3">
+        <div style="font-size:13px;font-weight:700;
+                        color:var(--text-1);margin-bottom:12px">
+            <i class="bi bi-people-fill"
+               style="color:var(--teal);margin-right:6px"></i>
+            Start a chat with a beneficiary
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+            @foreach (var b in benefsNotInChat)
+            {
+                <form asp-action="FindAndStart"
+                      method="post"
+                      style="display:inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden"
+                           name="phoneNumber"
+                           value="@b.ReceiverPhoneNumber" />
+                    <button type="submit"
+                            style="display:flex;
+                                           align-items:center;
+                                           gap:8px;
+                                           padding:8px 14px;
+                                           border-radius:20px;
+                                           border:1px solid var(--border);
+                                           background:var(--surface-2);
+                                           cursor:pointer;
+                                           transition:var(--transition);
+                                           font-size:13px;
+                                           color:var(--text-1)"
+                            onmouseover="this.style.background='var(--teal-light)';this.style.borderColor='var(--teal)'"
+                            onmouseout="this.style.background='var(--surface-2)';this.style.borderColor='var(--border)'">
+                        <div style="width:28px;height:28px;
+                                            border-radius:50%;
+                                            background:var(--teal-light);
+                                            display:flex;
+                                            align-items:center;
+                                            justify-content:center;
+                                            font-size:11px;
+                                            font-weight:700;
+                                            color:var(--teal)">
+                            @(b.Nickname?.Substring(0, 1).ToUpper() ?? "?")
+                        </div>
+                        @b.Nickname
+                    </button>
+                </form>
+            }
+        </div>
+    </div>
+}
+
+@if (!Model.Any())
+{
+    <div class="tp-card">
+        <div class="empty-state">
+            <i class="bi bi-chat-dots"
+               style="font-size:48px;opacity:.3;
+                              display:block;margin-bottom:12px"></i>
+            <p>No conversations yet.</p>
+            <a asp-action="New" class="btn-tp-primary">
+                <i class="bi bi-plus"></i> Start a Chat
+            </a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="tp-card" style="padding:0;overflow:hidden">
+        @foreach (var c in Model)
+        {
+            var other = c.Participants
+            .FirstOrDefault(p => p.UserId != currentUserId);
+            var lastMsg = c.Messages.OrderByDescending(m => m.SentAt).FirstOrDefault();
+            var unread = c.Messages.Count(m => !m.IsRead && m.SenderId != currentUserId);
+
+            <a asp-action="Open" asp-route-id="@c.Id"
+               style="display:flex;align-items:center;
+                                      gap:14px;padding:14px 20px;
+                                      text-decoration:none;
+                                      border-bottom:1px solid var(--border);
+                                      transition:all .15s;
+                                      background:@(unread > 0 ? "rgba(0,184,148,0.04)" : "transparent")"
+               onmouseover="this.style.background='var(--surface-2)'"
+               onmouseout="this.style.background='@(unread > 0 ? "rgba(0,184,148,0.04)" : "transparent")'">
+
+                <div style="flex-shrink:0;position:relative">
+                    @if (!string.IsNullOrEmpty(other?.User?.ProfilePictureUrl))
+                    {
+                        <img src="@other.User.ProfilePictureUrl"
+                             style="width:48px;height:48px;
+                                                border-radius:50%;
+                                                object-fit:cover" />
+                    }
+                    else
+                    {
+                        <div style="width:48px;height:48px;
+                                            border-radius:50%;
+                                            background:linear-gradient(135deg,
+                                                var(--teal),var(--teal-mid));
+                                            display:flex;align-items:center;
+                                            justify-content:center;
+                                            font-size:16px;font-weight:700;
+                                            color:#fff">
+                            @(other?.User?.FirstName?.Substring(0, 1) ?? "?")
+                        </div>
+                    }
+                    @if (unread > 0)
+                    {
+                        <div style="position:absolute;top:-2px;
+                                                            right:-2px;width:18px;height:18px;
+                                                            background:var(--teal);
+                                                            border-radius:50%;
+                                                            font-size:10px;font-weight:700;
+                                                            color:#fff;
+                                                            display:flex;align-items:center;
+                                                            justify-content:center;
+                                                            border:2px solid var(--surface)">
+                            @(unread > 9 ? "9+" : unread.ToString())
+                        </div>
+                    }
+                </div>
+
+                <div style="flex:1;min-width:0">
+                    <div style="display:flex;
+                                            justify-content:space-between;
+                                            align-items:center;
+                                            margin-bottom:2px">
+                        <div style="font-weight:@(unread > 0 ? "700" : "600");
+                                                color:var(--text-1);
+                                                font-size:14px">
+                            @(other?.User?.FirstName) @(other?.User?.LastName)
+                        </div>
+                        <div style="font-size:11px;
+                                                color:var(--text-3)">
+                            @(lastMsg?.SentAt.ToString("HH:mm") ?? "")
+                        </div>
+                    </div>
+                    <div style="font-size:13px;
+                                        color:@(unread > 0 ? "var(--text-1)" : "var(--text-3)");
+                                        font-weight:@(unread > 0 ? "500" : "400");
+                                        white-space:nowrap;
+                                        overflow:hidden;
+                                        text-overflow:ellipsis">
+                        @if (lastMsg != null)
+                        {
+                            if (lastMsg.SenderId == currentUserId)
+                            {
+                                <text>You: </text>
+                            }
+                            @lastMsg.Content
+                        }
+                        else
+                        {
+                            <text>No messages yet</text>
+                        }
+                    </div>
+                </div>
+            </a>
+        }
+    </div>
+}

@@ -1,0 +1,115 @@
+﻿@model List<MoneyTransfer.Models.Transaction>
+@{
+    ViewData["Title"] = "All Transactions";
+}
+
+<div class="page-header">
+    <div>
+        <h2>All Transactions</h2>
+        <p>Platform-wide transaction log (last 100)</p>
+    </div>
+    <a asp-action="Index" class="btn-tp-secondary">
+        <i class="bi bi-arrow-left"></i> Back
+    </a>
+</div>
+
+<div class="tp-card mb-3">
+    <input type="text"
+           id="txSearch"
+           class="form-control"
+           placeholder="Search by serial, name..."
+           oninput="filterTransactions(this.value)" />
+</div>
+
+<div class="tp-card">
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <i class="bi bi-receipt"></i>
+            <p>No transactions yet.</p>
+        </div>
+    }
+    else
+    {
+        <table class="tp-table" id="txTable">
+            <thead>
+                <tr>
+                    <th>Serial</th>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Amount</th>
+                    <th>Fee</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var t in Model)
+                {
+                    <tr class="tx-row"
+                        data-search="@t.SerialNumber?.ToLower() @t.SenderWallet?.User?.FirstName?.ToLower() @t.ReceiverWallet?.User?.FirstName?.ToLower()">
+                        <td style="font-family:monospace;
+                                           font-size:12px">
+                            @t.SerialNumber
+                        </td>
+                        <td style="font-size:13px">
+                            @t.SenderWallet?.User?.FirstName
+                            @t.SenderWallet?.User?.LastName
+                            <div style="font-size:11px;
+                                                color:var(--text-3)">
+                                @t.SenderCurrency?.Code
+                            </div>
+                        </td>
+                        <td style="font-size:13px">
+                            @(t.ReceiverWallet?.User != null
+                                                ? $"{t.ReceiverWallet.User.FirstName} {t.ReceiverWallet.User.LastName}"
+                                                : t.ReceiverName ?? "Mobile")
+                    <div style="font-size:11px;
+                                        color:var(--text-3)">
+                        @t.ReceiverCurrency?.Code
+                    </div>
+                </td>
+                <td style="font-weight:600">
+                    @t.SenderCurrency?.Symbol@t.Amount.ToString("N2")
+                </td>
+                <td style="font-size:12px;
+                                   color:var(--text-3)">
+                    @if (t.FeeWaived)
+                            {
+                                <span class="badge-tp success">
+                                    Free
+                                </span>
+                            }
+                            else
+                            {
+                                @t.FeeAmount.ToString("N2")
+                            }
+                        </td>
+                        <td>
+                            <span class="tx-status @t.Status.ToString().ToLower()">
+                                @t.Status
+                            </span>
+                        </td>
+                        <td style="font-size:12px;
+                                           color:var(--text-3)">
+                            @t.CreatedAt.ToString("MMM dd, HH:mm")
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function filterTransactions(q) {
+            const lower = q.toLowerCase();
+            document.querySelectorAll('.tx-row').forEach(row => {
+                const data = row.dataset.search || '';
+                row.style.display =
+                    !q || data.includes(lower) ? '' : 'none';
+            });
+        }
+    </script>
+}

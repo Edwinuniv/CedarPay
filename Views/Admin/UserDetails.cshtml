@@ -1,0 +1,210 @@
+﻿@model MoneyTransfer.Models.User
+@{
+    ViewData["Title"] = "User Details";
+    var wallets = ViewBag.Wallets as
+        List<MoneyTransfer.Models.Wallet>
+        ?? new List<MoneyTransfer.Models.Wallet>();
+    var kyc = ViewBag.KYC as MoneyTransfer.Models.KYCDocument;
+    var roles = ViewBag.Roles as
+        IList<string> ?? new List<string>();
+}
+
+<div class="page-header">
+    <div>
+        <h2>User Details</h2>
+        <p>@Model.FirstName @Model.LastName</p>
+    </div>
+    <div style="display:flex;gap:10px">
+        <a asp-controller="Admin" asp-action="UserReport"
+           asp-route-userId="@Model.Id"
+           target="_blank"
+           class="btn-tp-secondary">
+            <i class="bi bi-file-earmark-text"></i>
+            Generate Report
+        </a>
+        <a asp-action="Users" class="btn-tp-secondary">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="tp-card">
+            <div class="tp-card-header">
+                <span class="tp-card-title">
+                    Personal Information
+                </span>
+            </div>
+            <div style="display:flex;flex-direction:column;
+                        gap:8px;font-size:13px">
+                @foreach (var item in new[]
+                                {
+                                ("Name", $"{Model.FirstName} {Model.LastName}"),
+                                ("Email", Model.Email ?? "—"),
+                                ("Phone", Model.PhoneNumber ?? "—"),
+                                ("Gender", Model.Gender ?? "—"),
+                                ("DOB", Model.DateOfBirth.Year > 1 ? Model.DateOfBirth.ToString("MMM dd, yyyy") : "—"),
+                                ("Nationality", Model.Nationality ?? "—"),
+                                ("Country", Model.Country ?? "—"),
+                                ("City", Model.City ?? "—"),
+                                ("Account Type", Model.AccountType ?? "—"),
+                                ("Occupation", Model.Occupation ?? "—"),
+                                ("Annual Income", Model.AnnualIncomeUSD ?? "—"),
+                                })
+                {
+                    <div style="display:flex;
+                                        justify-content:space-between;
+                                        padding:8px 0;
+                                        border-bottom:1px solid var(--border)">
+                        <span style="color:var(--text-3)">
+                            @item.Item1
+                        </span>
+                        <span style="font-weight:600">
+                            @item.Item2
+                        </span>
+                    </div>
+                }
+                <div style="display:flex;
+                            justify-content:space-between;
+                            padding:8px 0">
+                    <span style="color:var(--text-3)">Roles</span>
+                    <span>
+                        @foreach (var r in roles)
+                        {
+                            <span class="badge-tp @(r == "admin" ? "info" : r == "agent" ? "success" : "default")"
+                                  style="margin-right:3px">
+                                @r
+                            </span>
+                        }
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="tp-card mb-3">
+            <div class="tp-card-header">
+                <span class="tp-card-title">
+                    KYC Documents
+                </span>
+                @if (kyc != null)
+                {
+                    <span class="badge-tp @(kyc.Status == MoneyTransfer.Models.KYCStatus.Approved ? "success" : kyc.Status == MoneyTransfer.Models.KYCStatus.Pending ? "warning" : "danger")">
+                        @kyc.Status
+                    </span>
+                }
+            </div>
+            @if (kyc != null)
+            {
+                <div style="font-size:13px;margin-bottom:10px">
+                    <strong>@kyc.DocumentType</strong>
+                    — @kyc.DocumentNumber
+                </div>
+                <div style="display:flex;gap:10px">
+                    @if (!string.IsNullOrEmpty(kyc.FrontImageUrl))
+                    {
+                        <a href="@kyc.FrontImageUrl"
+                           target="_blank">
+                            <img src="@kyc.FrontImageUrl"
+                                 style="height:80px;
+                                                        border-radius:var(--r-sm);
+                                                        object-fit:cover;
+                                                        border:1px solid var(--border)" />
+                        </a>
+                    }
+                    @if (!string.IsNullOrEmpty(kyc.BackImageUrl))
+                    {
+                        <a href="@kyc.BackImageUrl"
+                           target="_blank">
+                            <img src="@kyc.BackImageUrl"
+                                 style="height:80px;
+                                                        border-radius:var(--r-sm);
+                                                        object-fit:cover;
+                                                        border:1px solid var(--border)" />
+                        </a>
+                    }
+                </div>
+                @if (kyc.Status == MoneyTransfer.Models.KYCStatus.Pending)
+                {
+                    <div style="display:flex;gap:8px;margin-top:12px">
+                        <form asp-controller="Admin"
+                              asp-action="ApproveKYC"
+                              asp-route-id="@kyc.Id"
+                              method="post">
+                            <button type="submit"
+                                    class="btn-tp-success"
+                                    style="padding:7px 14px;
+                                                           font-size:12px">
+                                Approve
+                            </button>
+                        </form>
+                        <form asp-controller="Admin"
+                              asp-action="RejectKYC"
+                              asp-route-id="@kyc.Id"
+                              method="post"
+                              style="display:flex;gap:6px">
+                            <input type="text" name="reason"
+                                   class="form-control"
+                                   placeholder="Rejection reason"
+                                   style="font-size:12px" />
+                            <button type="submit"
+                                    class="btn-tp-danger"
+                                    style="padding:7px 14px;
+                                                           font-size:12px">
+                                Reject
+                            </button>
+                        </form>
+                    </div>
+                }
+            }
+            else
+            {
+                <p style="color:var(--text-3);font-size:13px">
+                    No KYC submitted yet.
+                </p>
+            }
+        </div>
+
+        <div class="tp-card">
+            <div class="tp-card-header">
+                <span class="tp-card-title">Wallets</span>
+            </div>
+            @if (wallets.Any())
+            {
+                @foreach (var w in wallets)
+                {
+                    <div class="wallet-card @(w.IsDefault ? "default" : "")"
+                         style="margin-bottom:8px">
+                        <div style="display:flex;
+                                                    justify-content:space-between">
+                            <div class="wallet-currency">
+                                @w.Currency?.Code
+                            </div>
+                            @if (w.IsDefault)
+                            {
+                                <span class="badge-tp success"
+                                      style="font-size:10px">
+                                    Default
+                                </span>
+                            }
+                        </div>
+                        <div class="wallet-balance">
+                            @w.Currency?.Symbol@w.Balance.ToString("N2")
+                        </div>
+                        <div class="wallet-serial">
+                            @w.SerialNumber
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <p style="color:var(--text-3);font-size:13px">
+                    No wallets yet.
+                </p>
+            }
+        </div>
+    </div>
+</div>

@@ -1,0 +1,150 @@
+﻿@model MoneyTransfer.Models.AgentApplication
+@{
+    ViewData["Title"] = "Apply to Become an Agent";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="page-header">
+            <div>
+                <h2>Become an Agent</h2>
+                <p>Submit your store details for admin review</p>
+            </div>
+        </div>
+
+        @if (ViewBag.RejectionReason != null)
+        {
+            <div class="alert-tp error mb-3"
+                 style="background:var(--red-light);
+                            border:1px solid rgba(255,107,107,.25)">
+                <i class="bi bi-exclamation-circle"></i>
+                <span style="color:var(--red)">
+                    <strong>Previous rejection reason:</strong>
+                    @ViewBag.RejectionReason
+                </span>
+            </div>
+        }
+
+        <div style="background:var(--teal-light);border:1px solid rgba(0,184,148,.2);
+                    border-radius:var(--r-md);padding:14px 18px;margin-bottom:20px;
+                    font-size:13px;color:var(--teal-dark)">
+            <i class="bi bi-info-circle-fill"></i>
+            <strong>How it works:</strong> Submit your application below.
+            An admin will review it and you will be notified of the decision.
+            Once approved, you will gain access to the Agent dashboard.
+        </div>
+
+        <div class="tp-card">
+            <form asp-action="Apply" method="post" class="tp-form">
+                <div asp-validation-summary="All" class="alert-tp error"
+                     style="@(ViewData.ModelState.ErrorCount > 0 ? "" : "display:none")">
+                </div>
+
+                <div style="font-size:13px;font-weight:700;color:var(--text-1);
+                            padding-bottom:10px;border-bottom:1px solid var(--border)">
+                    Store Information
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Your Name</label>
+                            <input asp-for="AgentName" class="form-control"
+                                   placeholder="Full name" />
+                            <span asp-validation-for="AgentName"
+                                  class="text-danger" style="font-size:12px"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Store Name</label>
+                            <input asp-for="StoreName" class="form-control"
+                                   placeholder="Business name" />
+                            <span asp-validation-for="StoreName"
+                                  class="text-danger" style="font-size:12px"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Phone Number</label>
+                            <input asp-for="PhoneNumber" class="form-control"
+                                   placeholder="+961 XX XXX XXX" />
+                            <span asp-validation-for="PhoneNumber"
+                                  class="text-danger" style="font-size:12px"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Business Email</label>
+                            <input asp-for="Email" class="form-control"
+                                   type="email" placeholder="store@example.com" />
+                            <span asp-validation-for="Email"
+                                  class="text-danger" style="font-size:12px"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="font-size:13px;font-weight:700;color:var(--text-1);
+                            padding:16px 0 10px;border-bottom:1px solid var(--border)">
+                    Location
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            <label class="form-label">Street</label>
+                            <input asp-for="Street" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">City</label>
+                            <input asp-for="City" class="form-control"
+                                   placeholder="Beirut" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Region</label>
+                            <input asp-for="Region" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Country</label>
+                            <input asp-for="Country" class="form-control"
+                                   placeholder="Lebanon" />
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-group">
+                            <label class="form-label">Working Hours</label>
+                            <input asp-for="WorkingHours" class="form-control"
+                                   placeholder="Mon-Fri 9AM-6PM" />
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea asp-for="Description" class="form-control"
+                                      rows="2"
+                                      style="resize:vertical"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn-tp-primary">
+                        <i class="bi bi-send"></i> Submit Application
+                    </button>
+                    <a asp-controller="Dashboard" asp-action="Index"
+                       class="btn-tp-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

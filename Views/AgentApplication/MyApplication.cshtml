@@ -1,0 +1,117 @@
+﻿@model List<MoneyTransfer.Models.AgentApplication>
+@{
+    ViewData["Title"] = "My Agent Application";
+}
+
+<div class="page-header">
+    <div>
+        <h2>My Agent Application</h2>
+        <p>Track the status of your application</p>
+    </div>
+    @if (!Model.Any())
+    {
+        <a asp-action="Apply" class="btn-tp-primary">
+            <i class="bi bi-shop"></i> Apply Now
+        </a>
+    }
+</div>
+
+@if (!Model.Any())
+{
+    <div class="tp-card">
+        <div class="empty-state">
+            <i class="bi bi-shop"></i>
+            <p>You haven't applied to become an agent yet.</p>
+            <a asp-action="Apply" class="btn-tp-primary">
+                <i class="bi bi-shop"></i> Apply to Become an Agent
+            </a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="d-flex flex-column gap-3">
+        @foreach (var app in Model)
+        {
+            <div class="tp-card">
+                <div style="display:flex;align-items:flex-start;
+                                    justify-content:space-between;gap:12px">
+                    <div style="flex:1">
+                        <div style="display:flex;align-items:center;gap:10px;
+                                            margin-bottom:12px">
+                            <div style="font-size:16px;font-weight:700;
+                                                color:var(--text-1)">
+                                @app.StoreName
+                            </div>
+                            @{
+                                var badgeClass = app.Status switch
+                                {
+                                    MoneyTransfer.Models.ApplicationStatus.Pending
+                                    => "warning",
+                                    MoneyTransfer.Models.ApplicationStatus.Approved
+                                    => "success",
+                                    MoneyTransfer.Models.ApplicationStatus.Rejected
+                                    => "danger",
+                                    _ => "default"
+                                };
+                            }
+                            <span class="badge-tp @badgeClass">
+                                @app.Status
+                            </span>
+                        </div>
+
+                        <div style="display:grid;grid-template-columns:1fr 1fr;
+                                            gap:8px;font-size:13px;color:var(--text-2)">
+                            <div>
+                                <i class="bi bi-person"></i>
+                                @app.AgentName
+                            </div>
+                            <div>
+                                <i class="bi bi-telephone"></i>
+                                @app.PhoneNumber
+                            </div>
+                            <div>
+                                <i class="bi bi-geo-alt"></i>
+                                @app.City, @app.Country
+                            </div>
+                            <div>
+                                <i class="bi bi-clock"></i>
+                                @app.WorkingHours
+                            </div>
+                        </div>
+
+                        @if (app.Status == MoneyTransfer.Models.ApplicationStatus.Rejected
+                                        && !string.IsNullOrEmpty(app.RejectionReason))
+                        {
+                            <div style="margin-top:12px;padding:10px 14px;
+                                                    background:var(--red-light);
+                                                    border-radius:var(--r-sm);
+                                                    font-size:13px;color:var(--red)">
+                                <i class="bi bi-exclamation-circle"></i>
+                                <strong>Rejection reason:</strong>
+                                @app.RejectionReason
+                            </div>
+                        }
+
+                        @if (app.Status == MoneyTransfer.Models.ApplicationStatus.Approved)
+                        {
+                            <div style="margin-top:12px;padding:10px 14px;
+                                                    background:var(--teal-light);
+                                                    border-radius:var(--r-sm);
+                                                    font-size:13px;color:var(--teal-dark)">
+                                <i class="bi bi-check-circle-fill"></i>
+                                Approved on @app.ReviewedAt?.ToString("MMM dd, yyyy")
+                            </div>
+                        }
+                    </div>
+
+                    <div style="font-size:11px;color:var(--text-3);
+                                        text-align:right;flex-shrink:0">
+                        Submitted<br />
+                        @app.SubmittedAt.ToString("MMM dd, yyyy")
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

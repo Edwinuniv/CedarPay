@@ -1,0 +1,79 @@
+﻿@model MoneyTransfer.Models.FeePolicy
+@{
+    ViewData["Title"] = "Fee Settings";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="page-header">
+            <div>
+                <h2>Fee Settings</h2>
+                <p>Configure transfer fees platform-wide</p>
+            </div>
+            <a asp-action="Index" class="btn-tp-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+
+        <div class="tp-card">
+            <form asp-action="FeeSettings" method="post"
+                  class="tp-form">
+                @Html.AntiForgeryToken()
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Fee Percentage
+                        <span style="font-size:11px;
+                                     color:var(--text-3)">
+                            (e.g. 0.02 = 2%)
+                        </span>
+                    </label>
+                    <input asp-for="FeePercentage"
+                           class="form-control"
+                           type="number"
+                           step="0.001" min="0" max="1" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Fixed Fee (USD)
+                    </label>
+                    <input asp-for="FixedFee"
+                           class="form-control"
+                           type="number"
+                           step="0.01" min="0" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Free Transaction Every N Transfers
+                        <span style="font-size:11px;
+                                     color:var(--text-3)">
+                            (e.g. 10 = every 10th is free)
+                        </span>
+                    </label>
+                    <input asp-for="FreeTransactionThreshold"
+                           class="form-control"
+                           type="number" min="1" />
+                </div>
+
+                <div style="background:var(--surface-2);
+                            border-radius:var(--r-sm);
+                            padding:14px;font-size:13px;
+                            color:var(--text-2);
+                            margin-bottom:4px">
+                    <strong>Current rates:</strong><br />
+                    Fee = @((Model.FeePercentage * 100).ToString("F1"))%
+                    + $@Model.FixedFee.ToString("F2") fixed<br />
+                    Free every @Model.FreeTransactionThreshold
+                    transactions
+                </div>
+
+                <button type="submit" class="btn-tp-primary">
+                    <i class="bi bi-check-lg"></i>
+                    Save Fee Settings
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

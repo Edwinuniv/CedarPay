@@ -1,0 +1,148 @@
+﻿@model List<MoneyTransfer.ViewModels.TransactionViewModel>
+@{
+    ViewData["Title"] = "Transactions";
+}
+
+<div class="page-header">
+    <div>
+        <h2>Transaction History</h2>
+        <p>All your transfers and payments</p>
+    </div>
+    <a asp-controller="Transfer" asp-action="Create"
+       class="btn-tp-primary">
+        <i class="bi bi-send"></i> Send Money
+    </a>
+</div>
+
+<div class="tp-card mb-3">
+    <input type="text"
+           id="txSearch"
+           class="form-control"
+           placeholder="Search by name or wallet serial (WAL-2026-XXXXX)..."
+           oninput="filterTx(this.value)" />
+</div>
+
+@if (!Model.Any())
+{
+    <div class="tp-card">
+        <div class="empty-state">
+            <i class="bi bi-receipt"></i>
+            <p>No transactions yet.</p>
+            <a asp-controller="Transfer" asp-action="Create"
+               class="btn-tp-primary">
+                <i class="bi bi-send"></i> Make Your First Transfer
+            </a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="tp-card">
+        <table class="tp-table" id="txTable">
+            <thead>
+                <tr>
+                    <th>Transaction</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Fee</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var tx in Model)
+                {
+                    <tr class="tx-row"
+                        data-name="@tx.OtherPartyName.ToLower()"
+                        data-tx-serial="@tx.SerialNumber.ToLower()"
+                        data-wallet-serial="@(tx.SenderWalletSerial?.ToLower() ?? "") @(tx.ReceiverWalletSerial?.ToLower() ?? "")">
+                        <td>
+                            <div style="display:flex;align-items:center;gap:10px">
+                                <div class="tx-avatar @(tx.IsSent ? "sent" : "received")"
+                                     style="@(!string.IsNullOrEmpty(tx.OtherPartyPictureUrl) ? "padding:0;overflow:hidden" : "")">
+                                    @if (!string.IsNullOrEmpty(tx.OtherPartyPictureUrl))
+                                    {
+                                        <img src="@tx.OtherPartyPictureUrl"
+                                             style="width:100%;height:100%;object-fit:cover;border-radius:var(--r-sm)" />
+                                    }
+                                    else
+                                    {
+                                        @tx.OtherPartyInitials
+                                    }
+                                </div>
+                                <div>
+                                    <div style="font-weight:600;font-size:13.5px">
+                                        @tx.OtherPartyName
+                                    </div>
+                                    <div style="font-size:11px;color:var(--text-3);font-family:var(--font-mono)">
+                                        @tx.SerialNumber
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge-tp default">
+                                @tx.Type
+                            </span>
+                        </td>
+                        <td>
+                            <span class="tx-amount @(tx.IsSent ? "sent" : "received")">
+                                @(tx.IsSent ? "−" : "+")@tx.CurrencySymbol@tx.Amount.ToString("N2")
+                            </span>
+                        </td>
+                        <td>
+                            @if (tx.FeeWaived)
+                            {
+                                <span class="badge-tp success">
+                                    Free 🎉
+                                </span>
+                            }
+                            else
+                            {
+                                <span style="font-size:13px;color:var(--text-2)">
+                                    $@tx.FeeAmount.ToString("N2")
+                                </span>
+                            }
+                        </td>
+                        <td>
+                            <span class="tx-status @tx.Status.ToLower()">
+                                @tx.Status
+                            </span>
+                        </td>
+                        <td style="font-size:12px;color:var(--text-3)">
+                            @tx.CreatedAt.ToString("MMM dd, yyyy")
+                        </td>
+                        <td>
+                            <a asp-action="Details"
+                               asp-route-id="@tx.Id"
+                               class="tp-card-link">
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        function filterTx(q) {
+            const lower = q.toLowerCase();
+            document.querySelectorAll('.tx-row').forEach(row => {
+                const name = row.dataset.name || '';
+                const walletSerial = row.dataset.walletSerial || '';
+                const txSerial = row.dataset.txSerial || '';
+
+                const show = !q ||
+                    name.includes(lower) ||
+                    walletSerial.includes(lower) ||
+                    txSerial.includes(lower);
+
+                row.style.display = show ? '' : 'none';
+            });
+        }
+    </script>
+}

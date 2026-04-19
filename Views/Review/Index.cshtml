@@ -1,0 +1,79 @@
+﻿@model List<MoneyTransfer.ViewModels.ReviewViewModel>
+@{
+    ViewData["Title"] = "Reviews";
+    var avg = ViewBag.AverageRating as double? ?? 0;
+}
+
+<div class="page-header">
+    <div>
+        <h2>Reviews</h2>
+        <p>What users say about TransferPay</p>
+    </div>
+    <a asp-action="Create" class="btn-tp-primary">
+        <i class="bi bi-star"></i> Write a Review
+    </a>
+</div>
+
+<!-- Average Rating -->
+<div class="tp-card mb-3">
+    <div style="text-align:center;padding:20px 0">
+        <div style="font-size:52px;font-weight:800;color:var(--text-1);letter-spacing:-2px">
+            @avg.ToString("F1")
+        </div>
+        <div style="font-size:22px;color:#f0a500;margin:4px 0">
+            @for (int i = 1; i <= 5; i++)
+            {
+                <span>@(i <= avg ? "★" : "☆")</span>
+            }
+        </div>
+        <div style="font-size:13px;color:var(--text-3)">
+            Based on @Model.Count review@(Model.Count != 1 ? "s" : "")
+        </div>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="tp-card">
+        <div class="empty-state">
+            <i class="bi bi-star"></i>
+            <p>Be the first to review TransferPay!</p>
+            <a asp-action="Create" class="btn-tp-primary">Write a Review</a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="d-flex flex-column gap-3">
+        @foreach (var r in Model)
+        {
+            <div class="tp-card">
+                <div style="display:flex;align-items:flex-start;gap:12px">
+                    <div class="ben-avatar" style="width:40px;height:40px;font-size:13px;flex-shrink:0">
+                        @r.UserName.Substring(0, 1).ToUpper()
+                    </div>
+                    <div style="flex:1">
+                        <div style="display:flex;align-items:center;justify-content:space-between">
+                            <div style="font-weight:600;font-size:14px">@r.UserName</div>
+                            <div style="font-size:12px;color:var(--text-3)">
+                                @r.CreatedAt.ToString("MMM dd, yyyy")
+                            </div>
+                        </div>
+                        <div style="color:#f0a500;font-size:16px;margin:4px 0">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                <span>@(i <= r.Rating ? "★" : "☆")</span>
+                            }
+                        </div>
+                        @if (!string.IsNullOrEmpty(r.Comment))
+                        {
+                            <div style="font-size:13.5px;color:var(--text-2);margin-top:4px">
+                                @r.Comment
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

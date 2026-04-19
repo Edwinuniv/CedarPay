@@ -1,0 +1,100 @@
+﻿@model MoneyTransfer.ViewModels.ReviewViewModel
+@{
+    ViewData["Title"] = "Write a Review";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="page-header">
+            <div>
+                <h2>Write a Review</h2>
+                <p>Share your experience with CedarPay</p>
+            </div>
+            <a asp-action="MyReviews" class="btn-tp-secondary">
+                <i class="bi bi-arrow-left"></i> My Reviews
+            </a>
+        </div>
+
+        @if (ViewBag.LastReviewDate != null)
+        {
+            <div style="background:var(--teal-light);
+                            border:1px solid rgba(0,184,148,.2);
+                            border-radius:var(--r-md);
+                            padding:12px 16px;margin-bottom:16px;
+                            font-size:13px;color:var(--teal-dark);
+                            display:flex;align-items:center;gap:8px">
+                <i class="bi bi-info-circle-fill"></i>
+                Your last review from
+                <strong>@ViewBag.LastReviewDate</strong>
+                is shown below. Submit to add a new one.
+            </div>
+        }
+
+        <div class="tp-card">
+            <form asp-controller="Review"
+                  asp-action="Store"
+                  method="post"
+                  class="tp-form">
+                @Html.AntiForgeryToken()
+
+                <div class="form-group">
+                    <label class="form-label">Your Rating</label>
+                    <div style="display:flex;gap:8px;font-size:36px;
+                                cursor:pointer;margin-top:4px"
+                         id="starRating">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            <span data-val="@i"
+                                  onclick="setRating(@i)"
+                                  style="color:@(i <= Model.Rating ? "#f0a500" : "#d0d7e0");
+                                             transition:color .15s;
+                                             user-select:none;
+                                             line-height:1">★</span>
+                        }
+                    </div>
+                    <input type="hidden"
+                           name="Rating"
+                           id="ratingInput"
+                           value="@Model.Rating" />
+                    @if (!ViewData.ModelState.IsValid &&
+                                        ViewData.ModelState["Rating"]?.Errors.Any() == true)
+                    {
+                        <span style="font-size:12px;color:var(--red)">
+                            Please select a rating.
+                        </span>
+                    }
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Comment (Optional)</label>
+                    <textarea name="Comment"
+                              class="form-control"
+                              rows="4"
+                              placeholder="Tell us what you think..."
+                              style="resize:vertical">@Model.Comment</textarea>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn-tp-primary">
+                        <i class="bi bi-star-fill"></i> Submit Review
+                    </button>
+                    <a asp-action="MyReviews" class="btn-tp-secondary">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function setRating(val) {
+            document.getElementById('ratingInput').value = val;
+            document.querySelectorAll('#starRating span')
+                .forEach((s, i) => {
+                    s.style.color = i < val ? '#f0a500' : '#d0d7e0';
+                });
+        }
+    </script>
+}

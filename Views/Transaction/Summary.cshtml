@@ -1,0 +1,240 @@
+﻿@model MoneyTransfer.ViewModels.TransactionViewModel
+@{
+    ViewData["Title"] = "Transaction Receipt";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>CedarPay Receipt — @Model.SerialNumber</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            max-width: 500px;
+            margin: 40px auto;
+            padding: 0 20px;
+            color: #1a1a2e;
+        }
+
+        .header {
+            text-align: center;
+            padding: 24px 0 20px;
+            border-bottom: 2px solid #00b894;
+        }
+
+        .brand {
+            font-size: 24px;
+            font-weight: 800;
+            color: #1a1a2e;
+        }
+
+            .brand span {
+                color: #00b894;
+            }
+
+        .amount {
+            font-size: 42px;
+            font-weight: 800;
+            text-align: center;
+            margin: 24px 0;
+            color: @(Model.IsSent ? "#ff6b6b" : "#00b894");
+        }
+
+        .status {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+            .status span {
+                background: #e8faf5;
+                color: #00b894;
+                padding: 4px 16px;
+                border-radius: 20px;
+                font-size: 13px;
+                font-weight: 600;
+            }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+
+            .row .label {
+                color: #888;
+            }
+
+            .row .value {
+                font-weight: 600;
+            }
+
+        .footer {
+            text-align: center;
+            margin-top: 32px;
+            font-size: 12px;
+            color: #888;
+            padding-top: 16px;
+            border-top: 1px solid #eee;
+        }
+
+        .print-btn {
+            display: block;
+            text-align: center;
+            margin: 24px 0;
+        }
+
+        .btn {
+            background: #00b894;
+            color: #fff;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 0 6px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-sec {
+            background: #f5f7fa;
+            color: #1a1a2e;
+            border: 1px solid #dde;
+        }
+
+        @@media print {
+            .print-btn {
+                display: none;
+            }
+
+            body {
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="brand">Cedar<span>Pay</span></div>
+        <div style="font-size:13px;color:#888;margin-top:6px">
+            Official Transaction Receipt
+        </div>
+    </div>
+
+    <div class="amount">
+        @(Model.IsSent ? "−" : "+")@Model.CurrencySymbol@Model.Amount.ToString("N2")
+    </div>
+
+    <div class="status">
+        <span>@Model.Status</span>
+        @if (Model.FeeWaived)
+        {
+            <span style="background:#fff9e6;color:#f0a500;
+                             margin-left:6px">
+                Fee Waived 🎉
+            </span>
+        }
+    </div>
+
+    <div class="row">
+        <span class="label">Transaction ID</span>
+        <span class="value"
+              style="font-family:monospace;font-size:12px">
+            @Model.SerialNumber
+        </span>
+    </div>
+    <div class="row">
+        <span class="label">Date</span>
+        <span class="value">
+            @Model.CreatedAt.ToString("MMM dd, yyyy HH:mm")
+        </span>
+    </div>
+    <div class="row">
+        <span class="label">Type</span>
+        <span class="value">@Model.Type</span>
+    </div>
+    <div class="row">
+        <span class="label">From</span>
+        <span class="value">@Model.SenderName</span>
+    </div>
+    <div class="row">
+        <span class="label">From Wallet</span>
+        <span class="value"
+              style="font-family:monospace;font-size:12px">
+            @Model.SenderWalletSerial
+        </span>
+    </div>
+    <div class="row">
+        <span class="label">To</span>
+        <span class="value">@Model.ReceiverName</span>
+    </div>
+    <div class="row">
+        <span class="label">To Wallet</span>
+        <span class="value"
+              style="font-family:monospace;font-size:12px">
+            @Model.ReceiverWalletSerial
+        </span>
+    </div>
+    <div class="row">
+        <span class="label">Amount Sent</span>
+        <span class="value">
+            @Model.CurrencySymbol@Model.Amount.ToString("N2")
+            @Model.SenderCurrency
+        </span>
+    </div>
+    @if (!string.IsNullOrEmpty(Model.ReceiverCurrency) &&
+        Model.SenderCurrency != Model.ReceiverCurrency)
+    {
+        <div class="row">
+            <span class="label">Amount Received</span>
+            <span class="value">
+                @Model.ConvertedAmount.ToString("N2")
+                @Model.ReceiverCurrency
+            </span>
+        </div>
+        <div class="row">
+            <span class="label">Exchange Rate</span>
+            <span class="value">
+                1 @Model.SenderCurrency =
+                @Model.ExchangeRateUsed.ToString("N4")
+                @Model.ReceiverCurrency
+            </span>
+        </div>
+    }
+    <div class="row">
+        <span class="label">Transaction Fee</span>
+        <span class="value">
+            @(Model.FeeWaived
+                        ? "Free 🎉"
+                        : "$" + Model.FeeAmount.ToString("N2"))
+        </span>
+    </div>
+    @if (!string.IsNullOrEmpty(Model.Description))
+    {
+        <div class="row">
+            <span class="label">Note</span>
+            <span class="value">@Model.Description</span>
+        </div>
+    }
+
+    <div class="footer">
+        <p>CedarPay — Licensed by Banque du Liban</p>
+        <p>This is an official receipt for your records.</p>
+        <p>For support: support@cedarpay.lb</p>
+    </div>
+
+    <div class="print-btn">
+        <button class="btn" onclick="window.print()">
+            🖨️ Print Receipt
+        </button>
+        <a href="/Transaction/Details/@Model.Id"
+           class="btn btn-sec">
+            ← Back
+        </a>
+    </div>
+</body>
+</html>

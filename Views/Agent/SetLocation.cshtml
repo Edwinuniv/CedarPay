@@ -1,0 +1,135 @@
+﻿@model MoneyTransfer.Models.Agent
+@{
+    ViewData["Title"] = "Set Store Location";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="page-header">
+            <div>
+                <h2>Set Store Location</h2>
+                <p>Click on the map to set your store location</p>
+            </div>
+            <a asp-action="Dashboard"
+               class="btn-tp-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+
+        <div style="background:var(--teal-light);
+                    border:1px solid rgba(0,184,148,.2);
+                    border-radius:var(--r-md);
+                    padding:14px 18px;margin-bottom:16px;
+                    font-size:13px;color:var(--teal-dark)">
+            <i class="bi bi-info-circle-fill"></i>
+            <strong>How to set location:</strong>
+            Click anywhere on the map to drop a pin at
+            your store's exact location, then click
+            <strong>Save Location</strong>.
+        </div>
+
+        <div class="tp-card mb-3">
+            <div style="font-size:13px;color:var(--text-2);
+                        margin-bottom:10px;
+                        display:flex;align-items:center;
+                        gap:8px">
+                <i class="bi bi-geo-alt-fill"
+                   style="color:var(--teal)"></i>
+                <span>
+                    Current location:
+                    <strong id="coordDisplay">
+                        @if (Model.Latitude != 0)
+                        {
+                            @($"{Model.Latitude:F5}, {Model.Longitude:F5}")
+                        }
+                        else
+                        {
+                            <text>Not set yet</text>
+                        }
+                    </strong>
+                </span>
+            </div>
+
+            <div id="locationMap"
+                 style="height:450px;
+                        border-radius:var(--r-md);
+                        overflow:hidden;
+                        border:1px solid var(--border)">
+            </div>
+        </div>
+
+        <form asp-action="SetLocation"
+              asp-route-id="@Model.Id" method="post">
+            <input type="hidden" name="latitude"
+                   id="latInput"
+                   value="@Model.Latitude" />
+            <input type="hidden" name="longitude"
+                   id="lngInput"
+                   value="@Model.Longitude" />
+            <div class="d-flex gap-2">
+                <button type="submit"
+                        class="btn-tp-primary"
+                        id="saveBtn">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    Save Location
+                </button>
+                <a asp-action="Dashboard"
+                   class="btn-tp-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" />
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js">
+    </script>
+    <script>
+        var defaultLat = @(Model.Latitude != 0 ? Model.Latitude.ToString("F6", System.Globalization.CultureInfo.InvariantCulture) : "33.8547");
+        var defaultLng = @(Model.Longitude != 0 ? Model.Longitude.ToString("F6", System.Globalization.CultureInfo.InvariantCulture) : "35.8623");
+        var defaultZoom = @(Model.Latitude != 0 ? 15 : 9);
+
+        var map = L.map('locationMap').setView([defaultLat, defaultLng], defaultZoom);
+
+        L.tileLayer(
+            'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 18
+            }
+        ).addTo(map);
+
+        var marker = null;
+
+        @if (Model.Latitude != 0)
+        {
+                <text>
+                marker = L.marker([defaultLat, defaultLng])
+                    .addTo(map)
+                    .bindPopup('<b>@Html.Raw(Model.StoreName)</b><br>Current location')
+                    .openPopup();
+                </text>
+        }
+
+        map.on('click', function(e) {
+            var lat = e.latlng.lat;
+            var lng = e.latlng.lng;
+
+            if (marker) map.removeLayer(marker);
+
+            marker = L.marker([lat, lng]).addTo(map)
+                .bindPopup('<b>@Html.Raw(Model.StoreName)</b><br>' + lat.toFixed(5) + ', ' + lng.toFixed(5))
+                .openPopup();
+
+            document.getElementById('latInput').value = lat.toFixed(6);
+            document.getElementById('lngInput').value = lng.toFixed(6);
+            document.getElementById('coordDisplay').textContent = lat.toFixed(5) + ', ' + lng.toFixed(5);
+
+            document.getElementById('saveBtn').style.background = 'var(--teal)';
+        });
+    </script>
+}

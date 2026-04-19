@@ -1,0 +1,77 @@
+﻿@model MoneyTransfer.ViewModels.TopUpViewModel
+@{
+    ViewData["Title"] = "Top Up";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="page-header">
+            <div>
+                <h2>Top Up Wallet</h2>
+                <p>Add funds to your wallet</p>
+            </div>
+        </div>
+        <div class="tp-card">
+            <form asp-action="Store" method="post" class="tp-form">
+                <div asp-validation-summary="All" class="alert-tp error"
+                     style="@(ViewData.ModelState.ErrorCount > 0 ? "" : "display:none")"></div>
+
+                <div class="form-group">
+                    <label class="form-label">Select Wallet</label>
+                    <select asp-for="WalletId" class="form-select">
+                        <option value="">— Choose wallet —</option>
+                        @foreach (var w in Model.UserWallets)
+                        {
+                            <option value="@w.Id">
+                                @w.CurrencyCode — @w.CurrencySymbol@w.Balance.ToString("N2")
+                                @(w.IsDefault ? "(Default)" : "")
+                            </option>
+                        }
+                    </select>
+                    <span asp-validation-for="WalletId" class="text-danger" style="font-size:12px"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Amount</label>
+                    <input asp-for="Amount" class="form-control"
+                           type="number" step="0.01" min="1"
+                           placeholder="0.00" />
+                    <span asp-validation-for="Amount" class="text-danger" style="font-size:12px"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Payment Method</label>
+                    <select asp-for="Method" class="form-select">
+                        <option value="CreditCard">Credit Card</option>
+                        <option value="DebitCard">Debit Card</option>
+                        <option value="BankTransfer">Bank Transfer</option>
+                        @* Cash is agent-only — Phase 7 *@
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Note (Optional)</label>
+                    <input asp-for="Description" class="form-control"
+                           placeholder="What's this top up for?" />
+                </div>
+
+                <div style="background:var(--teal-light);border-radius:var(--r-sm);padding:12px 16px;font-size:13px;color:var(--teal-dark)">
+                    <i class="bi bi-shield-check"></i>
+                    Funds will be added to your wallet instantly.
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn-tp-primary">
+                        <i class="bi bi-plus-circle"></i> Add Funds
+                    </button>
+                    <a asp-controller="Dashboard" asp-action="Index"
+                       class="btn-tp-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

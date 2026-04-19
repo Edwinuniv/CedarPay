@@ -1,0 +1,237 @@
+﻿@model List<MoneyTransfer.Models.Agent>
+@{
+    ViewData["Title"] = "Agent Map";
+}
+
+<div class="page-header">
+    <div>
+        <h2>Agent Locations</h2>
+        <p>Find a CedarPay agent near you</p>
+    </div>
+</div>
+
+<div class="tp-card mb-3">
+    <div style="display:flex;gap:12px;align-items:center">
+        <input type="text"
+               id="searchInput"
+               class="form-control"
+               placeholder="Type a city or agent name to filter..."
+               oninput="filterAgents(this.value)" />
+        <div style="font-size:13px;color:var(--text-3);
+                    flex-shrink:0">
+            <span id="agentCount">@Model.Count</span>
+            agent@(Model.Count != 1 ? "s" : "")
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="tp-card" style="padding:0;overflow:hidden">
+            <div id="map"
+                 style="height:500px;border-radius:var(--r-lg)">
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="tp-card"
+             style="height:500px;overflow-y:auto;padding:16px">
+            <div style="font-size:13px;font-weight:700;
+                        color:var(--text-1);margin-bottom:12px">
+                All Agents
+            </div>
+            <div id="agentList"
+                 style="display:flex;flex-direction:column;gap:8px">
+                @foreach (var agent in Model)
+                {
+                    <div class="agent-card-item"
+                         data-name="@(agent.StoreName?.ToLower() ?? "")"
+                         data-city="@(agent.City?.ToLower() ?? "")"
+                         data-lat="@agent.Latitude"
+                         data-lng="@agent.Longitude"
+                         onclick="flyTo(@agent.Latitude, @agent.Longitude, '@(agent.StoreName?.Replace("'", "\\'") ?? "")')"
+                         style="padding:12px;border-radius:var(--r-sm);
+                                background:var(--surface-2);
+                                border:1px solid var(--border);
+                                cursor:pointer;transition:var(--transition);
+                                margin-bottom:6px">
+                        <div style="font-size:13px;font-weight:600;
+                                    color:var(--text-1)">
+                            @agent.StoreName
+                        </div>
+                        <div style="font-size:11px;color:var(--text-3);
+                                    margin-top:2px">
+                            <i class="bi bi-geo-alt"></i>
+                            @agent.City, @agent.Country
+                        </div>
+                        @if (!string.IsNullOrEmpty(agent.WorkingHours))
+                        {
+                            <div style="font-size:11px;color:var(--teal);
+                                        margin-top:2px">
+                                <i class="bi bi-clock"></i>
+                                @agent.WorkingHours
+                            </div>
+                        }
+                        @if (agent.Latitude == 0 && agent.Longitude == 0)
+                        {
+                            <div style="font-size:10px;color:var(--yellow);
+                                        margin-top:3px">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                Location not set
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" />
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js">
+    </script>
+    <script>
+        const map = L.map('map').setView([33.8547, 35.8623], 9);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 18
+        }).addTo(map);
+
+        const tealIcon = L.divIcon({
+            html: `<div style="
+                width:32px;height:32px;
+                background:var(--teal);
+                border-radius:50% 50% 50% 0;
+                transform:rotate(-45deg);
+                border:3px solid #fff;
+                box-shadow:0 2px 8px rgba(0,0,0,.25)">
+            </div>`,
+            className: '',
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32]
+        });
+
+        const agents = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+            Model.Select(a => new {
+                name = a.StoreName,
+                agent = a.AgentName,
+                city = a.City,
+                country = a.Country,
+                phone = a.PhoneNumber,
+                hours = a.WorkingHours,
+                lat = a.Latitude,
+                lng = a.Longitude
+            })
+        ));
+
+        const markers = [];
+
+        agents.forEach(a => {
+            if (!a.lat || !a.lng || (a.lat === 0 && a.lng === 0)) return;
+
+            const marker = L.marker([a.lat, a.lng], { icon: tealIcon })
+                .bindPopup(`
+                    <div style="font-family:sans-serif;min-width:160px">
+                        <div style="font-weight:700;font-size:14px;
+                                    margin-bottom:4px">${escapeHtml(a.name)}</div>
+                        <div style="font-size:12px;color:#666">
+                            ${escapeHtml(a.city)}, ${escapeHtml(a.country)}
+                        </div>
+                        ${a.phone ? `<div style="font-size:12px;
+                            margin-top:4px">📞 ${escapeHtml(a.phone)}</div>` : ''}
+                        ${a.hours ? `<div style="font-size:12px;
+                            color:#00b894;margin-top:2px">
+                            🕐 ${escapeHtml(a.hours)}</div>` : ''}
+                    </div>
+                `)
+                .addTo(map);
+
+            markers.push({ marker, data: a });
+        });
+
+        if (markers.length === 0) {
+            console.log('No agents with valid coordinates found');
+        }
+
+        function escapeHtml(str) {
+            if (!str) 
+            {
+                return '';
+            }
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') 
+                {
+                    return '&amp;';
+                }
+                if (m === '<') 
+                {
+                    return '&lt;';
+                }
+                if (m === '>') 
+                {
+                    return '&gt;';
+                }
+                return m;
+            });
+        }
+
+        function flyTo(lat, lng, name) {
+            if (!lat || !lng || (lat === 0 && lng === 0)) {
+                alert('This agent has not set their location yet.');
+                return;
+            }
+            map.flyTo([lat, lng], 14, { duration: 1 });
+            markers.forEach(m => {
+                if (m.data.lat === lat && m.data.lng === lng) {
+                    m.marker.openPopup();
+                }
+            });
+        }
+
+        function filterAgents(query) {
+            const q = query.toLowerCase().trim();
+            const items = document.querySelectorAll('.agent-card-item');
+            let count = 0;
+            let firstLat = null;
+            let firstLng = null;
+
+            items.forEach(item => {
+                const name = (item.dataset.name || '').toLowerCase();
+                const city = (item.dataset.city || '').toLowerCase();
+                const show = q === '' ||  name.includes(q) || city.includes(q);
+
+                item.style.display = show ? 'block' : 'none';
+
+                if (show) {
+                    count++;
+                    if (firstLat === null) {
+                        const lat = parseFloat(item.dataset.lat);
+                        const lng = parseFloat(item.dataset.lng);
+                        if (lat && lng && !(lat === 0 && lng === 0)) {
+                            firstLat = lat;
+                            firstLng = lng;
+                        }
+                    }
+                }
+            });
+
+            document.getElementById('agentCount').textContent = count;
+
+            if (firstLat && firstLng) {
+                map.flyTo([firstLat, firstLng], 12, { duration: 1.5 });
+            }
+        }
+
+        document.getElementById('searchInput').addEventListener('input', function() {
+                filterAgents(this.value);
+            });
+    </script>
+}

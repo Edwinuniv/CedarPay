@@ -1,0 +1,107 @@
+﻿@model List<MoneyTransfer.Models.WalletRequest>
+@{
+    ViewData["Title"] = "Wallet Approval Requests";
+}
+
+<div class="page-header">
+    <div>
+        <h2>Wallet Approval Requests</h2>
+        <p>Review and approve user wallet creation requests</p>
+    </div>
+    <a asp-action="Index" class="btn-tp-secondary">
+        <i class="bi bi-arrow-left"></i> Back
+    </a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="tp-card">
+        <div class="empty-state">
+            <i class="bi bi-wallet2"></i>
+            <p>No pending wallet requests.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="d-flex flex-column gap-3">
+        @foreach (var r in Model)
+        {
+            <div class="tp-card">
+                <div style="display:flex;align-items:center;
+                                    gap:16px;margin-bottom:12px">
+                    <div class="ben-avatar"
+                         style="width:44px;height:44px;
+                                        font-size:14px">
+                        @r.User?.FirstName?.Substring(0, 1)
+                    </div>
+                    <div style="flex:1">
+                        <div style="font-weight:700;
+                                            font-size:15px">
+                            @r.User?.FirstName @r.User?.LastName
+                        </div>
+                        <div style="font-size:13px;
+                                            color:var(--text-2)">
+                            @r.User?.Email
+                        </div>
+                    </div>
+                    <div style="text-align:right">
+                        <div style="font-size:20px;font-weight:800;
+                                            color:var(--teal)">
+                            @r.Currency?.Code
+                        </div>
+                        <div style="font-size:11px;
+                                            color:var(--text-3)">
+                            @r.Currency?.Name
+                        </div>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(r.Description))
+                {
+                    <div style="font-size:13px;color:var(--text-2);
+                                            margin-bottom:12px;font-style:italic">
+                        "@r.Description"
+                    </div>
+                }
+
+                <div style="font-size:12px;color:var(--text-3);
+                                    margin-bottom:14px">
+                    Requested
+                    @r.RequestedAt.ToString("MMM dd, yyyy HH:mm")
+                </div>
+
+                <div style="display:flex;gap:10px;padding-top:12px;
+                                    border-top:1px solid var(--border)">
+                    <form asp-action="ApproveWallet"
+                          asp-route-id="@r.Id" method="post">
+                        <button type="submit"
+                                class="btn-tp-success"
+                                style="padding:8px 18px;
+                                               font-size:13px">
+                            <i class="bi bi-check-lg"></i>
+                            Approve Wallet
+                        </button>
+                    </form>
+                    <form asp-action="RejectWallet"
+                          asp-route-id="@r.Id"
+                          method="post"
+                          style="display:flex;gap:8px;flex:1"
+                          onsubmit="return confirm(
+                                      'Reject this wallet request?')">
+                        <input type="text" name="reason"
+                               class="form-control"
+                               placeholder="Rejection reason (optional)"
+                               style="flex:1;font-size:13px" />
+                        <button type="submit"
+                                class="btn-tp-danger"
+                                style="padding:8px 16px;
+                                               font-size:13px;flex-shrink:0">
+                            <i class="bi bi-x-lg"></i> Reject
+                        </button>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+}

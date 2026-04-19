@@ -1,0 +1,158 @@
+﻿@{
+    ViewData["Title"] = "Agent Dashboard";
+    var agent = ViewBag.Agent as MoneyTransfer.Models.Agent;
+}
+
+<div style="margin-bottom:24px">
+    <h2 style="font-size:22px;font-weight:800;
+                color:var(--text-1);letter-spacing:-0.4px">
+        Agent Control Panel
+        @if (agent != null)
+        {
+            <span style="font-size:14px;font-weight:500;
+                             color:var(--text-3);margin-left:10px">
+                @agent.StoreName
+            </span>
+        }
+    </h2>
+</div>
+
+<!-- Agent Stats -->
+<div class="row g-3 mb-3">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon received">
+                <i class="bi bi-cash-coin"></i>
+            </div>
+            <div class="stat-value">
+                $@((ViewBag.TotalCashIn as decimal? ?? 0).ToString("N2"))
+            </div>
+            <div class="stat-label">Total Cash In</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon beneficiaries">
+                <i class="bi bi-percent"></i>
+            </div>
+            <div class="stat-value">
+                $@((ViewBag.TotalCommissions as decimal? ?? 0).ToString("N2"))
+            </div>
+            <div class="stat-label">Total Commissions</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon received">
+                <i class="bi bi-geo-alt-fill"></i>
+            </div>
+            <div class="stat-value">
+                @(agent != null && agent.Latitude != 0
+                                ? "Set ✓" : "Not Set")
+            </div>
+            <div class="stat-label">Map Location</div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row g-3">
+    <div class="col-md-4">
+        <a asp-action="CashIn"
+           class="tp-card d-block text-decoration-none">
+            <div style="display:flex;align-items:center;
+                        gap:12px">
+                <div class="stat-icon received"
+                     style="margin-bottom:0;flex-shrink:0">
+                    <i class="bi bi-cash-coin"></i>
+                </div>
+                <div>
+                    <div class="tp-card-title">Cash In</div>
+                    <div style="font-size:12px;
+                                color:var(--text-3);
+                                margin-top:2px">
+                        Add cash to user wallet
+                    </div>
+                </div>
+                <i class="bi bi-chevron-right"
+                   style="color:var(--text-3);
+                          margin-left:auto"></i>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a asp-action="CashOut"
+           class="tp-card d-block text-decoration-none">
+            <div style="display:flex;align-items:center;
+                        gap:12px">
+                <div class="stat-icon sent"
+                     style="margin-bottom:0;flex-shrink:0">
+                    <i class="bi bi-cash-stack"></i>
+                </div>
+                <div>
+                    <div class="tp-card-title">Cash Out</div>
+                    <div style="font-size:12px;
+                                color:var(--text-3);
+                                margin-top:2px">
+                        Process cash withdrawal
+                    </div>
+                </div>
+                <i class="bi bi-chevron-right"
+                   style="color:var(--text-3);
+                          margin-left:auto"></i>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a asp-action="SetLocation"
+           class="tp-card d-block text-decoration-none">
+            <div style="display:flex;align-items:center;
+                        gap:12px">
+                <div class="stat-icon beneficiaries"
+                     style="margin-bottom:0;flex-shrink:0">
+                    <i class="bi bi-geo-alt-fill"></i>
+                </div>
+                <div>
+                    <div class="tp-card-title">
+                        @(agent?.Latitude != 0
+                                                ? "Update Location"
+                                                : "Set Location")
+                    </div>
+                    <div style="font-size:12px;
+                                color:var(--text-3);
+                                margin-top:2px">
+                        @(agent?.Latitude != 0
+                                                ? $"{agent.Latitude:F4}, {agent.Longitude:F4}"
+                                                : "Appear on the map")
+                    </div>
+                </div>
+                <i class="bi bi-chevron-right"
+                   style="color:var(--text-3);
+                          margin-left:auto"></i>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a asp-action="Commissions"
+           class="tp-card d-block text-decoration-none">
+            <div style="display:flex;align-items:center;
+                        gap:12px">
+                <div class="stat-icon beneficiaries"
+                     style="margin-bottom:0;flex-shrink:0">
+                    <i class="bi bi-percent"></i>
+                </div>
+                <div>
+                    <div class="tp-card-title">Commissions</div>
+                    <div style="font-size:12px;
+                                color:var(--text-3);
+                                margin-top:2px">
+                        View earnings
+                    </div>
+                </div>
+                <i class="bi bi-chevron-right"
+                   style="color:var(--text-3);
+                          margin-left:auto"></i>
+            </div>
+        </a>
+    </div>
+</div>
