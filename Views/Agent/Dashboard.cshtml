@@ -1,25 +1,74 @@
 ﻿@{
     ViewData["Title"] = "Agent Dashboard";
     var agent = ViewBag.Agent as MoneyTransfer.Models.Agent;
+    var agents = ViewBag.Agents as
+        List<MoneyTransfer.Models.Agent>
+        ?? new List<MoneyTransfer.Models.Agent>();
 }
 
 <div style="margin-bottom:24px">
     <h2 style="font-size:22px;font-weight:800;
                 color:var(--text-1);letter-spacing:-0.4px">
-        Agent Control Panel
+        Agent Dashboard
         @if (agent != null)
         {
             <span style="font-size:14px;font-weight:500;
-                                 color:var(--text-3);margin-left:10px">
+                                 color:var(--text-3);
+                                 margin-left:10px">
                 @agent.StoreName
             </span>
         }
     </h2>
+    <p style="font-size:13px;color:var(--text-3);
+              margin-top:3px">
+        Manage your store and personal account
+    </p>
 </div>
+
+<!-- Store Selector (multiple stores) -->
+@if (agents.Count > 1)
+{
+    <div class="tp-card mb-3">
+        <div style="display:flex;align-items:center;
+                            justify-content:space-between;
+                            flex-wrap:wrap;gap:12px">
+            <div style="font-size:13px;font-weight:600;
+                                color:var(--text-1)">
+                <i class="bi bi-shop"
+                   style="color:var(--teal);margin-right:6px"></i>
+                Active Store
+            </div>
+            <form asp-action="SelectStore" method="post"
+                  style="display:flex;gap:8px;align-items:center">
+                @Html.AntiForgeryToken()
+                <select name="agentId" class="form-select"
+                        style="width:auto">
+                    @foreach (var a in agents)
+                    {
+                        if (agent?.Id == a.Id)
+                        {
+                            <option value="@a.Id" selected>@a.StoreName (@a.City)</option>
+                        }
+                        else
+                        {
+                            <option value="@a.Id">@a.StoreName (@a.City)</option>
+                        }
+                    }
+                </select>
+                <button type="submit"
+                        class="btn-tp-primary"
+                        style="padding:8px 14px;
+                                       font-size:12px">
+                    Switch
+                </button>
+            </form>
+        </div>
+    </div>
+}
 
 <!-- Agent Stats -->
 <div class="row g-3 mb-3">
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="stat-card">
             <div class="stat-icon received">
                 <i class="bi bi-cash-coin"></i>
@@ -30,7 +79,7 @@
             <div class="stat-label">Total Cash In</div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="stat-card">
             <div class="stat-icon beneficiaries">
                 <i class="bi bi-percent"></i>
@@ -38,28 +87,37 @@
             <div class="stat-value">
                 $@((ViewBag.TotalCommissions as decimal? ?? 0).ToString("N2"))
             </div>
-            <div class="stat-label">Total Commissions</div>
+            <div class="stat-label">Commissions</div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="stat-card">
             <div class="stat-icon received">
                 <i class="bi bi-geo-alt-fill"></i>
             </div>
             <div class="stat-value">
-                @(agent != null && agent.Latitude != 0
-                                ? "Set ✓" : "Not Set")
+                @(agent != null && agent.Latitude != 0 ? "Set ✓" : "Not Set")
             </div>
             <div class="stat-label">Map Location</div>
         </div>
     </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon beneficiaries">
+                <i class="bi bi-shop"></i>
+            </div>
+            <div class="stat-value">@agents.Count</div>
+            <div class="stat-label">Active Stores</div>
+        </div>
+    </div>
 </div>
 
-<!-- Quick Actions -->
-<div class="row g-3">
-    <div class="col-md-4">
+<!-- Agent Actions -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
         <a asp-action="CashIn"
-           class="tp-card d-block text-decoration-none">
+           class="tp-card d-block text-decoration-none"
+           style="transition:var(--transition)">
             <div style="display:flex;align-items:center;
                         gap:12px">
                 <div class="stat-icon received"
@@ -71,7 +129,7 @@
                     <div style="font-size:12px;
                                 color:var(--text-3);
                                 margin-top:2px">
-                        Add cash to user wallet
+                        Add cash to wallet
                     </div>
                 </div>
                 <i class="bi bi-chevron-right"
@@ -80,9 +138,10 @@
             </div>
         </a>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <a asp-action="CashOut"
-           class="tp-card d-block text-decoration-none">
+           class="tp-card d-block text-decoration-none"
+           style="transition:var(--transition)">
             <div style="display:flex;align-items:center;
                         gap:12px">
                 <div class="stat-icon sent"
@@ -94,7 +153,7 @@
                     <div style="font-size:12px;
                                 color:var(--text-3);
                                 margin-top:2px">
-                        Process cash withdrawal
+                        Process withdrawal
                     </div>
                 </div>
                 <i class="bi bi-chevron-right"
@@ -103,38 +162,10 @@
             </div>
         </a>
     </div>
-    <div class="col-md-4">
-        <a asp-action="SetLocation"
-           class="tp-card d-block text-decoration-none">
-            <div style="display:flex;align-items:center;
-                        gap:12px">
-                <div class="stat-icon beneficiaries"
-                     style="margin-bottom:0;flex-shrink:0">
-                    <i class="bi bi-geo-alt-fill"></i>
-                </div>
-                <div>
-                    <div class="tp-card-title">
-                        @(agent?.Latitude != 0
-                                                ? "Update Location"
-                                                : "Set Location")
-                    </div>
-                    <div style="font-size:12px;
-                                color:var(--text-3);
-                                margin-top:2px">
-                        @(agent?.Latitude != 0
-                                                ? $"{agent.Latitude:F4}, {agent.Longitude:F4}"
-                                                : "Appear on the map")
-                    </div>
-                </div>
-                <i class="bi bi-chevron-right"
-                   style="color:var(--text-3);
-                          margin-left:auto"></i>
-            </div>
-        </a>
-    </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <a asp-action="Commissions"
-           class="tp-card d-block text-decoration-none">
+           class="tp-card d-block text-decoration-none"
+           style="transition:var(--transition)">
             <div style="display:flex;align-items:center;
                         gap:12px">
                 <div class="stat-icon beneficiaries"
@@ -155,4 +186,137 @@
             </div>
         </a>
     </div>
+    <div class="col-md-3">
+        <a asp-action="SetLocation"
+           class="tp-card d-block text-decoration-none"
+           style="transition:var(--transition)">
+            <div style="display:flex;align-items:center;
+                        gap:12px">
+                <div class="stat-icon received"
+                     style="margin-bottom:0;flex-shrink:0">
+                    <i class="bi bi-geo-alt-fill"></i>
+                </div>
+                <div>
+                    <div class="tp-card-title">
+                        Set Location
+                    </div>
+                    <div style="font-size:12px;
+                                color:var(--text-3);
+                                margin-top:2px">
+                        @(agent != null && agent.Latitude != 0 ? agent.Latitude.ToString("F4") + ", " + agent.Longitude.ToString("F4") : "Appear on the map")
+                    </div>
+                </div>
+                <i class="bi bi-chevron-right"
+                   style="color:var(--text-3);
+                          margin-left:auto"></i>
+            </div>
+        </a>
+    </div>
 </div>
+
+@if (agent != null)
+{
+    <div class="tp-card mb-3">
+        <div class="tp-card-header">
+            <span class="tp-card-title">
+                <i class="bi bi-shop"
+                   style="color:var(--teal);
+                                  margin-right:6px"></i>
+                Store Information
+            </span>
+            @{
+                string statusClass = "default";
+                if (agent.Status == MoneyTransfer.Models.AgentStatus.Approved)
+                {
+                    statusClass = "success";
+                }
+                else if (agent.Status == MoneyTransfer.Models.AgentStatus.Pending)
+                {
+                    statusClass = "warning";
+                }
+                else if (agent.Status == MoneyTransfer.Models.AgentStatus.Rejected)
+                {
+                    statusClass = "danger";
+                }
+            }
+            <span class="badge-tp @statusClass">
+                @agent.Status
+            </span>
+        </div>
+        <div style="display:grid;
+                            grid-template-columns:1fr 1fr;
+                            gap:12px;font-size:13px">
+            <div>
+                <span style="color:var(--text-3)">Store:</span>
+                <strong style="margin-left:6px">
+                    @agent.StoreName
+                </strong>
+            </div>
+            <div>
+                <span style="color:var(--text-3)">Agent:</span>
+                <strong style="margin-left:6px">
+                    @agent.AgentName
+                </strong>
+            </div>
+            <div>
+                <span style="color:var(--text-3)">Phone:</span>
+                <strong style="margin-left:6px">
+                    @agent.PhoneNumber
+                </strong>
+            </div>
+            <div>
+                <span style="color:var(--text-3)">Location:</span>
+                <strong style="margin-left:6px">
+                    @agent.City, @agent.Country
+                </strong>
+            </div>
+            <div>
+                <span style="color:var(--text-3)">Hours:</span>
+                <strong style="margin-left:6px">
+                    @(agent.WorkingHours ?? "Not set")
+                </strong>
+            </div>
+            <div>
+                <span style="color:var(--text-3)">Commission:</span>
+                <strong style="margin-left:6px">
+                    @((agent.CommissionRate * 100).ToString("F1"))%
+                </strong>
+            </div>
+        </div>
+
+        <!-- Action Buttons for Store Management -->
+        <div style="display:flex;gap:8px;margin-top:12px;
+                        padding-top:12px;
+                        border-top:1px solid var(--border)">
+            <a asp-action="EditStore"
+               asp-route-id="@agent.Id"
+               class="btn-tp-secondary"
+               style="padding:7px 14px;font-size:12px">
+                <i class="bi bi-pencil"></i> Edit Store
+            </a>
+            <a asp-action="SetLocation"
+               asp-route-id="@agent.Id"
+               class="btn-tp-primary"
+               style="padding:7px 14px;font-size:12px">
+                <i class="bi bi-geo-alt-fill"></i>
+                Set Location
+            </a>
+            <form asp-action="DeleteStore"
+                  asp-route-id="@agent.Id"
+                  method="post"
+                  onsubmit="return confirm('Delete this store?')">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn-tp-danger"
+                        style="padding:7px 12px;font-size:12px">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </form>
+            <a asp-action="Register"
+               class="btn-tp-secondary"
+               style="padding:7px 14px;font-size:12px;
+                          margin-left:auto">
+                <i class="bi bi-plus-lg"></i> New Store
+            </a>
+        </div>
+    </div>
+}

@@ -1,142 +1,676 @@
-﻿@model MoneyTransfer.Models.Conversation
+﻿@using System.IO
+@model MoneyTransfer.Models.Conversation
 @{
     ViewData["Title"] = "Chat";
     string currentUserId = ViewBag.CurrentUserId ?? "";
     var other = Model.Participants
         .FirstOrDefault(p => p.UserId != currentUserId);
+    bool isBotChat = ViewBag.IsBot == true;
 }
 
-<div style="display:flex;flex-direction:column;
-            height:calc(100vh - 140px);
-            max-width:800px;margin:0 auto">
+<style>
+    .chat-shell {
+        display: flex; flex-direction: column;
+        height: calc(100vh - 140px);
+        max-width: 800px; margin: 0 auto;
+        border-radius: var(--r-lg); overflow: hidden;
+        border: 1px solid var(--border);
+        box-shadow: 0 4px 24px rgba(0,0,0,.06);
+    }
+    .chat-header {
+        display: flex; align-items: center; gap: 12px;
+        padding: 14px 20px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+    }
+    .chat-back {
+        color: var(--text-2); text-decoration: none;
+        flex-shrink: 0; font-size: 16px;
+    }
+    .chat-profile-btn {
+        display: flex; align-items: center; gap: 12px;
+        flex: 1; cursor: pointer; border: none;
+        background: none; text-align: left;
+        padding: 4px 6px; margin: -4px -6px;
+        border-radius: var(--r-md);
+        transition: background .15s;
+    }
+    .chat-profile-btn:hover { background: var(--surface-2); }
+    .chat-avatar {
+        width: 40px; height: 40px; border-radius: 50%;
+        background: linear-gradient(135deg,var(--teal),var(--teal-mid));
+        display: flex; align-items: center; justify-content: center;
+        font-size: 15px; font-weight: 700; color: #fff;
+        flex-shrink: 0; object-fit: cover;
+    }
+    .chat-messages {
+        flex: 1; overflow-y: auto;
+        background: var(--surface-2);
+        padding: 16px;
+        display: flex; flex-direction: column; gap: 6px;
+        border-left: 1px solid var(--border);
+        border-right: 1px solid var(--border);
+    }
+    .date-sep { text-align: center; margin: 8px 0; }
+    .date-sep span {
+        font-size: 11px; color: var(--text-3);
+        background: var(--surface-2);
+        padding: 3px 10px; border-radius: 10px;
+        border: 1px solid var(--border);
+    }
+    .msg-wrapper {
+        display: flex; align-items: flex-end;
+        gap: 6px; position: relative;
+    }
+    .msg-wrapper.mine   { justify-content: flex-end; }
+    .msg-wrapper.theirs { justify-content: flex-start; }
+    .msg-avatar-img {
+        width: 28px; height: 28px; border-radius: 50%;
+        object-fit: cover; flex-shrink: 0; margin-bottom: 2px;
+    }
+    .msg-avatar-init {
+        width: 28px; height: 28px; border-radius: 50%;
+        background: var(--teal-light);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 11px; font-weight: 700; color: var(--teal);
+        flex-shrink: 0; margin-bottom: 2px;
+    }
+    .msg-bubble { max-width: 68%; position: relative; }
+    .msg-actions {
+        position: absolute; top: 0; z-index: 10;
+        display: flex; gap: 3px;
+        opacity: 0; pointer-events: none;
+        transition: opacity .15s;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px; padding: 3px 6px;
+        box-shadow: 0 2px 8px rgba(0,0,0,.12);
+    }
+    .msg-wrapper.mine   .msg-actions { right: 100%; margin-right: 8px; }
+    .msg-wrapper.theirs .msg-actions { left: 100%; margin-left: 8px; }
+    .msg-wrapper:hover .msg-actions {
+        opacity: 1; pointer-events: auto;
+    }
+    .msg-action-btn {
+        width: 28px; height: 28px; border-radius: 50%;
+        background: transparent; border: none;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; font-size: 13px; color: var(--text-2);
+        transition: var(--transition);
+    }
+    .msg-action-btn:hover        { background: var(--teal-light); color: var(--teal); }
+    .msg-action-btn.danger:hover { background: var(--red-light); color: var(--red); }
+    .emoji-picker-popup {
+        position: absolute; z-index: 999;
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--r-md);
+        box-shadow: 0 8px 24px rgba(0,0,0,.15);
+        padding: 8px 10px; display: none; gap: 4px;
+        bottom: 100%; margin-bottom: 5px;
+    }
+    .emoji-picker-popup.mine   { right: 0; }
+    .emoji-picker-popup.theirs { left: 0; }
+    .emoji-picker-popup.open   { display: flex; }
+    .ep-btn {
+        font-size: 20px; cursor: pointer; padding: 4px;
+        border-radius: 8px; border: none;
+        background: transparent; line-height: 1;
+        transition: transform .1s;
+    }
+    .ep-btn:hover { transform: scale(1.25); }
+    .reply-preview {
+        background: var(--teal-light);
+        border-left: 3px solid var(--teal);
+        border-radius: 6px; padding: 5px 9px;
+        margin-bottom: 5px; font-size: 12px; color: var(--text-2);
+    }
+    .reply-preview.mine-reply {
+        background: rgba(255,255,255,.18);
+        border-left-color: #fff;
+    }
+    .reply-preview strong {
+        color: var(--teal); display: block;
+        font-size: 11px; margin-bottom: 2px;
+    }
+    .reply-preview.mine-reply strong { color: #fff; }
+    .bubble-inner {
+        padding: 9px 13px; word-break: break-word;
+        overflow: hidden;
+    }
+    .bubble-inner.media-pad { padding: 6px; }
+    .bubble-mine {
+        background: var(--teal); color: #fff;
+        border-radius: 16px 16px 4px 16px;
+        border: none;
+    }
+    .bubble-theirs {
+        background: var(--surface); color: var(--text-1);
+        border-radius: 16px 16px 16px 4px;
+        border: 1px solid var(--border);
+    }
+    .msg-time {
+        font-size: 10px; color: var(--text-3);
+        margin-top: 2px; padding: 0 4px;
+    }
+    .msg-time.mine  { text-align: right; }
+    .msg-time.theirs { text-align: left; }
+    .edited-badge { font-size: 10px; opacity: .6; margin-left: 4px; }
+    .read-tick { margin-left: 3px; }
+    .reactions-strip {
+        display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;
+    }
+    .reaction-pill {
+        display: inline-flex; align-items: center; gap: 3px;
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: 12px; padding: 2px 7px;
+        font-size: 13px; cursor: pointer;
+        transition: var(--transition); user-select: none;
+    }
+    .reaction-pill:hover, .reaction-pill.mine-react {
+        border-color: var(--teal); background: var(--teal-light);
+    }
+    .reaction-pill .cnt {
+        font-size: 11px; color: var(--text-2); font-weight: 600;
+    }
+    .deleted-msg { font-style: italic; opacity: .6; font-size: 13px; }
+    .media-img {
+        max-width: 100%; border-radius: 10px;
+        cursor: pointer; display: block; max-height: 260px;
+        object-fit: cover;
+    }
+    .media-video {
+        max-width: 100%; border-radius: 10px;
+        max-height: 260px; display: block;
+    }
+    .file-card {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 12px;
+        background: rgba(0,0,0,.06); border-radius: 10px;
+        text-decoration: none; color: inherit;
+        transition: background .15s;
+    }
+    .file-card:hover { background: rgba(0,0,0,.12); }
+    .file-icon { font-size: 24px; flex-shrink: 0; }
+    .file-info { flex: 1; min-width: 0; }
+    .file-info .fname {
+        font-size: 13px; font-weight: 600;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .file-info .fsize { font-size: 11px; opacity: .7; }
+    audio { max-width: 100%; border-radius: 10px; }
+    .attach-bar, .reply-bar {
+        background: var(--surface-2);
+        border-top: 1px solid var(--border);
+        padding: 8px 16px;
+        display: none; align-items: center; gap: 10px;
+        font-size: 13px;
+    }
+    .attach-bar.open, .reply-bar.open { display: flex; }
+    .bar-clear {
+        background: none; border: none; cursor: pointer;
+        color: var(--text-3); font-size: 18px;
+        padding: 0 4px; line-height: 1;
+    }
+    .chat-input-bar {
+        background: var(--surface);
+        border-top: none;
+        border: 1px solid var(--border);
+        border-top: none;
+        border-radius: 0 0 var(--r-lg) var(--r-lg);
+        padding: 12px 16px; flex-shrink: 0;
+    }
+    .chat-input-row {
+        display: flex; gap: 8px; align-items: center;
+    }
+    .input-tool-btn {
+        width: 38px; height: 38px; border-radius: 50%;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; font-size: 16px;
+        color: var(--text-2); flex-shrink: 0;
+        transition: var(--transition);
+    }
+    .input-tool-btn:hover {
+        background: var(--teal-light);
+        border-color: var(--teal); color: var(--teal);
+    }
+    .emoji-input-wrap { position: relative; flex-shrink: 0; }
+    .input-emoji-picker {
+        display: none; position: absolute;
+        bottom: 46px; left: 0;
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--r-md);
+        box-shadow: 0 8px 24px rgba(0,0,0,.15);
+        padding: 10px; z-index: 100; white-space: nowrap;
+    }
+    .input-emoji-picker.open { display: block; }
+    .emoji-grid {
+        display: grid; grid-template-columns: repeat(8,1fr); gap: 4px;
+    }
+    #msgInput {
+        flex: 1; border-radius: 22px; padding: 10px 16px;
+        border: 1px solid var(--border);
+        background: var(--surface-2); color: var(--text-1);
+        font-size: 14px; outline: none;
+        transition: border-color .15s;
+    }
+    #msgInput:focus { border-color: var(--teal); }
+    .send-btn {
+        width: 42px; height: 42px; border-radius: 50%;
+        background: var(--teal); border: none; color: #fff;
+        font-size: 16px;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; flex-shrink: 0;
+        transition: var(--transition);
+    }
+    .send-btn:hover    { background: var(--teal-dark); }
+    .send-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .chat-empty {
+        text-align: center; margin: auto;
+        color: var(--text-3); font-size: 13px;
+    }
+    .chat-empty i {
+        font-size: 32px; display: block;
+        margin-bottom: 8px; opacity: .4;
+    }
+    #lightbox {
+        display: none; position: fixed; inset: 0;
+        background: rgba(0,0,0,.88); z-index: 99999;
+        align-items: center; justify-content: center;
+    }
+    #lightbox.open { display: flex; }
+    #lightbox img {
+        max-width: 92vw; max-height: 92vh;
+        border-radius: 10px;
+    }
+    #lightbox .lb-close {
+        position: absolute; top: 20px; right: 24px;
+        font-size: 28px; color: #fff; cursor: pointer;
+        background: none; border: none; line-height: 1;
+    }
+    .ctx-menu {
+        position: fixed;
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--r-md);
+        box-shadow: 0 8px 24px rgba(0,0,0,.15);
+        z-index: 9999; min-width: 170px; padding: 4px 0; display: none;
+    }
+    .ctx-menu.open { display: block; }
+    .ctx-item {
+        padding: 9px 16px; font-size: 13px; cursor: pointer;
+        color: var(--text-1);
+        display: flex; align-items: center; gap: 9px;
+        transition: background .12s;
+    }
+    .ctx-item:hover        { background: var(--surface-2); }
+    .ctx-item.danger       { color: var(--red); }
+    .ctx-item.danger:hover { background: var(--red-light); }
+    .edit-overlay {
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,.4); z-index: 9998;
+        display: none; align-items: center; justify-content: center;
+    }
+    .edit-overlay.open { display: flex; }
+    .edit-modal {
+        background: var(--surface); border-radius: var(--r-lg);
+        padding: 24px; min-width: 320px; max-width: 500px;
+        width: 90%; border: 1px solid var(--border);
+    }
+    .profile-overlay {
+        display: none; position: fixed; inset: 0;
+        background: rgba(0,0,0,.4); z-index: 10000;
+    }
+    .profile-panel {
+        position: fixed; top: 0; right: -420px;
+        width: 380px; max-width: 95vw; height: 100vh;
+        background: var(--surface);
+        border-left: 1px solid var(--border);
+        z-index: 10001; overflow-y: auto;
+        transition: right .3s cubic-bezier(.4,0,.2,1);
+        display: flex; flex-direction: column;
+    }
+    .bot-msg-content p:last-child { margin-bottom: 0; }
+    .bot-msg-content ul:last-child { margin-bottom: 0; }
+    .bot-msg-content strong { font-weight: 700; }
+    .msg-deleting {
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+</style>
 
-    <div style="background:var(--surface);
-                border:1px solid var(--border);
-                border-radius:var(--r-lg) var(--r-lg) 0 0;
-                padding:14px 20px;
-                display:flex;align-items:center;gap:12px">
-        <a asp-action="Index"
-           style="color:var(--text-2);text-decoration:none;
-                  margin-right:4px">
+<div class="chat-shell">
+
+    <div class="chat-header">
+        <a asp-controller="Chat" asp-action="Index" class="chat-back">
             <i class="bi bi-arrow-left"></i>
         </a>
-
-        @if (!string.IsNullOrEmpty(
-                other?.User?.ProfilePictureUrl))
+        
+        @if (isBotChat)
         {
-            <img src="@other.User.ProfilePictureUrl"
-                 style="width:40px;height:40px;border-radius:50%;
-                            object-fit:cover;flex-shrink:0" />
+            <div class="chat-avatar bot-avatar">🤖</div>
+            <div style="flex:1">
+                <div style="font-weight:700;font-size:15px;color:var(--text-1)">
+                    Cedar Bot
+                </div>
+                <div style="font-size:12px;color:var(--text-3);
+                            display:flex;align-items:center;gap:6px">
+                    @{
+                        var apiKey = ViewBag.GeminiApiKey as string;
+                        bool isAiMode = !string.IsNullOrWhiteSpace(apiKey);
+                    }
+                    @if (isAiMode)
+                    {
+                        <span style="width:7px;height:7px;border-radius:50%;
+                                     background:#00b894;display:inline-block">
+                        </span>
+                        @:AI Powered · Always online
+                    }
+                    else
+                    {
+                        <span style="width:7px;height:7px;border-radius:50%;
+                                     background:var(--text-3);
+                                     display:inline-block"></span>
+                        @:Basic Mode · Always online
+                    }
+                </div>
+            </div>
         }
         else
         {
-            <div style="width:40px;height:40px;border-radius:50%;
-                            background:linear-gradient(135deg,
-                                var(--teal),var(--teal-mid));
-                            display:flex;align-items:center;
-                            justify-content:center;
-                            font-size:15px;font-weight:700;
-                            color:#fff;flex-shrink:0">
-                @(other?.User?.FirstName?.Substring(0, 1) ?? "?")
-            </div>
+            <button type="button" class="chat-profile-btn" onclick="openProfile()">
+                @if (!string.IsNullOrEmpty(other?.User?.ProfilePictureUrl))
+                {
+                    <img src="@other.User.ProfilePictureUrl"
+                         class="chat-avatar" style="object-fit:cover" />
+                }
+                else
+                {
+                    <div class="chat-avatar">
+                        @(other?.User?.FirstName?.Substring(0,1) ?? "?")
+                    </div>
+                }
+                <div style="flex:1;min-width:0;text-align:left">
+                    <div style="font-weight:700;font-size:15px;
+                                color:var(--text-1);
+                                display:flex;align-items:center;gap:6px">
+                        @other?.User?.FirstName @other?.User?.LastName
+                        @if (other?.User?.IsVerified == true)
+                        {
+                            <span style="color:var(--teal);font-size:13px"
+                                  title="Verified">✓</span>
+                        }
+                    </div>
+                    <div style="font-size:12px;color:var(--text-3)">
+                        @other?.User?.PhoneNumber
+                        <span style="margin-left:6px;color:var(--teal);
+                                     font-size:11px">
+                            tap to view profile
+                        </span>
+                    </div>
+                </div>
+            </button>
         }
-
-        <div style="flex:1">
-            <div style="font-weight:700;font-size:15px;
-                        color:var(--text-1)">
-                @other?.User?.FirstName @other?.User?.LastName
-            </div>
-            <div style="font-size:12px;color:var(--text-3)">
-                @other?.User?.PhoneNumber
-            </div>
-        </div>
     </div>
 
-    <div id="msgArea"
-         style="flex:1;overflow-y:auto;
-                background:var(--surface-2);
-                padding:16px;
-                display:flex;flex-direction:column;
-                gap:6px;
-                border-left:1px solid var(--border);
-                border-right:1px solid var(--border)">
-
+    <div class="chat-messages" id="msgArea">
         @{
             DateTime? lastDate = null;
         }
 
-        @foreach (var msg in Model.Messages
-                .OrderBy(m => m.SentAt))
+        @foreach (var msg in Model.Messages.OrderBy(m => m.SentAt))
         {
-            bool isMine = msg.SenderId == currentUserId;
+            bool isMine = isBotChat ? !msg.IsFromAdmin : msg.SenderId == currentUserId;
+            bool hiddenForMe = !isBotChat && isMine && msg.IsDeletedForSender;
+            if (hiddenForMe) continue;
 
             if (lastDate == null || lastDate.Value.Date != msg.SentAt.Date)
             {
                 lastDate = msg.SentAt;
-                <div style="text-align:center;margin:8px 0">
-                    <span style="font-size:11px;
-                                         color:var(--text-3);
-                                         background:var(--surface-2);
-                                         padding:3px 10px;
-                                         border-radius:10px;
-                                         border:1px solid var(--border)">
-                        @msg.SentAt.ToString("MMMM dd, yyyy")
-                    </span>
+                <div class="date-sep">
+                    <span>@msg.SentAt.ToString("MMMM dd, yyyy")</span>
                 </div>
             }
 
-            <div style="display:flex;
-                            justify-content:@(isMine ? "flex-end" : "flex-start");
-                            align-items:flex-end;gap:6px">
+            var rxGroups = msg.Reactions
+                .GroupBy(r => r.Emoji)
+                .Select(g => new {
+                    Emoji   = g.Key,
+                    Count   = g.Count(),
+                    IsMine  = g.Any(r => r.UserId == currentUserId)
+                }).ToList();
 
-                @if (!isMine)
+            <div id="msg-@msg.Id"
+                 class="msg-wrapper @(isMine ? "mine" : "theirs")">
+
+                @if (!isMine && !isBotChat)
                 {
-                    if (!string.IsNullOrEmpty(
-                    msg.Sender?.ProfilePictureUrl))
+                    if (!string.IsNullOrEmpty(msg.Sender?.ProfilePictureUrl))
                     {
                         <img src="@msg.Sender.ProfilePictureUrl"
-                             style="width:28px;height:28px;
-                                                border-radius:50%;
-                                                object-fit:cover;flex-shrink:0;
-                                                margin-bottom:2px" />
+                             class="msg-avatar-img" />
                     }
                     else
                     {
-                        <div style="width:28px;height:28px;
-                                                border-radius:50%;
-                                                background:var(--teal-light);
-                                                display:flex;align-items:center;
-                                                justify-content:center;
-                                                font-size:11px;font-weight:700;
-                                                color:var(--teal);flex-shrink:0;
-                                                margin-bottom:2px">
-                            @(msg.Sender?.FirstName ?.Substring(0, 1) ?? "?")
-            </div>
+                        <div class="msg-avatar-init">
+                            @(msg.Sender?.FirstName?.Substring(0,1)
+                              ?? other?.User?.FirstName?.Substring(0,1)
+                              ?? "?")
+                        </div>
                     }
                 }
+                @if (!isMine && isBotChat)
+                {
+                    <div class="msg-avatar-init">🤖</div>
+                }
 
-                <div style="max-width:65%">
-                    <div style="padding:9px 13px;
-                                    border-radius:@(isMine ? "16px 16px 4px 16px" : "16px 16px 16px 4px");
-                                background:@(isMine ? "var(--teal)" : "var(--surface)");
-                                color:@(isMine ? "#fff" : "var(--text-1)");
-                                border:@(isMine ? "none" : "1px solid var(--border)");
-                                word-break:break-word">
-                    @msg.Content
-                </div>
-                <div style="font-size:10px;
-                                color:var(--text-3);
-                                margin-top:2px;
-                                text-align:@(isMine ? "right" : "left");
-                                padding:0 4px">
-                    @msg.SentAt.ToString("HH:mm")
-                    @if (isMine)
+                <div class="msg-bubble">
+                    @if (!msg.IsDeletedForEveryone && !isBotChat)
+                    {
+                        <div class="emoji-picker-popup @(isMine ? "mine" : "theirs")"
+                             id="ep-@msg.Id">
+                            @foreach (var em in new[]{"👍","❤️","😂","😮","😢","🙏"})
+                            {
+                                <button class="ep-btn"
+                                        onclick="reactTo(@msg.Id,'@em',event)"
+                                        title="@em">@em</button>
+                            }
+                        </div>
+                    }
+
+                    @if (msg.ReplyTo != null &&
+                         !msg.ReplyTo.IsDeletedForEveryone)
+                    {
+                        <div class="reply-preview @(isMine ? "mine-reply" : "")">
+                            <strong>
+                                @(msg.ReplyTo.Sender?.FirstName ?? "User")
+                            </strong>
+                            @{
+                                var rp = msg.ReplyTo.MessageType !=
+                                    MoneyTransfer.Models.MessageType.Text
+                                    ? "📎 " + msg.ReplyTo.MediaFileName
+                                    : msg.ReplyTo.Content;
+                            }
+                            @(rp?.Length > 60
+                                ? rp.Substring(0,60)+"…" : rp)
+                        </div>
+                    }
+
+                    <div style="position:relative">
+                        @if (!msg.IsDeletedForEveryone && !isBotChat)
                         {
-                            <span style="margin-left:3px;
-                                color:@(msg.IsRead  ? "var(--teal)" : "var(--text-3)")">
-                        @(msg.IsRead ? "✓✓" : "✓")
-                    </span>
+                            <div class="msg-actions">
+                                <button class="msg-action-btn"
+                                        title="React"
+                                        onclick="toggleEmojiPicker(event,@msg.Id)">
+                                    <i class="bi bi-emoji-smile"></i>
+                                </button>
+                                <button class="msg-action-btn"
+                                        title="Reply"
+                                        onclick="setReply(@msg.Id,
+                                            '@Html.Raw((msg.Sender?.FirstName ?? other?.User?.FirstName ?? "User").Replace("'","\\'"))',
+                                            '@Html.Raw(((msg.MessageType == MoneyTransfer.Models.MessageType.Text ? msg.Content : "📎 " + msg.MediaFileName) ?? "").Length > 40 ? ((msg.MessageType == MoneyTransfer.Models.MessageType.Text ? msg.Content : "📎 " + msg.MediaFileName) ?? "").Substring(0,40) + "…" : ((msg.MessageType == MoneyTransfer.Models.MessageType.Text ? msg.Content : "📎 " + msg.MediaFileName) ?? "").Replace("'","\\'"))')">
+                                    <i class="bi bi-reply-fill"></i>
+                                </button>
+                                @if (isMine &&
+                                    msg.MessageType ==
+                                    MoneyTransfer.Models.MessageType.Text)
+                                {
+                                    <button class="msg-action-btn"
+                                            title="Edit"
+                                            onclick="openEditModal(@msg.Id,'@Html.Raw(msg.Content.Replace("'","\\'").Replace("\r","").Replace("\n","\\n"))')">
+                                        <i class="bi bi-pencil-fill"></i>
+                                    </button>
+                                }
+                                @if (isMine)
+                                {
+                                    <button class="msg-action-btn danger"
+                                            title="Delete"
+                                            onclick="openDeleteMenu(event,@msg.Id)">
+                                        <i class="bi bi-trash-fill"></i>
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="msg-action-btn danger"
+                                            title="Delete for me"
+                                            onclick="deleteMsg(@msg.Id,'me')">
+                                        <i class="bi bi-eye-slash-fill"></i>
+                                    </button>
+                                }
+                            </div>
                         }
+
+                        <div id="bubble-@msg.Id"
+                             class="bubble-inner @(msg.MessageType != MoneyTransfer.Models.MessageType.Text ? "media-pad" : "") @(isMine ? "bubble-mine" : "bubble-theirs")">
+                            @if (msg.IsDeletedForEveryone)
+                            {
+                                <span class="deleted-msg">
+                                    🚫 This message was deleted.
+                                </span>
+                            }
+                            else if (msg.MessageType ==
+                                MoneyTransfer.Models.MessageType.Image)
+                            {
+                                <img src="@msg.MediaUrl"
+                                     class="media-img"
+                                     onclick="openLightbox('@msg.MediaUrl')"
+                                     alt="@msg.MediaFileName" />
+                            }
+                            else if (msg.MessageType ==
+                                MoneyTransfer.Models.MessageType.Video)
+                            {
+                                <video class="media-video"
+                                       controls preload="metadata">
+                                    <source src="@msg.MediaUrl" />
+                                </video>
+                            }
+                            else if (msg.MessageType ==
+                                MoneyTransfer.Models.MessageType.Voice)
+                            {
+                                <div style="padding:4px 8px">
+                                    <div style="font-size:11px;
+                                                opacity:.7;margin-bottom:4px">
+                                        🎤 Voice message
+                                    </div>
+                                    <audio controls>
+                                        <source src="@msg.MediaUrl" />
+                                    </audio>
+                                </div>
+                            }
+                            else if (msg.MessageType ==
+                                MoneyTransfer.Models.MessageType.File)
+                            {
+                                
+                                string fileExt = string.IsNullOrEmpty(msg.MediaFileName) ? "" : System.IO.Path.GetExtension(msg.MediaFileName).ToLower();
+                                string fileIcon = "📁";
+                                if (fileExt == ".pdf") { fileIcon = "📄"; }
+                                else if (fileExt == ".doc" || fileExt == ".docx") { fileIcon = "📝"; }
+                                else if (fileExt == ".xls" || fileExt == ".xlsx") { fileIcon = "📊"; }
+                                else if (fileExt == ".zip" || fileExt == ".rar") { fileIcon = "🗜️"; }
+                                else if (fileExt == ".txt") { fileIcon = "📃"; }
+                                
+                                <a href="@msg.MediaUrl"
+                                   download="@msg.MediaFileName"
+                                   class="file-card"
+                                   style="@(isMine ? "color:#fff" : "")">
+                                    <div class="file-icon">@fileIcon</div>
+                                    <div class="file-info">
+                                        <div class="fname">
+                                            @msg.MediaFileName
+                                        </div>
+                                        <div class="fsize">
+                                            @if (msg.MediaFileSize.HasValue)
+                                            {
+                                                long sz = msg.MediaFileSize.Value;
+                                                if (sz < 1024)
+                                                {
+                                                    @(sz.ToString() + " B")
+                                                }
+                                                else if (sz < 1048576)
+                                                {
+                                                    @((sz / 1024.0).ToString("F1") + " KB")
+                                                }
+                                                else
+                                                {
+                                                    @((sz / 1048576.0).ToString("F1") + " MB")
+                                                }
+                                            }
+                                        </div>
+                                    </div>
+                                    <i class="bi bi-download"
+                                       style="font-size:16px;opacity:.7"></i>
+                                </a>
+                            }
+                            else
+                            {
+                                @if (isBotChat && msg.IsFromAdmin)
+                                {
+                                    @Html.Raw(FormatBotMessage(msg.Content))
+                                }
+                                else
+                                {
+                                    @msg.Content
+                                }
+                            }
+                        </div>
+
+                        <div class="msg-time @(isMine ? "mine" : "theirs")">
+                            @msg.SentAt.ToString("HH:mm")
+                            @if (msg.IsEdited && !msg.IsDeletedForEveryone &&
+                                 msg.MessageType ==
+                                 MoneyTransfer.Models.MessageType.Text)
+                            {
+                                <span class="edited-badge">(edited)</span>
+                            }
+                            @if (isMine && !isBotChat)
+                            {
+                                <span class="read-tick"
+                                      style="color:@(msg.IsRead
+                                          ? "var(--teal)"
+                                          : "var(--text-3)")">
+                                    @(msg.IsRead ? "✓✓" : "✓")
+                                </span>
+                            }
+                        </div>
+
+                        <div class="reactions-strip"
+                             id="reactions-@msg.Id"
+                             style="justify-content:
+                                @(isMine ? "flex-end" : "flex-start")">
+                            @foreach (var rg in rxGroups)
+                            {
+                                <button class="reaction-pill
+                                    @(rg.IsMine ? "mine-react" : "")"
+                                        onclick="reactTo(@msg.Id,
+                                            '@rg.Emoji',event)"
+                                        title="Toggle">
+                                    @rg.Emoji
+                                    <span class="cnt">@rg.Count</span>
+                                </button>
+                            }
+                        </div>
                     </div>
                 </div>
             </div>
@@ -144,63 +678,837 @@
 
         @if (!Model.Messages.Any())
         {
-            <div style="text-align:center;margin:auto;
-                            color:var(--text-3);font-size:13px">
-                <i class="bi bi-chat-dots"
-                   style="font-size:32px;display:block;
-                              margin-bottom:8px;opacity:.4"></i>
-                Say hi to @other?.User?.FirstName!
+            <div class="chat-empty">
+                @if (isBotChat)
+                {
+                    <i class="bi bi-robot"></i>
+                    <p>Hi! I'm Cedar Bot. Ask me anything!</p>
+                }
+                else
+                {
+                    <i class="bi bi-chat-dots"></i>
+                    <p>Say hi to @other?.User?.FirstName!</p>
+                }
             </div>
         }
     </div>
 
-    <div style="background:var(--surface);
-                border:1px solid var(--border);
-                border-radius:0 0 var(--r-lg) var(--r-lg);
-                padding:12px 16px">
-        <form asp-action="Send" method="post"
-              style="display:flex;gap:10px;align-items:center">
-            @Html.AntiForgeryToken()
-            <input type="hidden" name="conversationId"
-                   value="@Model.Id" />
-            <input type="text" name="content"
-                   id="msgInput"
-                   class="form-control"
+    <div class="attach-bar" id="attachBar">
+        <i class="bi bi-paperclip"
+           style="color:var(--teal)"></i>
+        <div style="flex:1;min-width:0">
+            <div id="attachName"
+                 style="font-size:13px;font-weight:600;
+                        white-space:nowrap;overflow:hidden;
+                        text-overflow:ellipsis;
+                        color:var(--text-1)"></div>
+            <div id="attachSize"
+                 style="font-size:11px;color:var(--text-3)"></div>
+        </div>
+        <button onclick="clearAttach()" class="bar-clear">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+
+    <div class="reply-bar" id="replyBar">
+        <i class="bi bi-reply-fill"
+           style="color:var(--teal)"></i>
+        <div style="flex:1;min-width:0">
+            <div id="replyToName"
+                 style="font-size:11px;color:var(--teal);
+                        font-weight:600"></div>
+            <div id="replyToContent"
+                 style="font-size:12px;color:var(--text-2);
+                        white-space:nowrap;overflow:hidden;
+                        text-overflow:ellipsis"></div>
+        </div>
+        <button onclick="clearReply()" class="bar-clear">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+
+    <div class="chat-input-bar">
+        <div class="chat-input-row">
+            @if (!isBotChat)
+            {
+                <button type="button" class="input-tool-btn"
+                        onclick="document.getElementById('fileIn').click()"
+                        title="Attach file">
+                    <i class="bi bi-paperclip"></i>
+                </button>
+
+                <div class="emoji-input-wrap">
+                    <button type="button" class="input-tool-btn"
+                            id="inputEmojiBtn"
+                            onclick="toggleInputEmoji(event)"
+                            title="Emoji"
+                            style="font-size:18px">
+                        😊
+                    </button>
+                    <div class="input-emoji-picker" id="inputEmojiPicker">
+                        <div class="emoji-grid">
+                            @foreach (var e in new[]{
+                                "😀","😂","😍","🥰","😎","🤔","😢","😡",
+                                "👍","👎","❤️","🔥","🎉","🙏","💰","🌲",
+                                "✅","❌","⭐","💯","🚀","💬","📱","🏦"})
+                            {
+                                <button type="button" class="ep-btn"
+                                        onclick="insertEmoji('@e')">
+                                    @e
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <input type="text" id="msgInput"
                    placeholder="Type a message..."
-                   autocomplete="off"
-                   style="flex:1;border-radius:20px;
-                          padding:10px 16px" />
-            <button type="submit"
-                    style="width:42px;height:42px;
-                           border-radius:50%;
-                           background:var(--teal);
-                           border:none;color:#fff;
-                           font-size:16px;
-                           display:flex;align-items:center;
-                           justify-content:center;
-                           cursor:pointer;flex-shrink:0;
-                           transition:var(--transition)"
-                    onmouseover="this.style.background='var(--teal-dark)'"
-                    onmouseout="this.style.background='var(--teal)'">
+                   autocomplete="off" />
+
+            <button class="send-btn" id="sendBtn" title="Send">
                 <i class="bi bi-send-fill"
                    style="margin-left:2px"></i>
             </button>
-        </form>
+        </div>
+
+        @if (!isBotChat)
+        {
+            <input type="file" id="fileIn" style="display:none"
+                   accept="image/*,video/*,audio/*,
+                           .pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,.rar"
+                   onchange="onFileSelected(this)" />
+
+            <form id="fileForm" method="post"
+                  asp-controller="Chat" asp-action="SendFile"
+                  enctype="multipart/form-data" style="display:none">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="conversationId"
+                       value="@Model.Id" />
+                <input type="hidden" name="replyToId"
+                       id="fileReplyId" value="" />
+                <input type="file" name="file" id="fileFormInput" />
+            </form>
+        }
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        const area = document.getElementById('msgArea');
-        if (area) area.scrollTop = area.scrollHeight;
+<div class="profile-overlay" id="profileOverlay"
+     onclick="closeProfile()"></div>
+<div class="profile-panel" id="profilePanel">
+    <div style="padding:18px 20px;border-bottom:1px solid var(--border);
+                display:flex;align-items:center;gap:12px;
+                flex-shrink:0;background:var(--surface)">
+        <button onclick="closeProfile()"
+                style="background:none;border:none;cursor:pointer;
+                       color:var(--text-2);font-size:18px;padding:0">
+            <i class="bi bi-x-lg"></i>
+        </button>
+        <span style="font-weight:700;font-size:15px;
+                     color:var(--text-1)">Contact Info</span>
+    </div>
+    <div id="profileLoading"
+         style="flex:1;display:flex;align-items:center;
+                justify-content:center;color:var(--text-3)">
+        <div style="text-align:center">
+            <div style="font-size:24px;margin-bottom:8px">⏳</div>
+            Loading...
+        </div>
+    </div>
+    <div id="profileContent" style="display:none;flex:1">
+        <div style="padding:28px 20px 20px;text-align:center;
+                    border-bottom:1px solid var(--border)">
+            <div id="panelAvatar"
+                 style="width:90px;height:90px;border-radius:50%;
+                        background:linear-gradient(135deg,
+                            var(--teal),var(--teal-mid));
+                        display:flex;align-items:center;
+                        justify-content:center;
+                        font-size:32px;font-weight:700;color:#fff;
+                        margin:0 auto 14px;overflow:hidden"></div>
+            <div id="panelName"
+                 style="font-size:20px;font-weight:800;
+                        color:var(--text-1);margin-bottom:4px"></div>
+            <div id="panelUsername"
+                 style="font-size:13px;color:var(--text-3);
+                        margin-bottom:8px"></div>
+            <div id="panelVerified" style="display:none">
+                <span style="background:var(--teal-light);
+                             color:var(--teal);font-size:12px;
+                             font-weight:600;padding:3px 10px;
+                             border-radius:12px;
+                             border:1px solid var(--teal)">
+                    ✓ Verified
+                </span>
+            </div>
+        </div>
+        <div style="padding:16px 20px;
+                    border-bottom:1px solid var(--border)">
+            <div style="font-size:12px;font-weight:700;
+                        color:var(--text-3);text-transform:uppercase;
+                        letter-spacing:.5px;margin-bottom:12px">
+                About
+            </div>
+            <div id="panelBio"
+                 style="font-size:14px;color:var(--text-1);
+                        margin-bottom:14px;line-height:1.5;
+                        display:none"></div>
+            <div style="display:flex;align-items:center;
+                        gap:10px;margin-bottom:10px">
+                <i class="bi bi-telephone-fill"
+                   style="color:var(--teal);width:18px"></i>
+                <span id="panelPhone"
+                      style="font-size:13px;color:var(--text-1)">
+                </span>
+            </div>
+            <div id="panelLocRow"
+                 style="display:none;align-items:center;
+                        gap:10px;margin-bottom:10px">
+                <i class="bi bi-geo-alt-fill"
+                   style="color:var(--teal);width:18px"></i>
+                <span id="panelLoc"
+                      style="font-size:13px;color:var(--text-1)">
+                </span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+                <i class="bi bi-calendar3"
+                   style="color:var(--teal);width:18px"></i>
+                <span id="panelSince"
+                      style="font-size:13px;color:var(--text-1)">
+                </span>
+            </div>
+        </div>
+        <div style="padding:16px 20px;
+                    border-bottom:1px solid var(--border)">
+            <div style="font-size:12px;font-weight:700;
+                        color:var(--text-3);text-transform:uppercase;
+                        letter-spacing:.5px;margin-bottom:12px">
+                Shared Media
+            </div>
+            <div id="panelImages"
+                 style="display:grid;
+                        grid-template-columns:repeat(3,1fr);
+                        gap:4px;margin-bottom:8px"></div>
+            <div id="panelNoMedia"
+                 style="font-size:13px;color:var(--text-3);
+                        text-align:center;padding:12px 0;
+                        display:none">
+                No shared media yet
+            </div>
+        </div>
+        <div id="panelFilesSection"
+             style="padding:16px 20px;display:none">
+            <div style="font-size:12px;font-weight:700;
+                        color:var(--text-3);text-transform:uppercase;
+                        letter-spacing:.5px;margin-bottom:12px">
+                Shared Files
+            </div>
+            <div id="panelFiles"
+                 style="display:flex;flex-direction:column;
+                        gap:8px"></div>
+        </div>
+    </div>
+</div>
 
-        const input = document.getElementById('msgInput');
-        if (input) {
-            input.addEventListener('keypress', e => {
+<div id="lightbox">
+    <button class="lb-close" onclick="closeLightbox()">
+        <i class="bi bi-x-lg"></i>
+    </button>
+    <img id="lbImg" src="" alt="" />
+</div>
+
+<div id="ctxMenu" class="ctx-menu">
+    <div class="ctx-item danger"
+         onclick="deleteMsg(ctxId,'me')">
+        <i class="bi bi-eye-slash-fill"></i> Delete for Me
+    </div>
+    <div class="ctx-item danger"
+         onclick="deleteMsg(ctxId,'everyone')">
+        <i class="bi bi-trash-fill"></i> Delete for Everyone
+    </div>
+</div>
+
+<div id="editOverlay" class="edit-overlay">
+    <div class="edit-modal">
+        <div style="font-weight:700;font-size:15px;
+                    color:var(--text-1);margin-bottom:14px">
+            <i class="bi bi-pencil-fill"
+               style="color:var(--teal);margin-right:6px"></i>
+            Edit Message
+        </div>
+        <textarea id="editContent" rows="3"
+                  class="form-control"
+                  style="resize:none;border-radius:var(--r-md);
+                         margin-bottom:14px;font-size:14px">
+        </textarea>
+        <div style="display:flex;gap:10px;
+                    justify-content:flex-end">
+            <button onclick="closeEdit()"
+                    class="btn-tp-secondary"
+                    style="font-size:13px">Cancel</button>
+            <button onclick="submitEdit()"
+                    class="btn-tp-primary"
+                    style="font-size:13px">
+                <i class="bi bi-check-lg"></i> Save
+            </button>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string FormatBotMessage(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return "";
+
+        text = System.Net.WebUtility.HtmlEncode(text);
+        text = System.Text.RegularExpressions.Regex.Replace(
+            text, @"\*\*(.+?)\*\*", "<strong>$1</strong>");
+
+        var lines = text.Split('\n');
+        var result = new System.Text.StringBuilder();
+        bool inList = false;
+
+        foreach (var line in lines)
+        {
+            var trimmed = line.Trim();
+            bool isBullet = trimmed.StartsWith("•") ||
+                            trimmed.StartsWith("-") ||
+                            trimmed.StartsWith("*");
+
+            if (isBullet)
+            {
+                if (!inList)
+                {
+                    result.Append("<ul style='margin:6px 0 6px 16px;padding:0;list-style:none'>");
+                    inList = true;
+                }
+                var content = trimmed.TrimStart('•', '-', '*', ' ');
+                result.Append($"<li style='margin-bottom:3px;display:flex;gap:6px'>" +
+                              $"<span style='color:var(--teal);flex-shrink:0'>›</span>" +
+                              $"<span>{content}</span></li>");
+            }
+            else
+            {
+                if (inList)
+                {
+                    result.Append("</ul>");
+                    inList = false;
+                }
+                if (!string.IsNullOrWhiteSpace(trimmed))
+                    result.Append(
+                        $"<p style='margin:0 0 6px'>{trimmed}</p>");
+                else
+                    result.Append("<br/>");
+            }
+        }
+
+        if (inList) result.Append("</ul>");
+        return result.ToString();
+    }
+}
+
+@section Scripts {
+    <form id="csrfForm" style="display:none">
+        @Html.AntiForgeryToken()
+    </form>
+    <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.0/dist/browser/signalr.min.js"></script>
+    <script>
+        const convId = @Model.Id;
+        const myUserId = '@ViewBag.CurrentUserId';
+        const isBotChat = @(isBotChat ? "true" : "false");
+        const otherName = '@(other?.User?.FirstName ?? (isBotChat ? "Cedar Bot" : "User"))';
+        const token = document.querySelector('#csrfForm input[name="__RequestVerificationToken"]').value;
+        const area = document.getElementById('msgArea');
+
+        function scrollDown() {
+            if (area) area.scrollTop = area.scrollHeight;
+        }
+        scrollDown();
+
+        function openLightbox(src) {
+            document.getElementById('lbImg').src = src;
+            document.getElementById('lightbox').classList.add('open');
+        }
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('open');
+        }
+        document.getElementById('lightbox')?.addEventListener('click', function(e) {
+            if (e.target.id === 'lightbox') closeLightbox();
+        });
+
+        function onFileSelected(inp) {
+            const f = inp.files[0];
+            if (!f) return;
+            document.getElementById('attachName').textContent = f.name;
+            const sz = f.size < 1024 ? f.size + 'B'
+                : f.size < 1048576 ? (f.size / 1024).toFixed(1) + 'KB'
+                : (f.size / 1048576).toFixed(1) + 'MB';
+            document.getElementById('attachSize').textContent = sz;
+            document.getElementById('attachBar').classList.add('open');
+            const dt = new DataTransfer();
+            dt.items.add(f);
+            document.getElementById('fileFormInput').files = dt.files;
+        }
+
+        function clearAttach() {
+            document.getElementById('fileIn').value = '';
+            document.getElementById('fileFormInput').files = new DataTransfer().files;
+            document.getElementById('attachBar').classList.remove('open');
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.emoji-picker-popup') &&
+                !e.target.closest('.msg-action-btn')) {
+                document.querySelectorAll('.emoji-picker-popup')
+                    .forEach(function(p) { p.classList.remove('open'); });
+            }
+            if (!e.target.closest('#inputEmojiPicker') &&
+                !e.target.closest('#inputEmojiBtn')) {
+                document.getElementById('inputEmojiPicker')?.classList.remove('open');
+            }
+            if (!e.target.closest('#ctxMenu')) {
+                document.getElementById('ctxMenu').classList.remove('open');
+            }
+        });
+
+        function toggleEmojiPicker(e, msgId) {
+            e.stopPropagation();
+            const p = document.getElementById('ep-' + msgId);
+            const was = p.classList.contains('open');
+            document.querySelectorAll('.emoji-picker-popup')
+                .forEach(function(x) { x.classList.remove('open'); });
+            if (!was) p.classList.add('open');
+        }
+
+        async function reactTo(msgId, emoji, e) {
+            if (e) e.stopPropagation();
+            document.getElementById('ep-' + msgId)?.classList.remove('open');
+            const res = await fetch('/Chat/ReactToMessage', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': token
+                },
+                body: 'messageId=' + msgId + '&emoji=' + encodeURIComponent(emoji)
+            });
+            if (res.ok) {
+                const data = await res.json();
+                renderReactions(msgId, data.counts);
+            }
+        }
+
+        function renderReactions(msgId, counts) {
+            const strip = document.getElementById('reactions-' + msgId);
+            if (!strip) return;
+            strip.innerHTML = '';
+            (counts || []).forEach(function(r) {
+                const btn = document.createElement('button');
+                btn.className = 'reaction-pill';
+                btn.onclick = function(e) { reactTo(msgId, r.emoji, e); };
+                btn.innerHTML = r.emoji + ' <span class="cnt">' + r.count + '</span>';
+                strip.appendChild(btn);
+            });
+        }
+
+        function toggleInputEmoji(e) {
+            e.stopPropagation();
+            document.getElementById('inputEmojiPicker').classList.toggle('open');
+        }
+
+        function insertEmoji(em) {
+            const inp = document.getElementById('msgInput');
+            const s = inp.selectionStart, en = inp.selectionEnd;
+            inp.value = inp.value.slice(0, s) + em + inp.value.slice(en);
+            inp.selectionStart = inp.selectionEnd = s + em.length;
+            inp.focus();
+            document.getElementById('inputEmojiPicker').classList.remove('open');
+        }
+
+        function setReply(msgId, name, preview) {
+            document.getElementById('replyBar').classList.add('open');
+            document.getElementById('replyToName').textContent = name;
+            document.getElementById('replyToContent').textContent = preview;
+            document.getElementById('msgInput').dataset.replyTo = msgId;
+            document.getElementById('msgInput').focus();
+        }
+
+        function clearReply() {
+            document.getElementById('replyBar').classList.remove('open');
+            delete document.getElementById('msgInput').dataset.replyTo;
+        }
+
+        let editId = null;
+
+        function openEditModal(msgId, current) {
+            editId = msgId;
+            document.getElementById('editContent').value = current;
+            document.getElementById('editOverlay').classList.add('open');
+            setTimeout(function() { document.getElementById('editContent').focus(); }, 50);
+        }
+
+        function closeEdit() {
+            document.getElementById('editOverlay').classList.remove('open');
+            editId = null;
+        }
+
+        async function submitEdit() {
+            const nc = document.getElementById('editContent').value.trim();
+            if (!nc || !editId) return;
+            const res = await fetch('/Chat/EditMessage', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': token
+                },
+                body: 'messageId=' + editId + '&newContent=' + encodeURIComponent(nc)
+            });
+            if (res.ok) {
+                document.getElementById('bubble-' + editId).textContent = nc;
+                closeEdit();
+            }
+        }
+
+        document.getElementById('editContent')?.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) submitEdit();
+            if (e.key === 'Escape') closeEdit();
+        });
+
+        let ctxId = null;
+
+        function openDeleteMenu(e, msgId) {
+            e.preventDefault();
+            e.stopPropagation();
+            ctxId = msgId;
+            const m = document.getElementById('ctxMenu');
+            m.classList.add('open');
+            m.style.top = e.clientY + 'px';
+            m.style.left = e.clientX + 'px';
+        }
+
+        async function deleteMsg(msgId, type) {
+            document.getElementById('ctxMenu').classList.remove('open');
+            const res = await fetch('/Chat/DeleteMessage', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': token
+                },
+                body: 'messageId=' + msgId + '&deleteType=' + type
+            });
+            if (res.ok) {
+                if (type === 'me') {
+                    const el = document.getElementById('msg-' + msgId);
+                    if (el) {
+                        el.classList.add('msg-deleting');
+                        setTimeout(function() { el.remove(); }, 200);
+                    }
+                } else {
+                    const b = document.getElementById('bubble-' + msgId);
+                    if (b) b.innerHTML = '<span class="deleted-msg">🚫 This message was deleted.</span>';
+                }
+            }
+        }
+
+                async function sendText(content, replyToId) {
+            const inp = document.getElementById('msgInput');
+            const btn = document.getElementById('sendBtn');
+            inp.disabled = true;
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+
+            try {
+                const fd = new FormData();
+                fd.append('conversationId', convId);
+                fd.append('content', content);
+                if (replyToId) fd.append('replyToId', replyToId);
+                fd.append('__RequestVerificationToken', token);
+
+                const res = await fetch('/Chat/Send', {
+                    method:  'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body:    fd
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.success) {
+                        inp.value = '';
+                        clearReply();
+                        appendOwnBubble(content, data.sentAt, data.messageId);
+                    }
+                } else {
+                    console.error('Send failed:', res.status);
+                }
+            } catch (err) {
+                console.error('Send error:', err);
+            } finally {
+                inp.disabled    = false;
+                btn.disabled    = false;
+                btn.style.opacity = '1';
+                inp.focus();
+            }
+        }
+
+        function appendOwnBubble(content, sentAt, msgId) {
+            const row = document.createElement('div');
+            row.id = 'msg-' + (msgId || Date.now());
+            row.className = 'msg-wrapper mine';
+
+            row.innerHTML = `
+                <div class="msg-bubble">
+                    <div style="position:relative">
+                        <div id="bubble-${msgId || Date.now()}"
+                             class="bubble-inner bubble-mine"
+                             style="word-break:break-word">
+                            ${escHtml(content)}
+                        </div>
+                        <div class="msg-time mine">
+                            ${sentAt || new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}
+                            <span class="read-tick"
+                                  style="color:var(--text-3)">✓</span>
+                        </div>
+                        <div class="reactions-strip"
+                             id="reactions-${msgId || Date.now()}"
+                             style="justify-content:flex-end"></div>
+                    </div>
+                </div>`;
+
+            area.appendChild(row);
+            scrollDown();
+        }
+
+        const sendBtn = document.getElementById('sendBtn');
+        const msgInput = document.getElementById('msgInput');
+        const msgForm = document.getElementById('csrfForm');
+
+        if (sendBtn) {
+            sendBtn.addEventListener('click', function(e) {
+                if (isBotChat) {
+                    document.getElementById('csrfForm').submit();
+                    return;
+                }
+                const fi = document.getElementById('fileFormInput');
+                if (fi && fi.files && fi.files.length) {
+                    document.getElementById('fileReplyId').value = document.getElementById('msgInput').dataset.replyTo || '';
+                    document.getElementById('fileForm').submit();
+                    return;
+                }
+                const c = msgInput.value.trim();
+                if (!c) return;
+                const rid = msgInput.dataset.replyTo || '';
+                sendText(c, rid);
+            });
+        }
+
+        if (msgInput) {
+            msgInput.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
-                    input.closest('form').submit();
+                    if (isBotChat) {
+                        document.getElementById('csrfForm').submit();
+                        return;
+                    }
+                    const fi = document.getElementById('fileFormInput');
+                    if (fi && fi.files && fi.files.length) {
+                        document.getElementById('fileReplyId').value = document.getElementById('msgInput').dataset.replyTo || '';
+                        document.getElementById('fileForm').submit();
+                        return;
+                    }
+                    const c = this.value.trim();
+                    if (!c) return;
+                    const rid = this.dataset.replyTo || '';
+                    sendText(c, rid);
                 }
+            });
+        }
+
+        if (!isBotChat) {
+            const conn = new signalR.HubConnectionBuilder()
+                .withUrl('/chatHub')
+                .withAutomaticReconnect()
+                .build();
+
+            conn.on('ReceiveMessage', function(data) {
+                if (data.conversationId !== convId) return;
+                if (data.senderId === myUserId) return;
+                if (document.getElementById('msg-' + data.messageId)) return;
+
+                const row = document.createElement('div');
+                row.id = 'msg-' + data.messageId;
+                row.className = 'msg-wrapper theirs';
+
+                const av = document.createElement('div');
+                av.className = 'msg-avatar-init';
+                av.textContent = otherName.charAt(0).toUpperCase();
+
+                const mt = (data.messageType || 'Text').toLowerCase();
+                const pad = mt === 'text' ? 'bubble-inner' : 'bubble-inner media-pad';
+                const replyHtml = data.replyPreview
+                    ? '<div class="reply-preview"><strong>' + escHtml(data.replySender || '') + '</strong>' + escHtml(data.replyPreview) + '</div>'
+                    : '';
+
+                let content = '';
+                if (mt === 'image') {
+                    content = '<img src="' + escHtml(data.mediaUrl) + '" class="media-img" onclick="openLightbox(\'' + escHtml(data.mediaUrl) + '\')" />';
+                } else if (mt === 'video') {
+                    content = '<video class="media-video" controls preload="metadata"><source src="' + escHtml(data.mediaUrl) + '" /></video>';
+                } else if (mt === 'voice') {
+                    content = '<div style="padding:4px 8px"><div style="font-size:11px;opacity:.7;margin-bottom:4px">🎤 Voice message</div><audio controls><source src="' + escHtml(data.mediaUrl) + '" /></audio></div>';
+                } else if (mt === 'file') {
+                    content = '<a href="' + escHtml(data.mediaUrl) + '" download="' + escHtml(data.mediaFileName) + '" class="file-card"><div class="file-icon">📁</div><div class="file-info"><div class="fname">' + escHtml(data.mediaFileName) + '</div></div><i class="bi bi-download" style="font-size:16px;opacity:.7"></i></a>';
+                } else {
+                    content = escHtml(data.content);
+                }
+
+                const bub = document.createElement('div');
+                bub.className = 'msg-bubble';
+                bub.innerHTML = replyHtml + '<div style="position:relative"><div id="bubble-' + data.messageId + '" class="' + pad + ' bubble-theirs">' + content + '</div><div class="msg-time theirs">' + data.sentAt + '</div><div class="reactions-strip" id="reactions-' + data.messageId + '" style="justify-content:flex-start"></div></div>';
+
+                row.appendChild(av);
+                row.appendChild(bub);
+                area.appendChild(row);
+                scrollDown();
+            });
+
+            conn.on('MessageEdited', function(data) {
+                const b = document.getElementById('bubble-' + data.messageId);
+                if (b && !b.querySelector('.deleted-msg')) b.textContent = data.newContent;
+            });
+
+            conn.on('MessageDeleted', function(data) {
+                if (data.deletedForEveryone) {
+                    const b = document.getElementById('bubble-' + data.messageId);
+                    if (b) b.innerHTML = '<span class="deleted-msg">🚫 This message was deleted.</span>';
+                }
+            });
+
+            conn.on('ReactionUpdated', function(data) {
+                renderReactions(data.messageId, data.counts);
+            });
+
+            conn.start()
+                .then(function() { return conn.invoke('JoinConversation', convId); })
+                .catch(console.error);
+        }
+
+        async function openProfile() {
+            document.getElementById('profileOverlay').style.display = 'block';
+            document.getElementById('profilePanel').style.right = '0';
+            document.getElementById('profileLoading').style.display = 'flex';
+            document.getElementById('profileContent').style.display = 'none';
+
+            try {
+                const res = await fetch('/Chat/ConversationProfile/' + convId);
+                if (!res.ok) return;
+                const d = await res.json();
+
+                const av = document.getElementById('panelAvatar');
+                if (d.profilePicture) {
+                    av.innerHTML = '<img src="' + escHtml(d.profilePicture) + '" style="width:90px;height:90px;object-fit:cover" />';
+                } else {
+                    av.textContent = (d.firstName || '?').charAt(0).toUpperCase();
+                }
+
+                document.getElementById('panelName').textContent = (d.firstName || '') + ' ' + (d.lastName || '');
+                document.getElementById('panelUsername').textContent = d.username ? '@@' + d.username : '';
+                document.getElementById('panelVerified').style.display = d.isVerified ? 'block' : 'none';
+
+                const bio = document.getElementById('panelBio');
+                if (d.bio) {
+                    bio.textContent = d.bio;
+                    bio.style.display = 'block';
+                }
+
+                document.getElementById('panelPhone').textContent = d.phone || 'No phone';
+
+                if (d.city || d.country) {
+                    document.getElementById('panelLocRow').style.display = 'flex';
+                    let locText = '';
+                    if (d.city) locText += d.city;
+                    if (d.country) {
+                        if (locText) locText += ', ';
+                        locText += d.country;
+                    }
+                    document.getElementById('panelLoc').textContent = locText;
+                }
+                document.getElementById('panelSince').textContent = 'Member since ' + (d.memberSince || 'recently');
+
+                const grid = document.getElementById('panelImages');
+                grid.innerHTML = '';
+                const imgs = (d.images || []).slice(0, 9);
+                if (imgs.length) {
+                    imgs.forEach(function(img) {
+                        const div = document.createElement('div');
+                        div.style.cssText = 'aspect-ratio:1;border-radius:6px;overflow:hidden;cursor:pointer';
+                        div.onclick = function() { openLightbox(img.mediaUrl); };
+                        div.innerHTML = '<img src="' + escHtml(img.mediaUrl) + '" style="width:100%;height:100%;object-fit:cover" />';
+                        grid.appendChild(div);
+                    });
+                    document.getElementById('panelNoMedia').style.display = 'none';
+                } else {
+                    document.getElementById('panelNoMedia').style.display = 'block';
+                }
+
+                const files = d.files || [];
+                if (files.length) {
+                    const fc = document.getElementById('panelFiles');
+                    fc.innerHTML = '';
+                    files.forEach(function(f) {
+                        const parts = (f.mediaFileName || '').split('.');
+                        const ext = parts.length > 1 ? parts.pop().toLowerCase() : '';
+                        let ic = '📁';
+                        if (ext === 'pdf') ic = '📄';
+                        else if (ext === 'doc' || ext === 'docx') ic = '📝';
+                        else if (ext === 'xls' || ext === 'xlsx') ic = '📊';
+                        else if (ext === 'zip' || ext === 'rar') ic = '🗜️';
+                        else if (ext === 'txt') ic = '📃';
+
+                        let sz = '';
+                        if (f.mediaFileSize) {
+                            if (f.mediaFileSize < 1024) {
+                                sz = f.mediaFileSize + 'B';
+                            } else if (f.mediaFileSize < 1048576) {
+                                sz = (f.mediaFileSize / 1024).toFixed(1) + 'KB';
+                            } else {
+                                sz = (f.mediaFileSize / 1048576).toFixed(1) + 'MB';
+                            }
+                        }
+
+                        fc.innerHTML += '<a href="' + escHtml(f.mediaUrl) + '" download="' + escHtml(f.mediaFileName) + '" class="file-card" style="text-decoration:none;color:inherit"><div class="file-icon">' + ic + '</div><div class="file-info"><div class="fname">' + escHtml(f.mediaFileName || 'File') + '</div><div class="fsize">' + sz + '</div></div><i class="bi bi-download" style="font-size:15px;opacity:.6"></i></a>';
+                    });
+                    document.getElementById('panelFilesSection').style.display = 'block';
+                }
+
+                document.getElementById('profileLoading').style.display = 'none';
+                document.getElementById('profileContent').style.display = 'block';
+            } catch (err) {
+                console.error(err);
+                document.getElementById('profileLoading').innerHTML = '<div style="color:var(--red)">Failed to load profile</div>';
+            }
+        }
+
+        function closeProfile() {
+            document.getElementById('profilePanel').style.right = '-420px';
+            document.getElementById('profileOverlay').style.display = 'none';
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeProfile();
+                closeLightbox();
+                closeEdit();
+            }
+        });
+
+        function escHtml(s) {
+            if (!s) return '';
+            return String(s).replace(/[&<>"']/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                if (m === '"') return '&quot;';
+                if (m === "'") return '&#39;';
+                return m;
             });
         }
     </script>

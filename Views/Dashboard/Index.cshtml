@@ -3,6 +3,8 @@
     ViewData["Title"] = "Dashboard";
     bool isAdmin = User.IsInRole("Admin");
     bool isAgent = User.IsInRole("Agent");
+    var agentStore = ViewBag.AgentStore as MoneyTransfer.Models.Agent;
+    var agentStores = ViewBag.AgentStores as List<MoneyTransfer.Models.Agent> ?? new List<MoneyTransfer.Models.Agent>();
 }
 
 <div style="margin-bottom:24px">
@@ -11,7 +13,11 @@
         @Model.FullName.Split(' ')[0] 👋
     </h2>
     <p style="font-size:13px;color:var(--text-3);margin-top:3px">
-        @if (isAdmin)
+        @if (isAdmin && isAgent)
+        {
+            <text>Welcome Admin & Agent. Here's your platform overview and personal account.</text>
+        }
+        else if (isAdmin)
         {
             <text>Welcome to your admin dashboard. Here's your personal account overview and platform statistics.</text>
         }
@@ -26,6 +32,43 @@
     </p>
 </div>
 
+<!-- Agent Store Selector - For all agents with multiple stores -->
+@if (isAgent && agentStores.Count > 1)
+{
+    <div class="tp-card mb-3">
+        <div style="font-size:13px;color:var(--text-2);
+                    margin-bottom:6px;font-weight:600">
+            <i class="bi bi-shop"
+               style="color:var(--teal);margin-right:6px"></i>
+            You manage <strong>@agentStores.Count stores</strong>.
+            Your dashboard shows stats for:
+        </div>
+        <form asp-controller="Agent"
+              asp-action="SelectStore"
+              method="post"
+              style="display:flex;gap:8px">
+            @Html.AntiForgeryToken()
+            <select name="agentId" class="form-select"
+                    style="flex:1">
+                @foreach (var s in agentStores)
+                {
+                    <option value="@s.Id"
+                            @@(agentStore?.Id == s.Id ? "selected" : "")>
+                        @s.StoreName (@s.City)
+                    </option>
+                }
+            </select>
+            <button type="submit"
+                    class="btn-tp-primary"
+                    style="padding:10px 18px;
+                           font-size:13px">
+                Switch Store
+            </button>
+        </form>
+    </div>
+}
+
+<!-- Admin Section (only for admins) -->
 @if (isAdmin)
 {
     <div style="margin-bottom:24px">
@@ -93,13 +136,13 @@
         @{
             var adminCards = new[]
             {
-        ("Users", "Manage Users", "View, sort, disable accounts", "bi-people-fill", "beneficiaries"),
-        ("AgentApplications", "Agent Applications", "Approve or reject requests", "bi-person-check-fill", "sent"),
-        ("KYCReview", "KYC Review", "Verify identity documents", "bi-shield-check", "received"),
-        ("WalletRequests", "Wallet Approvals", "Approve wallet creation", "bi-wallet2", "sent"),
-        ("AllTransactions", "All Transactions", "Platform-wide log", "bi-list-check", "beneficiaries"),
-        ("FeeSettings", "Fee Settings", "Configure transfer fees", "bi-percent", "received"),
-        };
+                ("Users", "Manage Users", "View, sort, disable accounts", "bi-people-fill", "beneficiaries"),
+                ("AgentApplications", "Agent Applications", "Approve or reject requests", "bi-person-check-fill", "sent"),
+                ("KYCReview", "KYC Review", "Verify identity documents", "bi-shield-check", "received"),
+                ("WalletRequests", "Wallet Approvals", "Approve wallet creation", "bi-wallet2", "sent"),
+                ("AllTransactions", "All Transactions", "Platform-wide log", "bi-list-check", "beneficiaries"),
+                ("FeeSettings", "Fee Settings", "Configure transfer fees", "bi-percent", "received"),
+            };
         }
 
         @foreach (var card in adminCards)
@@ -123,8 +166,96 @@
         }
     </div>
 
-    <div style="border-top:1px solid var(--border);margin:20px 0 24px"></div>
+    <!-- Agent Section for Admin who are also Agents -->
+    @if (isAgent)
+    {
+        <div style="border-top:1px solid var(--border);margin:20px 0 24px"></div>
+        <div style="margin-bottom:16px">
+            <h3 style="font-size:16px;font-weight:700;color:var(--text-1);margin-bottom:14px">
+                <i class="bi bi-shop" style="color:var(--teal);margin-right:8px"></i>
+                Your Agent Dashboard
+            </h3>
+        </div>
+        
+        <!-- Agent Stats for Admin-Agent -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-icon received">
+                        <i class="bi bi-cash-coin"></i>
+                    </div>
+                    <div class="stat-value">
+                        $@((ViewBag.AgentTotalCashIn as decimal? ?? 0).ToString("N2"))
+                    </div>
+                    <div class="stat-label">Total Cash In</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-icon beneficiaries">
+                        <i class="bi bi-percent"></i>
+                    </div>
+                    <div class="stat-value">
+                        $@((ViewBag.AgentTotalCommissions as decimal? ?? 0).ToString("N2"))
+                    </div>
+                    <div class="stat-label">Total Commissions</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-icon received">
+                        <i class="bi bi-geo-alt-fill"></i>
+                    </div>
+                    <div class="stat-value">
+                        @(ViewBag.AgentLocationSet == true ? "Set ✓" : "Not Set")
+                    </div>
+                    <div class="stat-label">Map Location</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <a asp-controller="Agent" asp-action="Dashboard" class="tp-card d-block text-decoration-none">
+                    <div style="display:flex;align-items:center;gap:12px">
+                        <div class="stat-icon received" style="margin-bottom:0"><i class="bi bi-speedometer2"></i></div>
+                        <div><div class="tp-card-title">Agent Panel</div><div style="font-size:12px;color:var(--text-3)">Manage your store</div></div>
+                        <i class="bi bi-chevron-right" style="color:var(--text-3);margin-left:auto"></i>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a asp-controller="Agent" asp-action="CashIn" class="tp-card d-block text-decoration-none">
+                    <div style="display:flex;align-items:center;gap:12px">
+                        <div class="stat-icon received" style="margin-bottom:0"><i class="bi bi-cash-coin"></i></div>
+                        <div><div class="tp-card-title">Cash In</div><div style="font-size:12px;color:var(--text-3)">Add cash to wallet</div></div>
+                        <i class="bi bi-chevron-right" style="color:var(--text-3);margin-left:auto"></i>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a asp-controller="Agent" asp-action="CashOut" class="tp-card d-block text-decoration-none">
+                    <div style="display:flex;align-items:center;gap:12px">
+                        <div class="stat-icon sent" style="margin-bottom:0"><i class="bi bi-cash-stack"></i></div>
+                        <div><div class="tp-card-title">Cash Out</div><div style="font-size:12px;color:var(--text-3)">Process withdrawal</div></div>
+                        <i class="bi bi-chevron-right" style="color:var(--text-3);margin-left:auto"></i>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a asp-controller="Agent" asp-action="SetLocation" class="tp-card d-block text-decoration-none">
+                    <div style="display:flex;align-items:center;gap:12px">
+                        <div class="stat-icon beneficiaries" style="margin-bottom:0"><i class="bi bi-geo-alt-fill"></i></div>
+                        <div><div class="tp-card-title">Set Location</div><div style="font-size:12px;color:var(--text-3)">Update store location</div></div>
+                        <i class="bi bi-chevron-right" style="color:var(--text-3);margin-left:auto"></i>
+                    </div>
+                </a>
+            </div>
+        </div>
+    }
 
+    <!-- Separator before personal account -->
+    <div style="border-top:1px solid var(--border);margin:20px 0 24px"></div>
     <div style="margin-bottom:16px">
         <h3 style="font-size:16px;font-weight:700;color:var(--text-1);margin-bottom:14px">
             <i class="bi bi-person-circle" style="color:var(--teal);margin-right:8px"></i>
@@ -133,8 +264,88 @@
     </div>
 }
 
-<div class="row g-3 mb-3">
+<!-- Agent Section (for pure agents, not admins) -->
+@if (isAgent && !isAdmin)
+{
+    <!-- Agent Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon received">
+                    <i class="bi bi-cash-coin"></i>
+                </div>
+                <div class="stat-value">
+                    $@((ViewBag.AgentTotalCashIn as decimal? ?? 0).ToString("N2"))
+                </div>
+                <div class="stat-label">Total Cash In</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon beneficiaries">
+                    <i class="bi bi-percent"></i>
+                </div>
+                <div class="stat-value">
+                    $@((ViewBag.AgentTotalCommissions as decimal? ?? 0).ToString("N2"))
+                </div>
+                <div class="stat-label">Total Commissions</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon received">
+                    <i class="bi bi-geo-alt-fill"></i>
+                </div>
+                <div class="stat-value">
+                    @(ViewBag.AgentLocationSet == true ? "Set ✓" : "Not Set")
+                </div>
+                <div class="stat-label">Map Location</div>
+            </div>
+        </div>
+    </div>
 
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <a asp-controller="Agent" asp-action="Dashboard" class="tp-card d-block text-decoration-none">
+                <div style="display:flex;align-items:center;gap:12px">
+                    <div class="stat-icon received" style="margin-bottom:0"><i class="bi bi-speedometer2"></i></div>
+                    <div><div class="tp-card-title">Agent Dashboard</div><div style="font-size:12px;color:var(--text-3)">Manage your store</div></div>
+                    <i class="bi bi-chevron-right" style="color:var(--text-3);margin-left:auto"></i>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a asp-controller="Agent" asp-action="CashIn" class="tp-card d-block text-decoration-none">
+                <div style="display:flex;align-items:center;gap:12px">
+                    <div class="stat-icon received" style="margin-bottom:0"><i class="bi bi-cash-coin"></i></div>
+                    <div><div class="tp-card-title">Cash In</div><div style="font-size:12px;color:var(--text-3)">Add cash to wallet</div></div>
+                    <i class="bi bi-chevron-right" style="color:var(--text-3);margin-left:auto"></i>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a asp-controller="Agent" asp-action="CashOut" class="tp-card d-block text-decoration-none">
+                <div style="display:flex;align-items:center;gap:12px">
+                    <div class="stat-icon sent" style="margin-bottom:0"><i class="bi bi-cash-stack"></i></div>
+                    <div><div class="tp-card-title">Cash Out</div><div style="font-size:12px;color:var(--text-3)">Process withdrawal</div></div>
+                    <i class="bi bi-chevron-right" style="color:var(--text-3);margin-left:auto"></i>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a asp-controller="Agent" asp-action="SetLocation" class="tp-card d-block text-decoration-none">
+                <div style="display:flex;align-items:center;gap:12px">
+                    <div class="stat-icon beneficiaries" style="margin-bottom:0"><i class="bi bi-geo-alt-fill"></i></div>
+                    <div><div class="tp-card-title">Set Location</div><div style="font-size:12px;color:var(--text-3)">Update store location</div></div>
+                    <i class="bi bi-chevron-right" style="color:var(--text-3);margin-left:auto"></i>
+                </div>
+            </a>
+        </div>
+    </div>
+}
+
+<!-- User Account Section (Visible to ALL users - the original dashboard content) -->
+<div class="row g-3 mb-3">
     <div class="col-lg-4">
         <div class="balance-card h-100">
             <div class="balance-label">Available Balance</div>
@@ -278,7 +489,6 @@
 </div>
 
 <div class="row g-3">
-
     <div class="col-lg-8">
         <div class="tp-card">
             <div class="tp-card-header">

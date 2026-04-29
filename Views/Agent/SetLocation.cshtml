@@ -6,31 +6,64 @@
     var zoomValue = Model.Latitude != 0 ? 15 : 9;
     var hasLocation = Model.Latitude != 0;
     var storeName = Model.StoreName?.Replace("'", "\\'") ?? "Store";
+    var agentId = Model.Id;
 }
 
 <div class="row justify-content-center">
     <div class="col-md-8">
+        <div class="tp-card mb-3"
+             style="background:var(--teal-light);
+                    border:1px solid rgba(0,184,148,.2)">
+            <div style="display:flex;align-items:center;
+                        justify-content:space-between;gap:12px">
+                <div>
+                    <div style="font-size:13px;font-weight:700;
+                                color:var(--teal-dark)">
+                        <i class="bi bi-shop"
+                           style="margin-right:6px"></i>
+                        Setting location for:
+                        <strong>@Model.StoreName</strong>
+                    </div>
+                    <div style="font-size:12px;
+                                color:var(--teal-dark);
+                                opacity:.8;margin-top:2px">
+                        @Model.City, @Model.Country
+                    </div>
+                </div>
+                @if (ViewBag.AllStores is List<MoneyTransfer.Models.Agent> allStores &&
+                                allStores.Count > 1)
+                {
+                    <div>
+                        <select id="storeSwitch"
+                                class="form-select"
+                                style="font-size:13px"
+                                onchange="switchStore(this)">
+                            @foreach (var s in allStores)
+                            {
+                                <option value="@s.Id" selected="@(s.Id == Model.Id ? "selected" : null)">
+                                    @s.StoreName
+                                </option>
+                            }
+                        </select>
+                    </div>
+                }
+            </div>
+        </div>
+
         <div class="page-header">
             <div>
                 <h2>Set Store Location</h2>
                 <p>Click on the map to set your store location</p>
             </div>
-            <a asp-action="Dashboard"
-               class="btn-tp-secondary">
-                <i class="bi bi-arrow-left"></i> Back
+            <a asp-action="Dashboard" class="btn-tp-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
             </a>
         </div>
 
-        <div style="background:var(--teal-light);
-                    border:1px solid rgba(0,184,148,.2);
-                    border-radius:var(--r-md);
-                    padding:14px 18px;margin-bottom:16px;
-                    font-size:13px;color:var(--teal-dark)">
+        <div style="background:var(--teal-light); border:1px solid rgba(0,184,148,.2); border-radius:var(--r-md); padding:14px 18px; margin-bottom:16px; font-size:13px; color:var(--teal-dark)">
             <i class="bi bi-info-circle-fill"></i>
             <strong>How to set location:</strong>
-            Click anywhere on the map to drop a pin at
-            your store's exact location, then click
-            <strong>Save Location</strong>.
+            Click anywhere on the map to drop a pin at your store's exact location, then click <strong>Save Location</strong>.
         </div>
 
         <div class="tp-card mb-3">
@@ -55,49 +88,36 @@
                 </span>
             </div>
 
-            <div id="locationMap"
-                 style="height:450px;
-                        border-radius:var(--r-md);
-                        overflow:hidden;
-                        border:1px solid var(--border)">
-            </div>
+            <div id="locationMap" style="height:450px; border-radius:var(--r-md); overflow:hidden; border:1px solid var(--border)"></div>
         </div>
 
-        <form asp-action="SetLocation"
-              asp-route-id="@Model.Id" method="post">
-            <input type="hidden" name="latitude"
-                   id="latInput"
-                   value="@Model.Latitude" />
-            <input type="hidden" name="longitude"
-                   id="lngInput"
-                   value="@Model.Longitude" />
+        <form asp-action="SetLocation" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@agentId" />
+            <input type="hidden" name="latitude" id="latInput" value="@latValue" />
+            <input type="hidden" name="longitude" id="lngInput" value="@lngValue" />
             <div class="d-flex gap-2">
-                <button type="submit"
-                        class="btn-tp-primary"
-                        id="saveBtn">
-                    <i class="bi bi-geo-alt-fill"></i>
-                    Save Location
+                <button type="submit" class="btn-tp-primary">
+                    <i class="bi bi-save"></i> Save Location
                 </button>
-                <a asp-action="Dashboard"
-                   class="btn-tp-secondary">Cancel</a>
+                <a asp-action="Dashboard" class="btn-tp-secondary">Cancel</a>
             </div>
         </form>
     </div>
 </div>
 
 @section Styles {
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" />
 }
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
-    <script>
-        var defaultLat = @(latValue);
-        var defaultLng = @(lngValue);
-        var defaultZoom = @(zoomValue);
+    <script type="text/javascript">
+        var defaultLat = @latValue;
+        var defaultLng = @lngValue;
+        var defaultZoom = @zoomValue;
         var hasLocation = @(hasLocation ? "true" : "false");
-        var storeName = "@Html.Raw(storeName)";
+        var storeName = '@Html.Raw(storeName)';
 
         var map = L.map('locationMap').setView([defaultLat, defaultLng], defaultZoom);
 
@@ -108,7 +128,6 @@
 
         var marker = null;
 
-        // Add marker if location already exists
         if (hasLocation) {
             marker = L.marker([defaultLat, defaultLng])
                 .addTo(map)
@@ -116,7 +135,6 @@
                 .openPopup();
         }
 
-        // Handle map click
         map.on('click', function(e) {
             var lat = e.latlng.lat;
             var lng = e.latlng.lng;
@@ -134,5 +152,10 @@
             document.getElementById('lngInput').value = lng.toFixed(6);
             document.getElementById('coordDisplay').innerHTML = lat.toFixed(5) + ', ' + lng.toFixed(5);
         });
+
+        function switchStore(select) {
+            const storeId = select.value;
+            window.location.href = '/Agent/SetLocation/' + storeId;
+        }
     </script>
 }

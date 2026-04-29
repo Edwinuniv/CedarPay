@@ -8,6 +8,9 @@
         <h2>My Commissions</h2>
         <p>Earnings from processed transactions</p>
     </div>
+    <a asp-action="Dashboard" class="btn-tp-secondary">
+        <i class="bi bi-arrow-left"></i> Back
+    </a>
 </div>
 
 <div class="row g-3 mb-3">
@@ -61,30 +64,25 @@ else
                 @foreach (var c in Model)
                 {
                     <tr>
-                        <td style="font-family:monospace;
-                                           font-size:12px">
+                        <td style="font-family:monospace; font-size:12px">
                             @c.Transaction?.SerialNumber
                         </td>
-                        <td style="font-weight:600;
-                                           color:var(--teal)">
+                        <td style="font-weight:600; color:var(--teal)">
                             $@c.Amount.ToString("N2")
                         </td>
-                        <td style="font-size:13px;
-                                           color:var(--text-2)">
+                        <td style="font-size:13px; color:var(--text-2)">
                             @(c.Percentage * 100)%
                         </td>
                         <td>
-                            <span class="badge-tp @(c.IsPaid
-                                                                  ? "success" : "warning")">
-                        @(c.IsPaid ? "Paid" : "Pending")
-                    </span>
-                </td>
-                <td style="font-size:12px;
-                                   color:var(--text-3)">
-                    @c.EarnedAt.ToString("MMM dd, yyyy")
-                </td>
-            </tr>
-                        }
+                            <span class="badge-tp @(c.IsPaid ? "success" : "warning")">
+                                @(c.IsPaid ? "Paid" : "Pending")
+                            </span>
+                        </td>
+                        <td style="font-size:12px; color:var(--text-3)">
+                            @c.EarnedAt.ToString("MMM dd, yyyy")
+                        </td>
+                    </tr>
+                }
             </tbody>
         </table>
     </div>

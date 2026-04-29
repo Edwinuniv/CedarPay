@@ -47,6 +47,8 @@
             @Html.AntiForgeryToken()
             <input type="hidden" name="RemoveProfilePicture"
                    id="removePicFlag" value="false" />
+            <input type="hidden" name="croppedProfilePicture"
+                   id="croppedPicData" />
 
             @if (isEditMode)
             {
@@ -56,69 +58,103 @@
             }
 
             <div class="tp-card mb-3">
-                <div style="display:flex;align-items:center;gap:20px">
-                    <div>
+                @if (isEditMode)
+                {
+                    <!-- Overlay edit button on avatar -->
+                    <div style="position:relative;display:inline-block">
                         @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
                         {
                             <img id="avatarImg"
                                  src="@Model.ProfilePictureUrl"
                                  style="width:80px;height:80px;
-                                                            border-radius:50%;
-                                                            object-fit:cover;
-                                                            border:3px solid var(--teal)" />
+                                                border-radius:50%;
+                                                object-fit:cover;
+                                                border:3px solid var(--teal)" />
                         }
                         else
                         {
                             <div id="avatarInitials"
                                  style="width:80px;height:80px;
-                                                    border-radius:50%;
-                                                    background:linear-gradient(135deg,
-                                                        var(--teal),var(--teal-mid));
-                                                    display:flex;align-items:center;
-                                                    justify-content:center;
-                                                    font-size:28px;font-weight:800;
-                                                    color:#fff">
-                                @(Model.FirstName?.Length > 0 ? Model.FirstName.Substring(0, 1).ToUpper() : "?")
-                            </div>
-                            <img id="avatarImg"
-                                 style="display:none;width:80px;height:80px;
-                                                border-radius:50%;object-fit:cover;
-                                                border:3px solid var(--teal)" />
-                        }
+                                                border-radius:50%;
+                                                background:linear-gradient(135deg,
+                                                    var(--teal),var(--teal-mid));
+                                                display:flex;align-items:center;
+                                                justify-content:center;
+                                                font-size:28px;font-weight:800;
+                                                color:#fff">
+                                @(Model.FirstName?.Length > 0
+                                                        ? Model.FirstName.Substring(0, 1).ToUpper()
+                                                        : "?")
                     </div>
-                    <div>
-                        <div style="font-size:14px;font-weight:700;
-                                    color:var(--text-1);margin-bottom:2px">
-                            @Model.FirstName @Model.LastName
-                        </div>
-                        <div style="font-size:12px;color:var(--text-3);
-                                    margin-bottom:10px">
-                            JPG, PNG or GIF · Max 2MB
-                        </div>
-                        @if (isEditMode)
-                        {
-                            <div style="display:flex;gap:8px;flex-wrap:wrap">
-                                <label class="btn-tp-secondary"
-                                       style="padding:7px 14px;font-size:12px;
-                                                        cursor:pointer;margin:0">
-                                    <i class="bi bi-camera"></i> Change Photo
-                                    <input type="file" name="profilePicture"
-                                           accept="image/*" style="display:none"
-                                           onchange="previewPicture(this)" />
-                                </label>
-                                @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
-                                {
-                                    <button type="button"
-                                            class="btn-tp-danger"
-                                            style="padding:7px 14px;font-size:12px"
-                                            onclick="removePicture()">
-                                        <i class="bi bi-trash"></i> Remove
-                                    </button>
-                                }
-                            </div>
-                        }
+                    <img id="avatarImg"
+                         style="display:none;width:80px;height:80px;
+                                        border-radius:50%;object-fit:cover;
+                                        border:3px solid var(--teal)" />
+                                        }
+                        <!-- Edit overlay button -->
+                        <label style="position:absolute;bottom:0;right:0;
+                                           width:26px;height:26px;
+                                           background:var(--teal);
+                                           border-radius:50%;
+                                           display:flex;align-items:center;
+                                           justify-content:center;
+                                           cursor:pointer;border:2px solid #fff;
+                                           font-size:12px;color:#fff"
+                               title="Change photo">
+                            <i class="bi bi-pencil-fill"></i>
+                            <input type="file"
+                                   id="profilePicInput"
+                                   name="profilePicture"
+                                   accept="image/*"
+                                   style="display:none"
+                                   onchange="openCropper(this)" />
+                        </label>
                     </div>
-                </div>
+                }
+                else
+                {
+                    <div style="display:flex;align-items:center;gap:20px">
+                        <div>
+                            @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
+                            {
+                                <img id="avatarImg"
+                                     src="@Model.ProfilePictureUrl"
+                                     style="width:80px;height:80px;
+                                                            border-radius:50%;
+                                                            object-fit:cover;
+                                                            border:3px solid var(--teal)" />
+                            }
+                            else
+                            {
+                                <div id="avatarInitials"
+                                     style="width:80px;height:80px;
+                                                                border-radius:50%;
+                                                                background:linear-gradient(135deg,
+                                                                    var(--teal),var(--teal-mid));
+                                                                display:flex;align-items:center;
+                                                                justify-content:center;
+                                                                font-size:28px;font-weight:800;
+                                                                color:#fff">
+                                    @(Model.FirstName?.Length > 0 ? Model.FirstName.Substring(0, 1).ToUpper() : "?")
+                                </div>
+                                <img id="avatarImg"
+                                     style="display:none;width:80px;height:80px;
+                                                            border-radius:50%;object-fit:cover;
+                                                            border:3px solid var(--teal)" />
+                            }
+                        </div>
+                        <div>
+                            <div style="font-size:14px;font-weight:700;
+                                            color:var(--text-1);margin-bottom:2px">
+                                @Model.FirstName @Model.LastName
+                            </div>
+                            <div style="font-size:12px;color:var(--text-3);
+                                            margin-bottom:10px">
+                                JPG, PNG or GIF · Max 2MB
+                            </div>
+                        </div>
+                    </div>
+                }
             </div>
 
             <div class="tp-card mb-3">
@@ -132,8 +168,8 @@
                 @if (ViewBag.WalletApproved == true && !isEditMode)
                 {
                     <div style="display:flex;align-items:center;gap:8px;
-                                                font-size:12px;color:var(--text-3);
-                                                margin-bottom:10px">
+                                                        font-size:12px;color:var(--text-3);
+                                                        margin-bottom:10px">
                         <i class="bi bi-lock-fill"
                            style="color:var(--teal)"></i>
                         Account type is locked after wallet approval.
@@ -143,14 +179,14 @@
                 @if (ViewBag.WalletApproved == true)
                 {
                     <div style="display:flex;align-items:center;gap:10px;
-                                                padding:12px;background:var(--surface-2);
-                                                border-radius:var(--r-sm)">
+                                                        padding:12px;background:var(--surface-2);
+                                                        border-radius:var(--r-sm)">
                         <span style="font-size:24px">
                             @(Model.AccountType == "Corporate" ? "🏢" : "👤")
                         </span>
                         <div>
                             <div style="font-size:14px;font-weight:700;
-                                                        color:var(--text-1)">
+                                                                color:var(--text-1)">
                                 @(Model.AccountType ?? "Individual")
                             </div>
                             <div style="font-size:11px;color:var(--text-3)">
@@ -173,16 +209,16 @@
                                 <div class="acct-type-card"
                                      data-val="Individual"
                                      style="padding:14px;border-radius:var(--r-md);
-                                                        border:2px solid var(--border);
-                                                        background:var(--surface-2);
-                                                        text-align:center;
-                                                        transition:var(--transition);
-                                                        cursor:pointer">
+                                                                        border:2px solid var(--border);
+                                                                        background:var(--surface-2);
+                                                                        text-align:center;
+                                                                        transition:var(--transition);
+                                                                        cursor:pointer">
                                     <div style="font-size:22px;margin-bottom:4px">
                                         👤
                                     </div>
                                     <div style="font-size:13px;font-weight:700;
-                                                                                            color:var(--text-1)">
+                                                                                                            color:var(--text-1)">
                                         Individual
                                     </div>
                                     <div style="font-size:11px;color:var(--text-3)">
@@ -198,16 +234,16 @@
                                 <div class="acct-type-card"
                                      data-val="Corporate"
                                      style="padding:14px;border-radius:var(--r-md);
-                                                        border:2px solid var(--border);
-                                                        background:var(--surface-2);
-                                                        text-align:center;
-                                                        transition:var(--transition);
-                                                        cursor:pointer">
+                                                                        border:2px solid var(--border);
+                                                                        background:var(--surface-2);
+                                                                        text-align:center;
+                                                                        transition:var(--transition);
+                                                                        cursor:pointer">
                                     <div style="font-size:22px;margin-bottom:4px">
                                         🏢
                                     </div>
                                     <div style="font-size:13px;font-weight:700;
-                                                                        color:var(--text-1)">
+                                                                                        color:var(--text-1)">
                                         Corporate
                                     </div>
                                     <div style="font-size:11px;color:var(--text-3)">
@@ -220,14 +256,14 @@
                     else
                     {
                         <div style="display:flex;align-items:center;gap:10px;
-                                                                padding:12px;background:var(--surface-2);
-                                                                border-radius:var(--r-sm)">
+                                                                                padding:12px;background:var(--surface-2);
+                                                                                border-radius:var(--r-sm)">
                             <span style="font-size:24px">
                                 @(Model.AccountType == "Corporate" ? "🏢" : "👤")
                             </span>
                             <div>
                                 <div style="font-size:14px;font-weight:700;
-                                                                                        color:var(--text-1)">
+                                                                                                        color:var(--text-1)">
                                     @(Model.AccountType ?? "Individual")
                                 </div>
                                 <div style="font-size:11px;color:var(--text-3)">
@@ -304,7 +340,7 @@
                     @if (isEditMode)
                     {
                         <span style="color:var(--red);font-size:11px;
-                                            margin-left:6px">* Required</span>
+                                                    margin-left:6px">* Required</span>
                     }
                 </div>
                 <div class="row g-3">
@@ -330,7 +366,7 @@
                             {
                                 <div class="form-control"
                                      style="background:var(--surface-2);
-                                                        color:var(--text-1)">
+                                                                color:var(--text-1)">
                                     @(Model.FirstName ?? "—")
                                 </div>
                             }
@@ -349,7 +385,7 @@
                             {
                                 <div class="form-control"
                                      style="background:var(--surface-2);
-                                                        color:var(--text-1)">
+                                                                color:var(--text-1)">
                                     @(Model.FatherName ?? "—")
                                 </div>
                             }
@@ -377,7 +413,7 @@
                             {
                                 <div class="form-control"
                                      style="background:var(--surface-2);
-                                                        color:var(--text-1)">
+                                                                color:var(--text-1)">
                                     @(Model.LastName ?? "—")
                                 </div>
                             }
@@ -396,7 +432,7 @@
                             {
                                 <div class="form-control"
                                      style="background:var(--surface-2);
-                                                        color:var(--text-1)">
+                                                                color:var(--text-1)">
                                     @(Model.MotherName ?? "—")
                                 </div>
                             }
@@ -423,7 +459,7 @@
                             {
                                 <div class="form-control"
                                      style="background:var(--surface-2);
-                                                        color:var(--text-1)">
+                                                                color:var(--text-1)">
                                     @(Model.DateOfBirth.Year > 1 ? Model.DateOfBirth.ToString("MMM dd, yyyy") : "—")
                                 </div>
                             }
@@ -442,7 +478,7 @@
                             {
                                 <div class="form-control"
                                      style="background:var(--surface-2);
-                                                        color:var(--text-1)">
+                                                                color:var(--text-1)">
                                     @(Model.PlaceOfBirth ?? "—")
                                 </div>
                             }
@@ -472,7 +508,7 @@
                             {
                                 <div class="form-control"
                                      style="background:var(--surface-2);
-                                                            color:var(--text-1)">
+                                                                    color:var(--text-1)">
                                     @(Model.Gender ?? "—")
                                 </div>
                             }
@@ -496,7 +532,7 @@
                             {
                                 <div class="form-control"
                                      style="background:var(--surface-2);
-                                                            color:var(--text-1)">
+                                                                    color:var(--text-1)">
                                     @(Model.MaritalStatus ?? "—")
                                 </div>
                             }
@@ -524,7 +560,7 @@
                             {
                                 <div class="form-control"
                                      style="background:var(--surface-2);
-                                                         color:var(--text-1)">
+                                                                 color:var(--text-1)">
                                     @(Model.Nationality ?? "—")
                                 </div>
                             }
@@ -545,7 +581,7 @@
                             {
                                 <div class="form-control"
                                      style="background:var(--surface-2);
-                                                            color:var(--text-1)">
+                                                                    color:var(--text-1)">
                                     @(Model.OtherNationality ?? "—")
                                 </div>
                             }
@@ -573,8 +609,45 @@
                             {
                                 <div class="form-control"
                                      style="background:var(--surface-2);
-                                                            color:var(--text-1)">
+                                                                    color:var(--text-1)">
                                     @(Model.PhoneNumber ?? "—")
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Username</label>
+                            @if (isEditMode)
+                            {
+                                <div style="display:flex;align-items:center;
+                                                    background:var(--surface-2);
+                                                    border:1px solid var(--border-md);
+                                                    border-radius:var(--r-sm);
+                                                    overflow:hidden">
+                                    <span style="padding:0 12px;
+                                                         color:var(--text-3);
+                                                         font-size:14px;
+                                                         border-right:1px solid var(--border)">
+                                        @@
+                                    </span>
+                                    <input name="UserUsername"
+                                           value="@Model.UserUsername"
+                                           style="border:none;
+                                                          background:transparent;
+                                                          padding:11px 12px;flex:1;
+                                                          font-size:14px;
+                                                          color:var(--text-1);
+                                                          outline:none"
+                                           placeholder="yourname" />
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="form-control"
+                                     style="background:var(--surface-2);
+                                                        color:var(--text-1)">
+                                    @($"@{Model.UserUsername ?? "—"}")
                                 </div>
                             }
                         </div>
@@ -592,7 +665,7 @@
                             {
                                 <div class="form-control"
                                      style="background:var(--surface-2);
-                                                         color:var(--text-1)">
+                                                                 color:var(--text-1)">
                                     @(Model.Description ?? "—")
                                 </div>
                             }
@@ -622,7 +695,7 @@
                             {
                                 <div class="form-control"
                                      style="background:var(--surface-2);
-                                                        color:var(--text-1)">
+                                                                color:var(--text-1)">
                                     @(Model.RecordNumber ?? "—")
                                 </div>
                             }
@@ -641,7 +714,7 @@
                             {
                                 <div class="form-control"
                                      style="background:var(--surface-2);
-                                                        color:var(--text-1)">
+                                                                color:var(--text-1)">
                                     @(Model.Governate ?? "—")
                                 </div>
                             }
@@ -660,7 +733,7 @@
                             {
                                 <div class="form-control"
                                      style="background:var(--surface-2);
-                                                        color:var(--text-1)">
+                                                                color:var(--text-1)">
                                     @(Model.District ?? "—")
                                 </div>
                             }
@@ -679,7 +752,7 @@
                             {
                                 <div class="form-control"
                                      style="background:var(--surface-2);
-                                                        color:var(--text-1)">
+                                                                color:var(--text-1)">
                                     @(Model.Village ?? "—")
                                 </div>
                             }
@@ -718,7 +791,7 @@
                             {
                                 <div class="form-control"
                                      style="background:var(--surface-2);
-                                                        color:var(--text-1)">
+                                                                color:var(--text-1)">
                                     @(Model.Country ?? "—")
                                 </div>
                             }
@@ -746,7 +819,7 @@
                             {
                                 <div class="form-control"
                                      style="background:var(--surface-2);
-                                                        color:var(--text-1)">
+                                                                color:var(--text-1)">
                                     @(Model.City ?? "—")
                                 </div>
                             }
@@ -765,7 +838,7 @@
                             {
                                 <div class="form-control"
                                      style="background:var(--surface-2);
-                                                        color:var(--text-1)">
+                                                                color:var(--text-1)">
                                     @(Model.Region ?? "—")
                                 </div>
                             }
@@ -784,7 +857,7 @@
                             {
                                 <div class="form-control"
                                      style="background:var(--surface-2);
-                                                    color:var(--text-1)">
+                                                            color:var(--text-1)">
                                     @(Model.State ?? "—")
                                 </div>
                             }
@@ -803,7 +876,7 @@
                             {
                                 <div class="form-control"
                                      style="background:var(--surface-2);
-                                                    color:var(--text-1)">
+                                                            color:var(--text-1)">
                                     @(Model.Street ?? "—")
                                 </div>
                             }
@@ -822,7 +895,7 @@
                             {
                                 <div class="form-control"
                                      style="background:var(--surface-2);
-                                                     color:var(--text-1)">
+                                                             color:var(--text-1)">
                                     @(Model.BuildingName ?? "—")
                                 </div>
                             }
@@ -841,7 +914,7 @@
                             {
                                 <div class="form-control"
                                      style="background:var(--surface-2);
-                                                    color:var(--text-1)">
+                                                            color:var(--text-1)">
                                     @(Model.BuildingNumber ?? "—")
                                 </div>
                             }
@@ -860,7 +933,7 @@
                             {
                                 <div class="form-control"
                                      style="background:var(--surface-2);
-                                                    color:var(--text-1)">
+                                                            color:var(--text-1)">
                                     @(Model.PostalCode ?? "—")
                                 </div>
                             }
@@ -890,7 +963,7 @@
                             {
                                 <div class="form-control"
                                      style="background:var(--surface-2);
-                                                        color:var(--text-1)">
+                                                                color:var(--text-1)">
                                     @(Model.Occupation ?? "—")
                                 </div>
                             }
@@ -909,7 +982,7 @@
                             {
                                 <div class="form-control"
                                      style="background:var(--surface-2);
-                                                         color:var(--text-1)">
+                                                                 color:var(--text-1)">
                                     @(Model.EmployerName ?? "—")
                                 </div>
                             }
@@ -938,7 +1011,7 @@
                             {
                                 <div class="form-control"
                                      style="background:var(--surface-2);
-                                                    color:var(--text-1)">
+                                                            color:var(--text-1)">
                                     @(Model.AnnualIncomeUSD ?? "—")
                                 </div>
                             }
@@ -959,7 +1032,7 @@
                             {
                                 <div class="form-control"
                                      style="background:var(--surface-2);
-                                                                        color:var(--text-1)">
+                                                                                color:var(--text-1)">
                                     @(Model.OtherIncomeSource ?? "—")
                                 </div>
                             }
@@ -992,22 +1065,22 @@
             {
                 <div class="tp-card mb-3">
                     <div style="font-size:13px;font-weight:700;
-                                                color:var(--text-1);margin-bottom:14px">
+                                                        color:var(--text-1);margin-bottom:14px">
                         <i class="bi bi-shield-check"
                            style="color:var(--teal);margin-right:6px"></i>
                         Identity Verification
                         @if (isEditMode)
                         {
                             <span style="color:var(--red);font-size:11px;
-                                                            margin-left:6px">* Required</span>
+                                                                            margin-left:6px">* Required</span>
                         }
                     </div>
 
                     @if (Model.KYCStatus == "Pending")
                     {
                         <div style="padding:10px 14px;background:var(--yellow-light);
-                                                                border-radius:var(--r-sm);font-size:13px;
-                                                                color:var(--yellow);margin-bottom:12px">
+                                                                                border-radius:var(--r-sm);font-size:13px;
+                                                                                color:var(--yellow);margin-bottom:12px">
                             <i class="bi bi-clock"></i>
                             Your documents are under review.
                         </div>
@@ -1040,7 +1113,7 @@
                                 {
                                     <div class="form-control"
                                          style="background:var(--surface-2);
-                                                                         color:var(--text-1)">
+                                                                                         color:var(--text-1)">
                                         @Model.DocumentType
                                     </div>
                                 }
@@ -1068,7 +1141,7 @@
                                 {
                                     <div class="form-control"
                                          style="background:var(--surface-2);
-                                                                             color:var(--text-1)">
+                                                                                             color:var(--text-1)">
                                         @(string.IsNullOrEmpty(Model.DocumentNumber) ? "—" : Model.DocumentNumber)
                                     </div>
                                 }
@@ -1087,9 +1160,9 @@
                                         <div style="margin-bottom:8px">
                                             <img src="@Model.FrontImageUrl"
                                                  style="height:60px;
-                                                                            border-radius:var(--r-sm);
-                                                                            object-fit:cover;
-                                                                            border:1px solid var(--border)" />
+                                                                                                    border-radius:var(--r-sm);
+                                                                                                    object-fit:cover;
+                                                                                                    border:1px solid var(--border)" />
                                         </div>
                                     }
                                     <input type="file" name="frontImage"
@@ -1107,9 +1180,9 @@
                                         <div style="margin-bottom:8px">
                                             <img src="@Model.BackImageUrl"
                                                  style="height:60px;
-                                                                        border-radius:var(--r-sm);
-                                                                        object-fit:cover;
-                                                                        border:1px solid var(--border)" />
+                                                                                                border-radius:var(--r-sm);
+                                                                                                object-fit:cover;
+                                                                                                border:1px solid var(--border)" />
                                         </div>
                                     }
                                     <input type="file" name="backImage"
@@ -1125,9 +1198,9 @@
                                     <label class="form-label">Front</label>
                                     <img src="@Model.FrontImageUrl"
                                          style="height:60px;
-                                                        border-radius:var(--r-sm);
-                                                        object-fit:cover;
-                                                        border:1px solid var(--border)" />
+                                                                        border-radius:var(--r-sm);
+                                                                        object-fit:cover;
+                                                                        border:1px solid var(--border)" />
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -1137,14 +1210,14 @@
                                     {
                                         <img src="@Model.BackImageUrl"
                                              style="height:60px;
-                                                                    border-radius:var(--r-sm);
-                                                                    object-fit:cover;
-                                                                    border:1px solid var(--border)" />
+                                                                                            border-radius:var(--r-sm);
+                                                                                            object-fit:cover;
+                                                                                            border:1px solid var(--border)" />
                                     }
                                     else
                                     {
                                         <div style="color:var(--text-3);
-                                                                    font-size:13px">
+                                                                                            font-size:13px">
                                             —
                                         </div>
                                     }
@@ -1159,16 +1232,16 @@
             {
                 <div class="tp-card mb-3">
                     <div style="display:flex;align-items:flex-start;
-                                                            gap:10px;margin-bottom:16px">
+                                                                    gap:10px;margin-bottom:16px">
                         <input type="checkbox" id="termsCheck"
                                @(Model.ProfileCompleted ? "checked" : "")
                                required
                                style="width:16px;height:16px;
-                                                                  margin-top:2px;flex-shrink:0;
-                                                                  accent-color:var(--teal)" />
+                                                                          margin-top:2px;flex-shrink:0;
+                                                                          accent-color:var(--teal)" />
                         <label for="termsCheck"
                                style="font-size:13px;
-                                                                  color:var(--text-2);cursor:pointer">
+                                                                          color:var(--text-2);cursor:pointer">
                             I confirm that all information provided is accurate
                             and I agree to the
                             <a href="#" style="color:var(--teal)">
@@ -1193,24 +1266,72 @@
             }
         </form>
 
-        @* FIX: Only show admin panel if user is admin *@
+        <!-- Cropper Modal -->
+        <div id="cropperModal"
+             style="display:none;position:fixed;
+                    top:0;left:0;right:0;bottom:0;
+                    background:rgba(0,0,0,0.7);
+                    z-index:9999;
+                    align-items:center;
+                    justify-content:center">
+            <div style="background:var(--surface);
+                        border-radius:var(--r-xl);
+                        padding:24px;
+                        max-width:500px;width:90%;
+                        max-height:90vh;overflow:hidden">
+                <div style="font-size:16px;font-weight:700;
+                            color:var(--text-1);
+                            margin-bottom:16px;
+                            display:flex;
+                            justify-content:space-between">
+                    Crop Profile Picture
+                    <button onclick="closeCropper()"
+                            style="background:none;border:none;
+                                   font-size:20px;cursor:pointer;
+                                   color:var(--text-2)">
+                        ×
+                    </button>
+                </div>
+                <div style="max-height:350px;overflow:hidden;
+                            border-radius:var(--r-md)">
+                    <img id="cropperImg"
+                         style="max-width:100%;display:block" />
+                </div>
+                <div style="display:flex;gap:10px;
+                            margin-top:16px;
+                            justify-content:center">
+                    <button type="button"
+                            onclick="cropImage()"
+                            class="btn-tp-primary">
+                        <i class="bi bi-check-lg"></i>
+                        Use This Photo
+                    </button>
+                    <button type="button"
+                            onclick="closeCropper()"
+                            class="btn-tp-secondary">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+
         @if (isAdminUser)
         {
             <div class="tp-card mb-3"
                  style="border:1px solid rgba(167,139,250,.3);
-                                background:rgba(167,139,250,.05)">
+                                        background:rgba(167,139,250,.05)">
                 <div style="display:flex;align-items:center;
-                                    justify-content:space-between;gap:16px">
+                                            justify-content:space-between;gap:16px">
                     <div>
                         <div style="font-size:14px;font-weight:700;
-                                            color:var(--text-1);margin-bottom:4px">
+                                                    color:var(--text-1);margin-bottom:4px">
                             <i class="bi bi-shield-fill"
                                style="color:var(--purple);
-                                              margin-right:6px"></i>
+                                                      margin-right:6px"></i>
                             Admin Powers
                         </div>
                         <div style="font-size:13px;
-                                            color:var(--text-2)">
+                                                    color:var(--text-2)">
                             @(isAgentUser
                                                     ? "You are currently active as an agent."
                                                     : "As admin, you can instantly become an agent.")
@@ -1238,25 +1359,24 @@
                 </div>
             </div>
         }
-        @* FIX: Only show agent dashboard panel if user is agent but NOT admin (or if we want to show for both, but separate from non-agent flow) *@
         else if (isAgentUser)
         {
             <div class="tp-card mb-3"
                  style="border:1px solid rgba(0,184,148,.2);
-                                background:var(--teal-light)">
+                                        background:var(--teal-light)">
                 <div style="display:flex;align-items:center;
-                                    gap:12px">
+                                            gap:12px">
                     <i class="bi bi-check-circle-fill"
                        style="color:var(--teal);
-                                      font-size:24px;flex-shrink:0"></i>
+                                              font-size:24px;flex-shrink:0"></i>
                     <div style="flex:1">
                         <div style="font-size:14px;font-weight:700;
-                                            color:var(--text-1)">
+                                                    color:var(--text-1)">
                             You are a CedarPay Agent ✓
                         </div>
                         <div style="font-size:13px;
-                                            color:var(--text-2);
-                                            margin-top:2px">
+                                                    color:var(--text-2);
+                                                    margin-top:2px">
                             Your application was approved.
                             Access your agent tools below.
                         </div>
@@ -1279,20 +1399,20 @@
                 {
                     <div class="tp-card mb-3">
                         <div style="font-size:13px;font-weight:700;
-                                                            color:var(--text-1);
-                                                            margin-bottom:12px">
+                                                                                    color:var(--text-1);
+                                                                                    margin-bottom:12px">
                             <i class="bi bi-clock-history" style="color:var(--teal);margin-right:6px"></i>
                             Application History
                         </div>
                         @foreach (var app in history)
                         {
                             <div style="display:flex;
-                                                                        justify-content:space-between;
-                                                                        align-items:center;
-                                                                        padding:10px 0;
-                                                                        border-bottom:
-                                                                        1px solid var(--border);
-                                                                        font-size:13px">
+                                                                                                        justify-content:space-between;
+                                                                                                        align-items:center;
+                                                                                                        padding:10px 0;
+                                                                                                        border-bottom:
+                                                                                                        1px solid var(--border);
+                                                                                                        font-size:13px">
                                 <div>
                                     <div style="font-weight:600">
                                         @app.StoreName
@@ -1313,25 +1433,24 @@
         }
         else
         {
-            @* FIX: Only show "Apply Now" / pending / rejected for non-agent users (regular users) *@
             @if (agentStatus == "Pending")
             {
                 <div class="tp-card mb-3"
                      style="border:1px solid rgba(255,209,102,.3);
-                                            background:var(--yellow-light)">
+                                                            background:var(--yellow-light)">
                     <div style="display:flex;align-items:center;
-                                                gap:12px">
+                                                                gap:12px">
                         <i class="bi bi-clock-fill"
                            style="color:var(--yellow);
-                                                  font-size:20px"></i>
+                                                                  font-size:20px"></i>
                         <div style="flex:1">
                             <div style="font-size:14px;
-                                                        font-weight:700;
-                                                        color:var(--text-1)">
+                                                                        font-weight:700;
+                                                                        color:var(--text-1)">
                                 Application Under Review
                             </div>
                             <div style="font-size:13px;
-                                                        color:var(--text-2)">
+                                                                        color:var(--text-2)">
                                 Your agent application is pending.
                                 You'll be notified once reviewed.
                             </div>
@@ -1348,18 +1467,18 @@
             {
                 <div class="tp-card mb-3"
                      style="border:1px solid rgba(255,107,107,.3);
-                                            background:var(--red-light)">
+                                                            background:var(--red-light)">
                     <div style="display:flex;align-items:center;
-                                                justify-content:space-between;
-                                                gap:16px">
+                                                                justify-content:space-between;
+                                                                gap:16px">
                         <div>
                             <div style="font-size:14px;
-                                                        font-weight:700;
-                                                        color:var(--red)">
+                                                                        font-weight:700;
+                                                                        color:var(--red)">
                                 Application Rejected
                             </div>
                             <div style="font-size:13px;
-                                                        color:var(--text-2)">
+                                                                        color:var(--text-2)">
                                 Your application was rejected.
                                 You can reapply below.
                             </div>
@@ -1369,14 +1488,14 @@
                                asp-action="MyApplication"
                                class="btn-tp-secondary"
                                style="padding:8px 14px;
-                                                      font-size:12px">
+                                                                      font-size:12px">
                                 View History
                             </a>
                             <a asp-controller="AgentApplication"
                                asp-action="Apply"
                                class="btn-tp-primary"
                                style="padding:8px 14px;
-                                                      font-size:12px">
+                                                                      font-size:12px">
                                 Reapply
                             </a>
                         </div>
@@ -1387,22 +1506,22 @@
             {
                 <div class="tp-card mb-3"
                      style="border:1px solid rgba(0,184,148,.2);
-                                            background:var(--teal-light)">
+                                                            background:var(--teal-light)">
                     <div style="display:flex;align-items:center;
-                                                justify-content:space-between;
-                                                gap:16px">
+                                                                justify-content:space-between;
+                                                                gap:16px">
                         <div>
                             <div style="font-size:14px;
-                                                        font-weight:700;
-                                                        color:var(--text-1);
-                                                        margin-bottom:4px">
+                                                                        font-weight:700;
+                                                                        color:var(--text-1);
+                                                                        margin-bottom:4px">
                                 <i class="bi bi-shop"
                                    style="color:var(--teal);
-                                                          margin-right:6px"></i>
+                                                                          margin-right:6px"></i>
                                 Become a CedarPay Agent
                             </div>
                             <div style="font-size:13px;
-                                                        color:var(--text-2)">
+                                                                        color:var(--text-2)">
                                 Register your store and earn commissions.
                                 Admin review required.
                             </div>
@@ -1447,8 +1566,14 @@
     </div>
 </div>
 
+@section Styles {
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.css" />
+}
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.js"></script>
     <script>
         const currentType = '@Model.AccountType';
         document.querySelectorAll('.acct-type-card').forEach(card => {
@@ -1494,30 +1619,72 @@
         }
         updateCorporateFields();
 
-        function previewPicture(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    let img = document.getElementById('avatarImg');
-                    const init = document.getElementById(
-                        'avatarInitials');
-                    if (!img) {
-                        img = document.createElement('img');
-                        img.id = 'avatarImg';
-                        img.style.cssText =
-                            'width:80px;height:80px;border-radius:50%;' +
-                            'object-fit:cover;border:3px solid var(--teal)';
-                        if (init) init.parentNode
-                            .insertBefore(img, init.nextSibling);
-                    }
-                    img.src = e.target.result;
-                    img.style.display = 'block';
-                    if (init) init.style.display = 'none';
-                    document.getElementById('removePicFlag')
-                        .value = 'false';
-                };
-                reader.readAsDataURL(input.files[0]);
+        let cropperInstance = null;
+
+        function openCropper(input) {
+            if (!input.files || !input.files[0]) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                const img = document.getElementById('cropperImg');
+                const modal = document.getElementById('cropperModal');
+                img.src = e.target.result;
+                modal.style.display = 'flex';
+
+                if (cropperInstance) {
+                    cropperInstance.destroy();
+                }
+                cropperInstance = new Cropper(img, {
+                    aspectRatio: 1,
+                    viewMode: 1,
+                    dragMode: 'move',
+                    autoCropArea: 1,
+                    restore: false,
+                    guides: true,
+                    center: true,
+                    highlight: false,
+                    cropBoxMovable: true,
+                    cropBoxResizable: true,
+                    toggleDragModeOnDblclick: false,
+                });
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+
+        function cropImage() {
+            if (!cropperInstance) return;
+            const canvas = cropperInstance.getCroppedCanvas({
+                width: 300,
+                height: 300,
+                fillColor: '#fff',
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high',
+            });
+
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+
+            const preview = document.getElementById('avatarImg');
+            const initials = document.getElementById('avatarInitials');
+            if (preview) {
+                preview.src = dataUrl;
+                preview.style.display = 'block';
             }
+            if (initials) initials.style.display = 'none';
+
+            document.getElementById('croppedPicData').value = dataUrl;
+            document.getElementById('removePicFlag').value = 'false';
+
+            closeCropper();
+        }
+
+        function closeCropper() {
+            const modal = document.getElementById('cropperModal');
+            modal.style.display = 'none';
+            if (cropperInstance) {
+                cropperInstance.destroy();
+                cropperInstance = null;
+            }
+            const input = document.getElementById('profilePicInput');
+            if (input) input.value = '';
         }
 
         function removePicture() {
@@ -1527,6 +1694,7 @@
             if (img) img.style.display = 'none';
             if (init) init.style.display = 'flex';
             document.getElementById('removePicFlag').value = 'true';
+            document.getElementById('croppedPicData').value = '';
         }
     </script>
 }

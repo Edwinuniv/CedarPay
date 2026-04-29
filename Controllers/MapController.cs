@@ -22,13 +22,8 @@ namespace MoneyTransfer.Controllers
             if (User.IsInRole("Agent") || User.IsInRole("Admin"))
             {
                 var userId = _userManager.GetUserId(User);
-                var agent = await _agentRepository.GetByUserIdAsync(userId);
-                if (agent != null)
-                {
-                    ViewBag.MyStoreLat = agent.Latitude;
-                    ViewBag.MyStoreLng = agent.Longitude;
-                    ViewBag.UserAgent = agent;
-                }
+                var userAgents = await _agentRepository.GetByUserIdAsync(userId);
+                ViewBag.UserAgents = userAgents.ToList();
             }
 
             return View(agents.ToList());

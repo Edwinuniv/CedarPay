@@ -13,14 +13,13 @@ namespace MoneyTransfer.Controllers
     [Authorize]
     public class DashboardController : BaseController
     {
-        private readonly IUserRepository _userRepository;
         private readonly IWalletRepository _walletRepository;
         private readonly IBeneficiaryRepository _beneficiaryRepository;
         private readonly IAccountRepository _accountRepository;
         private readonly IAgentRepository _agentRepository;
         private readonly IAgentApplicationRepository _applicationRepository;
-        private readonly UserManager<User> _userManager;
         private readonly ApplicationDbContext _context;
+
 
         public DashboardController(
             IUserRepository userRepository,
@@ -33,13 +32,11 @@ namespace MoneyTransfer.Controllers
             ApplicationDbContext context)
             : base(userManager, userRepository)
         {
-            _userRepository = userRepository;
             _walletRepository = walletRepository;
             _beneficiaryRepository = beneficiaryRepository;
             _accountRepository = accountRepository;
             _agentRepository = agentRepository;
             _applicationRepository = applicationRepository;
-            _userManager = userManager;
             _context = context;
         }
 
@@ -72,23 +69,37 @@ namespace MoneyTransfer.Controllers
                 ViewBag.PendingAgentsCount = pendingApps.Count();
             }
 
-            // Get agent statistics if user is agent
-            if (User.IsInRole(Roles.Agent))
+            // Get agent statistics if user is agent or admin (who is also an agent)
+            if (User.IsInRole(Roles.Agent) || User.IsInRole(Roles.Admin))
             {
-                var agent = await _agentRepository.GetByUserIdAsync(userId);
-                if (agent != null)
+                var agentList = (await _agentRepository.GetByUserIdAsync(userId)).ToList();
+
+                // Get selected store from cookie
+                Agent? selectedAgent = null;
+                if (Request.Cookies.TryGetValue("SelectedAgentId", out var cookieId) &&
+                    int.TryParse(cookieId, out var agentId))
                 {
-                    var topUps = await _context.TopUps
+                    selectedAgent = agentList.FirstOrDefault(a => a.Id == agentId);
+                }
+                selectedAgent ??= agentList.FirstOrDefault();
+
+                ViewBag.AgentStore = selectedAgent;
+                ViewBag.AgentStores = agentList;
+                ViewBag.AgentLocationSet = selectedAgent?.Latitude != 0;
+
+                if (selectedAgent != null)
+                {
+                    ViewBag.AgentTotalCashIn = await _context.TopUps
                         .Where(t => t.Method == TopUpMethod.Cash)
                         .SumAsync(t => (decimal?)t.Amount) ?? 0;
-
-                    var commissions = await _context.Commissions
-                        .Where(c => c.AgentId == agent.Id)
+                    ViewBag.AgentTotalCommissions = await _context.Commissions
+                        .Where(c => c.AgentId == selectedAgent.Id)
                         .SumAsync(c => (decimal?)c.Amount) ?? 0;
-
-                    ViewBag.AgentStore = agent;
-                    ViewBag.AgentTotalCashIn = topUps;
-                    ViewBag.AgentTotalCommissions = commissions;
+                }
+                else
+                {
+                    ViewBag.AgentTotalCashIn = 0;
+                    ViewBag.AgentTotalCommissions = 0;
                 }
             }
 

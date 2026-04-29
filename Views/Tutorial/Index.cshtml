@@ -1,0 +1,105 @@
+﻿@{
+    ViewData["Title"] = "CedarPay Tutorial";
+}
+
+<div style="max-width:700px;margin:0 auto">
+    <div style="text-align:center;margin-bottom:32px">
+        <div style="font-size:48px;margin-bottom:12px">🌲</div>
+        <h2 style="font-size:24px;font-weight:800;
+                    color:var(--text-1)">
+            Welcome to CedarPay
+        </h2>
+        <p style="font-size:14px;color:var(--text-3)">
+            Here's how to use the app
+        </p>
+    </div>
+
+    <!-- Tutorial Steps -->
+    <div class="d-flex flex-column gap-3"
+         id="tutorialSteps">
+
+        @{
+            var steps = new[]
+            {
+                ("1", "bi-person-fill", "teal",
+                "Complete Your Profile",
+                "Fill in all required information including your national ID for KYC verification. This is required before creating wallets.",
+                "/Account/Profile?edit=true"),
+                ("2", "bi-wallet2", "purple",
+                "Create a Wallet",
+                "Request a wallet in your preferred currency (USD, EUR, LBP, AED and more). Admin approval required.",
+                "/Wallet/Create"),
+                ("3", "bi-plus-circle-fill", "received",
+                "Top Up Your Wallet",
+                "Add funds to your wallet using Credit Card or Bank Transfer via Stripe secure payments.",
+                "/TopUp/Create"),
+                ("4", "bi-people-fill", "sent",
+                "Add Beneficiaries",
+                "Save your contacts by @username search or wallet serial. Makes sending money faster.",
+                "/Beneficiary/Create"),
+                ("5", "bi-send-fill", "teal",
+                "Send Money",
+                "Transfer money wallet-to-wallet or via mobile number. Automatic currency conversion included.",
+                "/Transfer/Create"),
+                ("6", "bi-geo-alt-fill", "beneficiaries",
+                "Find an Agent",
+                "Need cash? Find a CedarPay agent near you for cash-in and cash-out operations.",
+                "/Map/Index"),
+                };
+        }
+
+        @foreach (var step in steps)
+        {
+            <a href="@step.Item6"
+               style="text-decoration:none;
+                          display:block;
+                          transition:var(--transition)"
+               onmouseover="this.style.transform='translateX(4px)'"
+               onmouseout="this.style.transform='translateX(0)'">
+                <div class="tp-card"
+                     style="display:flex;align-items:flex-start;
+                                    gap:16px;cursor:pointer">
+                    <div style="width:40px;height:40px;
+                                        border-radius:50%;
+                                        background:var(--teal-light);
+                                        display:flex;align-items:center;
+                                        justify-content:center;
+                                        font-size:18px;font-weight:800;
+                                        color:var(--teal);flex-shrink:0">
+                        @step.Item1
+                    </div>
+                    <div style="flex:1">
+                        <div style="font-size:15px;font-weight:700;
+                                            color:var(--text-1);
+                                            margin-bottom:4px">
+                            <i class="bi @step.Item3"
+                               style="color:var(--teal);
+                                              margin-right:6px"></i>
+                            @step.Item4
+                        </div>
+                        <div style="font-size:13px;
+                                            color:var(--text-2);
+                                            margin-bottom:10px">
+                            @step.Item5
+                        </div>
+                        <div style="font-size:12px;
+                                            color:var(--teal);
+                                            display:flex;align-items:center;
+                                            gap:4px">
+                            Click to start <i class="bi bi-arrow-right"></i>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        }
+    </div>
+
+    <div style="text-align:center;margin-top:24px">
+        <a asp-controller="Dashboard"
+           asp-action="Index"
+           class="btn-tp-secondary">
+            <i class="bi bi-house"></i>
+            Go to Dashboard
+        </a>
+    </div>
+</div>

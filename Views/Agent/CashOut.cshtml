@@ -7,8 +7,14 @@
         <div class="page-header">
             <div>
                 <h2>Cash Out</h2>
-                <p>Process a cash withdrawal for a user</p>
+                <p>
+                    Process a cash withdrawal for a user
+                </p>
             </div>
+            <a asp-action="Dashboard"
+               class="btn-tp-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
         </div>
 
         <div class="tp-card">
@@ -16,9 +22,22 @@
                   class="tp-form">
                 @Html.AntiForgeryToken()
 
+                <div style="background:var(--red-light);
+                            border-radius:var(--r-sm);
+                            padding:12px 16px;
+                            font-size:13px;
+                            color:var(--red);
+                            margin-bottom:4px">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    You are <strong>withdrawing</strong>
+                    from the user's wallet.
+                    Verify the user's identity before
+                    processing.
+                </div>
+
                 <div class="form-group">
                     <label class="form-label">
-                        User's Wallet Serial
+                        User's Wallet Serial *
                     </label>
                     <input type="text" name="walletSerial"
                            class="form-control"
@@ -27,7 +46,9 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Amount</label>
+                    <label class="form-label">
+                        Amount to Withdraw *
+                    </label>
                     <input type="number" name="amount"
                            class="form-control"
                            step="0.01" min="0.01"
@@ -35,27 +56,22 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Note (Optional)</label>
+                    <label class="form-label">
+                        Note (Optional)
+                    </label>
                     <input type="text" name="note"
                            class="form-control"
                            placeholder="Withdrawal note" />
                 </div>
 
-                <div style="background:var(--red-light);
-                            border-radius:var(--r-sm);
-                            padding:12px 16px;
-                            font-size:13px;color:var(--red)">
-                    <i class="bi bi-exclamation-triangle"></i>
-                    Verify the user's identity before
-                    processing a cash withdrawal.
-                    This action cannot be undone.
-                </div>
-
-                <button type="submit" class="btn-tp-danger"
-                        style="padding:13px 24px;
-                               font-size:14px;font-weight:600">
+                <button type="submit"
+                        class="btn-tp-danger"
+                        style="width:100%;
+                               justify-content:center;
+                               padding:13px;
+                               font-size:14px">
                     <i class="bi bi-cash-stack"></i>
-                    Process Cash Withdrawal
+                    Confirm Cash Withdrawal
                 </button>
             </form>
         </div>

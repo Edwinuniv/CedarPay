@@ -8,9 +8,16 @@
         <h2>My Wallets</h2>
         <p>Manage your currency wallets</p>
     </div>
-    <a asp-action="Create" class="btn-tp-primary">
-        <i class="bi bi-plus-lg"></i> New Wallet
-    </a>
+    <div style="display:flex;gap:8px">
+        <a asp-action="MyRequests"
+           class="btn-tp-secondary">
+            <i class="bi bi-clock-history"></i>
+            My Requests
+        </a>
+        <a asp-action="Create" class="btn-tp-primary">
+            <i class="bi bi-plus-lg"></i> New Wallet
+        </a>
+    </div>
 </div>
 
 @if (!Model.Any())
@@ -55,6 +62,7 @@ else
                         {
                             <form asp-action="SetDefault" asp-route-id="@wallet.Id"
                                   method="post" style="flex:1">
+                                @Html.AntiForgeryToken()
                                 <button type="submit" class="btn-tp-secondary w-100"
                                         style="justify-content:center;padding:8px 12px;font-size:12px">
                                     Set Default
@@ -65,6 +73,7 @@ else
                         {
                             <form asp-action="Delete" asp-route-id="@wallet.Id"
                                   method="post">
+                                @Html.AntiForgeryToken()
                                 <button type="submit" class="btn-tp-danger"
                                         style="padding:8px 12px;font-size:12px"
                                         onclick="return confirm('Delete this wallet?')">

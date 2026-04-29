@@ -1,0 +1,705 @@
+﻿@using System.IO
+@model MoneyTransfer.Models.Conversation
+@{
+    ViewData["Title"] = "Cedar Bot";
+    string currentUserId = ViewBag.CurrentUserId ?? "";
+    bool isAi = ViewBag.BotMode == "ai";
+}
+
+@functions {
+    string FormatBotMessage(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return "";
+        text = System.Net.WebUtility.HtmlEncode(text);
+        text = System.Text.RegularExpressions.Regex.Replace(
+            text, @"\*\*(.+?)\*\*", "<strong>$1</strong>");
+        var lines = text.Split('\n');
+        var result = new System.Text.StringBuilder();
+        bool inList = false;
+        foreach (var line in lines)
+        {
+            var t = line.Trim();
+            bool bullet = t.StartsWith("•") ||
+                          t.StartsWith("- ") ||
+                          t.StartsWith("* ");
+            if (bullet)
+            {
+                if (!inList)
+                {
+                    result.Append("<ul style='margin:6px 0;padding:0;list-style:none'>");
+                    inList = true;
+                }
+                var c = t.TrimStart('•', '-', '*', ' ');
+                result.Append($"<li style='display:flex;gap:6px;margin-bottom:4px'><span style='color:var(--teal);flex-shrink:0'>›</span><span>{c}</span></li>");
+            }
+            else
+            {
+                if (inList) { result.Append("</ul>"); inList = false; }
+                if (!string.IsNullOrWhiteSpace(t))
+                    result.Append($"<p style='margin:0 0 6px'>{t}</p>");
+            }
+        }
+        if (inList) result.Append("</ul>");
+        return result.ToString();
+    }
+}
+
+<style>
+    .bot-shell {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 140px);
+        max-width: 760px;
+        margin: 0 auto;
+        border-radius: var(--r-lg);
+        overflow: hidden;
+        border: 1px solid var(--border);
+        box-shadow: 0 4px 24px rgba(0,0,0,.08);
+    }
+
+    .bot-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 20px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+    }
+
+    .bot-avatar-wrap {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--teal), var(--teal-mid));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+
+    .bot-status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 5px;
+    }
+
+        .bot-status-dot.ai {
+            background: #00b894;
+        }
+
+        .bot-status-dot.basic {
+            background: var(--text-3);
+        }
+
+    .bot-messages {
+        flex: 1;
+        overflow-y: auto;
+        background: var(--surface-2);
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .bot-date-sep {
+        text-align: center;
+        margin: 4px 0;
+    }
+
+        .bot-date-sep span {
+            font-size: 11px;
+            color: var(--text-3);
+            background: var(--surface-2);
+            padding: 3px 10px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+    .bot-row {
+        display: flex;
+        align-items: flex-end;
+        gap: 8px;
+    }
+
+        .bot-row.mine {
+            justify-content: flex-end;
+        }
+
+        .bot-row.theirs {
+            justify-content: flex-start;
+        }
+
+    .bot-mini-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--teal-light);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        flex-shrink: 0;
+        margin-bottom: 2px;
+    }
+
+    .bot-bubble-wrap {
+        max-width: 68%;
+    }
+
+    .bot-bubble {
+        padding: 10px 14px;
+        word-break: break-word;
+        line-height: 1.5;
+        font-size: 14px;
+    }
+
+        .bot-bubble.mine {
+            background: var(--teal);
+            color: #fff;
+            border-radius: 18px 18px 4px 18px;
+        }
+
+        .bot-bubble.theirs {
+            background: var(--surface);
+            color: var(--text-1);
+            border: 1px solid var(--border);
+            border-radius: 18px 18px 18px 4px;
+        }
+
+            .bot-bubble.theirs strong {
+                color: var(--teal);
+            }
+
+    .bot-time {
+        font-size: 10px;
+        color: var(--text-3);
+        margin-top: 3px;
+        padding: 0 4px;
+    }
+
+    .bot-row.mine .bot-time {
+        text-align: right;
+    }
+
+    .bot-row.theirs .bot-time {
+        text-align: left;
+    }
+
+    #typingRow {
+        display: none;
+    }
+
+    .typing-bubble {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 18px 18px 18px 4px;
+        padding: 12px 16px;
+        display: flex;
+        gap: 5px;
+        align-items: center;
+    }
+
+    .typing-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--text-3);
+        animation: tdot 1.2s infinite ease-in-out;
+    }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: .2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: .4s;
+        }
+
+    @@keyframes tdot {
+        0%, 80%, 100% {
+            transform: scale(1);
+            opacity: .4;
+        }
+
+        40% {
+            transform: scale(1.3);
+            opacity: 1;
+        }
+    }
+
+    .bot-input-bar {
+        background: var(--surface);
+        border-top: 1px solid var(--border);
+        padding: 12px 16px;
+        flex-shrink: 0;
+    }
+
+    .bot-input-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .bot-emoji-wrap {
+        position: relative;
+        flex-shrink: 0;
+    }
+
+    .bot-emoji-btn {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+        .bot-emoji-btn:hover {
+            background: var(--teal-light);
+            border-color: var(--teal);
+        }
+
+    .bot-emoji-picker {
+        display: none;
+        position: absolute;
+        bottom: 46px;
+        left: 0;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-md);
+        box-shadow: 0 8px 24px rgba(0,0,0,.15);
+        padding: 10px;
+        z-index: 100;
+        white-space: nowrap;
+    }
+
+        .bot-emoji-picker.open {
+            display: block;
+        }
+
+    .bot-emoji-grid {
+        display: grid;
+        grid-template-columns: repeat(8,1fr);
+        gap: 4px;
+    }
+
+    .ep-btn {
+        font-size: 20px;
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 8px;
+        border: none;
+        background: transparent;
+        line-height: 1;
+        transition: transform .1s;
+    }
+
+        .ep-btn:hover {
+            transform: scale(1.25);
+        }
+
+    #botInput {
+        flex: 1;
+        border-radius: 22px;
+        padding: 10px 16px;
+        border: 1px solid var(--border);
+        background: var(--surface-2);
+        color: var(--text-1);
+        font-size: 14px;
+        outline: none;
+        transition: border-color .15s;
+    }
+
+        #botInput:focus {
+            border-color: var(--teal);
+        }
+
+    .bot-send-btn {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: var(--teal);
+        border: none;
+        color: #fff;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: var(--transition);
+    }
+
+        .bot-send-btn:hover {
+            background: var(--teal-dark);
+        }
+
+        .bot-send-btn:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+    .bot-empty {
+        text-align: center;
+        margin: auto;
+        color: var(--text-3);
+        font-size: 13px;
+    }
+
+        .bot-empty i {
+            font-size: 36px;
+            display: block;
+            margin-bottom: 10px;
+            opacity: .35;
+        }
+
+    .bot-suggestions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+        margin-top: 16px;
+    }
+
+    .bot-chip {
+        font-size: 12px;
+        padding: 6px 12px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text-2);
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+        .bot-chip:hover {
+            border-color: var(--teal);
+            color: var(--teal);
+            background: var(--teal-light);
+        }
+</style>
+
+<div class="bot-shell">
+
+    <div class="bot-header">
+        <a asp-controller="Chat" asp-action="Index"
+           style="color:var(--text-2);text-decoration:none;flex-shrink:0">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div class="bot-avatar-wrap">🤖</div>
+        <div style="flex:1">
+            <div style="font-weight:700;font-size:15px;color:var(--text-1)">
+                Cedar Bot
+            </div>
+            <div style="font-size:12px;color:var(--text-3);
+                        display:flex;align-items:center">
+                <span class="bot-status-dot @(isAi ? "ai" : "basic")"></span>
+                @(isAi ? "AI Powered · Always online" : "Basic Mode · Always online")
+            </div>
+        </div>
+        @if (isAi)
+        {
+            <div style="font-size:11px;color:var(--teal);
+                            background:var(--teal-light);
+                            padding:3px 8px;border-radius:10px;
+                            border:1px solid rgba(0,184,148,.2)">
+                Gemini AI
+            </div>
+        }
+    </div>
+
+    <div class="bot-messages" id="botMsgs">
+        @{
+            DateTime? lastDate = null;
+        }
+
+        @foreach (var msg in Model.Messages.OrderBy(m => m.SentAt))
+        {
+            bool isMine = !msg.IsFromAdmin;
+
+            if (lastDate == null || lastDate.Value.Date != msg.SentAt.Date)
+            {
+                lastDate = msg.SentAt;
+                <div class="bot-date-sep">
+                    <span>@msg.SentAt.ToString("MMMM dd, yyyy")</span>
+                </div>
+            }
+
+            <div class="bot-row @(isMine ? "mine" : "theirs")">
+                @if (!isMine)
+                {
+                    <div class="bot-mini-avatar">🤖</div>
+                }
+                <div class="bot-bubble-wrap">
+                    <div class="bot-bubble @(isMine ? "mine" : "theirs")">
+                        @if (isMine)
+                        {
+                            @msg.Content
+                        }
+                        else
+                        {
+                            @Html.Raw(FormatBotMessage(msg.Content))
+                        }
+                    </div>
+                    <div class="bot-time">
+                        @msg.SentAt.ToString("HH:mm")
+                        @if (isMine)
+                        {
+                            <span style="color:var(--text-3)"> ✓</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (!Model.Messages.Any())
+        {
+            <div class="bot-empty" id="emptyState">
+                <i class="bi bi-robot"></i>
+                <p>Ask me anything about CedarPay!</p>
+                <div class="bot-suggestions">
+                    @foreach (var s in new[]
+                                    {
+                                "What's my balance?",
+                                "How do I send money?",
+                                "What are the fees?",
+                                "Supported currencies?",
+                                "How do I get verified?",
+                                "Find an agent"
+                                })
+                    {
+                        <button class="bot-chip"
+                                onclick="sendMessage('@s')">
+                            @s
+                        </button>
+                    }
+                </div>
+            </div>
+        }
+
+        <div class="bot-row theirs" id="typingRow">
+            <div class="bot-mini-avatar">🤖</div>
+            <div class="typing-bubble">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bot-input-bar">
+        <div class="bot-input-row">
+            <div class="bot-emoji-wrap">
+                <button type="button" class="bot-emoji-btn"
+                        id="emojiBtn" title="Emoji">
+                    😊
+                </button>
+                <div class="bot-emoji-picker" id="emojiPicker">
+                    <div class="bot-emoji-grid">
+                        @foreach (var e in new[]{
+                                                "😀","😂","😍","🥰","😎","🤔","😢","😡",
+                                                "👍","👎","❤️","🔥","🎉","🙏","💰","🌲",
+                                                "✅","❌","⭐","💯","🚀","💬","📱","🏦"})
+                        {
+                            <button type="button" class="ep-btn"
+                                    onclick="insertEmoji('@e')">
+                                @e
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <input type="text" id="botInput"
+                   placeholder="Ask Cedar Bot..." autocomplete="off" />
+
+            <button class="bot-send-btn" id="botSendBtn" title="Send">
+                <i class="bi bi-send-fill" style="margin-left:2px"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <form id="csrfForm" style="display:none">@Html.AntiForgeryToken()</form>
+    <script>
+        const convId     = @Model.Id;
+        const token      = document.querySelector('#csrfForm input[name="__RequestVerificationToken"]').value;
+        const msgs       = document.getElementById('botMsgs');
+        const input      = document.getElementById('botInput');
+        const sendBtn    = document.getElementById('botSendBtn');
+        const typingRow  = document.getElementById('typingRow');
+
+        function scrollBot() {
+            if (msgs) msgs.scrollTop = msgs.scrollHeight;
+        }
+        scrollBot();
+
+        // ── Emoji ───────────────────────────────────
+        document.getElementById('emojiBtn')
+            .addEventListener('click', e => {
+                e.stopPropagation();
+                document.getElementById('emojiPicker')
+                    .classList.toggle('open');
+            });
+        document.addEventListener('click', e => {
+            if (!e.target.closest('#emojiPicker') &&
+                !e.target.closest('#emojiBtn'))
+                document.getElementById('emojiPicker')
+                    .classList.remove('open');
+        });
+        function insertEmoji(em) {
+            const s = input.selectionStart;
+            const en = input.selectionEnd;
+            input.value = input.value.slice(0,s) + em + input.value.slice(en);
+            input.selectionStart = input.selectionEnd = s + em.length;
+            input.focus();
+            document.getElementById('emojiPicker').classList.remove('open');
+        }
+
+        // ── Format markdown ─────────────────────────
+        function formatBotMessage(text) {
+            if (!text) return '';
+            let t = text
+                .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+            t = t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+            const lines = t.split('\n');
+            let result = '', inList = false;
+            lines.forEach(line => {
+                const tr = line.trim();
+                const isBullet = tr.startsWith('•') ||
+                                 tr.startsWith('- ') ||
+                                 tr.startsWith('* ');
+                if (isBullet) {
+                    if (!inList) {
+                        result += "<ul style='margin:6px 0;padding:0;list-style:none'>";
+                        inList = true;
+                    }
+                    const c = tr.replace(/^[•\-\*]\s*/,'');
+                    result += `<li style='display:flex;gap:6px;margin-bottom:4px'><span style='color:var(--teal);flex-shrink:0'>›</span><span>${c}</span></li>`;
+                } else {
+                    if (inList) { result += '</ul>'; inList = false; }
+                    if (tr) result += `<p style='margin:0 0 6px'>${tr}</p>`;
+                }
+            });
+            if (inList) result += '</ul>';
+            return result;
+        }
+
+        // ── Add bubble ──────────────────────────────
+        function addBubble(text, isMine, msgId) {
+            const empty = document.getElementById('emptyState');
+            if (empty) empty.remove();
+
+            const now = new Date().toLocaleTimeString(
+                [], {hour:'2-digit', minute:'2-digit'});
+
+            const row = document.createElement('div');
+            row.className = `bot-row ${isMine ? 'mine' : 'theirs'}`;
+            row.id = `botrow-${msgId}`;
+
+            if (!isMine) {
+                const av = document.createElement('div');
+                av.className = 'bot-mini-avatar';
+                av.textContent = '🤖';
+                row.appendChild(av);
+            }
+
+            const wrap   = document.createElement('div');
+            wrap.className = 'bot-bubble-wrap';
+
+            const bubble = document.createElement('div');
+            bubble.className = `bot-bubble ${isMine ? 'mine' : 'theirs'}`;
+            if (isMine) {
+                bubble.textContent = text;
+            } else {
+                bubble.innerHTML = formatBotMessage(text);
+            }
+
+            const time = document.createElement('div');
+            time.className = 'bot-time';
+            time.innerHTML = now + (isMine
+                ? ' <span style="color:var(--text-3)">✓</span>' : '');
+
+            wrap.appendChild(bubble);
+            wrap.appendChild(time);
+            row.appendChild(wrap);
+
+            msgs.insertBefore(row, typingRow);
+            scrollBot();
+        }
+
+        // ── Send ────────────────────────────────────
+        async function sendMessage(text) {
+            text = (text || input.value).trim();
+            if (!text) return;
+
+            input.value      = '';
+            input.disabled   = true;
+            sendBtn.disabled = true;
+
+            addBubble(text, true, 'u' + Date.now());
+
+            typingRow.style.display = 'flex';
+            scrollBot();
+
+            try {
+                const fd = new FormData();
+                fd.append('conversationId', convId);
+                fd.append('content', text);
+                fd.append('__RequestVerificationToken', token);
+
+                const res = await fetch('/Bot/SendToBot', {
+                    method:  'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body:    fd
+                });
+
+                typingRow.style.display = 'none';
+
+                if (!res.ok) {
+                    addBubble('⚠️ Something went wrong. Please try again.',
+                        false, 'e' + Date.now());
+                    return;
+                }
+
+                const data = await res.json();
+                if (data.error) {
+                    addBubble('⚠️ ' + data.error,
+                        false, 'e' + Date.now());
+                    return;
+                }
+
+                addBubble(data.botResponse, false, data.botMessageId);
+
+            } catch (err) {
+                typingRow.style.display = 'none';
+                console.error('Bot error:', err);
+                addBubble('⚠️ Network error. Please try again.',
+                    false, 'e' + Date.now());
+            } finally {
+                input.disabled   = false;
+                sendBtn.disabled = false;
+                input.focus();
+            }
+        }
+
+        sendBtn.addEventListener('click', () => sendMessage());
+        input.addEventListener('keypress', e => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    </script>
+}

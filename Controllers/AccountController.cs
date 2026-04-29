@@ -16,27 +16,23 @@ namespace MoneyTransfer.Controllers
     {
         private readonly IAgentApplicationRepository _applicationRepository;
         private readonly IWalletRepository _walletRepository;
-
-        // REMOVED these duplicate fields:
-        // private readonly IUserRepository _userRepository;
-        // private readonly UserManager<User> _userManager;
-        // These are already in BaseController
+        private readonly ApplicationDbContext _context;
+        private readonly ILogger<AccountController> _logger;
 
         public AccountController(
             IUserRepository userRepository,
             IAgentApplicationRepository applicationRepository,
             UserManager<User> userManager,
             ApplicationDbContext context,
-            IWalletRepository walletRepository)
+            IWalletRepository walletRepository,
+            ILogger<AccountController> logger)
             : base(userManager, userRepository)
         {
             _applicationRepository = applicationRepository;
             _walletRepository = walletRepository;
             _context = context;
+            _logger = logger;
         }
-
-        private readonly ApplicationDbContext _context;
-
         public async Task<IActionResult> Profile(bool edit = false)
         {
             var userId = _userManager.GetUserId(User);
@@ -108,7 +104,8 @@ namespace MoneyTransfer.Controllers
                 DocumentNumber = kyc?.DocumentNumber ?? "",
                 FrontImageUrl = kyc?.FrontImageUrl,
                 BackImageUrl = kyc?.BackImageUrl,
-                KYCStatus = kyc?.Status.ToString()
+                KYCStatus = kyc?.Status.ToString(),
+                UserUsername = user.UserName
             };
 
             return View(vm);
@@ -129,7 +126,37 @@ namespace MoneyTransfer.Controllers
                 return NotFound();
             }
 
-            if (vm.RemoveProfilePicture)
+            // Handle cropped picture (base64)
+            var croppedPicData = Request.Form["croppedProfilePicture"].FirstOrDefault();
+
+            if (!string.IsNullOrEmpty(croppedPicData) && croppedPicData.StartsWith("data:image"))
+            {
+                try
+                {
+                    var base64Data = croppedPicData.Split(',')[1];
+                    var imageBytes = Convert.FromBase64String(base64Data);
+
+                    var uploadsFolder = Path.Combine(
+                        Directory.GetCurrentDirectory(),
+                        "wwwroot", "uploads", "profiles");
+                    Directory.CreateDirectory(uploadsFolder);
+
+                    DeleteFile(user.ProfilePictureUrl);
+
+                    var fileName = $"{userId}_{DateTime.Now.Ticks}.jpg";
+                    var filePath = Path.Combine(uploadsFolder, fileName);
+
+                    await System.IO.File.WriteAllBytesAsync(filePath, imageBytes);
+                    user.ProfilePictureUrl = $"/uploads/profiles/{fileName}";
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to save cropped image");
+                    ModelState.AddModelError("", "Failed to process cropped image.");
+                    return View("Profile", vm);
+                }
+            }
+            else if (vm.RemoveProfilePicture)
             {
                 DeleteFile(user.ProfilePictureUrl);
                 user.ProfilePictureUrl = null;
@@ -180,9 +207,37 @@ namespace MoneyTransfer.Controllers
 
             await _userRepository.UpdateAsync(user);
 
+            if (!string.IsNullOrEmpty(vm.UserUsername))
+            {
+                var cleanUsername = vm.UserUsername.ToLower().Trim();
+
+                var existingUser = await _context.Users
+                    .FirstOrDefaultAsync(u =>
+                        u.UserName == cleanUsername &&
+                        u.Id != userId);
+
+                if (existingUser != null)
+                {
+                    ModelState.AddModelError("", $"Username '@{cleanUsername}' is already taken.");
+                    return View("Profile", vm);
+                }
+
+                // Update username
+                var userToUpdate = await _userManager.FindByIdAsync(userId);
+                if (userToUpdate != null)
+                {
+                    await _userManager.SetUserNameAsync(userToUpdate, cleanUsername);
+                    user.UserName = cleanUsername;
+                    await _userRepository.UpdateAsync(user);
+                }
+            }
+
+            // FIX: KYC Update with proper EF tracking handling
             if (!string.IsNullOrEmpty(vm.DocumentNumber))
             {
-                var existingKyc = await _context.KYCDocuments.FirstOrDefaultAsync(k => k.UserId == userId);
+                // Use a fresh query without tracking issues
+                var existingKyc = await _context.KYCDocuments
+                    .FirstOrDefaultAsync(k => k.UserId == userId);
 
                 string? frontUrl = existingKyc?.FrontImageUrl;
                 string? backUrl = existingKyc?.BackImageUrl;
@@ -191,35 +246,42 @@ namespace MoneyTransfer.Controllers
                 {
                     var r = await SaveUploadedFile(
                         frontImage, userId + "_front", "kyc");
-                    if (r.Url != null)
-                    {
-                        frontUrl = r.Url;
-                    }
+                    if (r.Url != null) frontUrl = r.Url;
                 }
 
                 if (backImage != null && backImage.Length > 0)
                 {
                     var r = await SaveUploadedFile(
                         backImage, userId + "_back", "kyc");
-                    if (r.Url != null)
-                    {
-                        backUrl = r.Url;
-                    }
+                    if (r.Url != null) backUrl = r.Url;
                 }
 
-                if (existingKyc != null && existingKyc.Status != KYCStatus.Approved)
+                if (existingKyc != null)
                 {
-                    existingKyc.DocumentType = vm.DocumentType;
-                    existingKyc.DocumentNumber = vm.DocumentNumber;
-                    existingKyc.FrontImageUrl = frontUrl;
-                    existingKyc.BackImageUrl = backUrl;
-                    existingKyc.Status = KYCStatus.Pending;
-                    existingKyc.SubmittedAt = DateTime.Now;
-                    _context.KYCDocuments.Update(existingKyc);
+                    // Only update if not already approved
+                    if (existingKyc.Status != KYCStatus.Approved)
+                    {
+                        // Directly update the entity
+                        existingKyc.DocumentType = vm.DocumentType;
+                        existingKyc.DocumentNumber = vm.DocumentNumber;
+                        existingKyc.FrontImageUrl = frontUrl;
+                        existingKyc.BackImageUrl = backUrl;
+                        existingKyc.Status = KYCStatus.Pending;
+                        existingKyc.RejectionReason = null;
+                        existingKyc.SubmittedAt = DateTime.Now;
+
+                        // Detach any existing tracked entity first to avoid tracking conflicts
+                        var tracked = _context.ChangeTracker.Entries<KYCDocument>()
+                            .FirstOrDefault(e => e.Entity.Id == existingKyc.Id);
+                        if (tracked != null)
+                            tracked.State = EntityState.Detached;
+
+                        _context.KYCDocuments.Update(existingKyc);
+                    }
                 }
-                else if (existingKyc == null)
+                else
                 {
-                    await _context.KYCDocuments.AddAsync(new KYCDocument
+                    var newKyc = new KYCDocument
                     {
                         DocumentType = vm.DocumentType,
                         DocumentNumber = vm.DocumentNumber,
@@ -228,7 +290,8 @@ namespace MoneyTransfer.Controllers
                         Status = KYCStatus.Pending,
                         UserId = userId,
                         SubmittedAt = DateTime.Now
-                    });
+                    };
+                    await _context.KYCDocuments.AddAsync(newKyc);
                 }
 
                 await _context.SaveChangesAsync();

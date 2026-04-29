@@ -1,94 +1,293 @@
-﻿@model List<MoneyTransfer.ViewModels.ReviewViewModel>
-@{
-    ViewData["Title"] = "My Reviews";
+﻿@{
+    ViewData["Title"] = "Reviews";
+    var myReviews = ViewBag.MyReviews as
+        List<MoneyTransfer.Models.Review>
+        ?? new List<MoneyTransfer.Models.Review>();
+    var txReviews = ViewBag.TransactionReviews as
+        List<MoneyTransfer.Models.Review>
+        ?? new List<MoneyTransfer.Models.Review>();
+    var agentReviews = ViewBag.AgentReviews as
+        List<MoneyTransfer.Models.Review>
+        ?? new List<MoneyTransfer.Models.Review>();
 }
 
 <div class="page-header">
     <div>
         <h2>My Reviews</h2>
-        <p>Your feedback history</p>
+        <p>Your ratings and feedback</p>
     </div>
     <a asp-action="Create" class="btn-tp-primary">
-        <i class="bi bi-star"></i> Write Another
+        <i class="bi bi-star"></i> Write App Review
     </a>
 </div>
 
-@if (!Model.Any())
-{
-    <div class="tp-card">
-        <div class="empty-state">
-            <i class="bi bi-star"></i>
-            <p>You haven't written any reviews yet.</p>
-            <a asp-action="Create" class="btn-tp-primary">
-                Write Your First Review
-            </a>
-        </div>
-    </div>
-}
-else
-{
-    <div class="d-flex flex-column gap-3">
-        @foreach (var r in Model)
+<!-- Tab selector -->
+<div style="display:flex;gap:8px;margin-bottom:20px;
+            border-bottom:2px solid var(--border);
+            padding-bottom:0">
+    @{
+        var tabs = new[]
         {
-            <div class="tp-card">
-                <div style="display:flex;align-items:flex-start;
-                                    justify-content:space-between;gap:12px">
-                    <div style="flex:1">
-                        <div style="color:#f0a500;font-size:22px;
-                                            margin-bottom:8px;line-height:1">
-                            @for (int i = 1; i <= 5; i++)
-                            {
-                                <span>@(i <= r.Rating ? "★" : "☆")</span>
-                            }
-                            <span style="font-size:13px;
-                                                 color:var(--text-3);
-                                                 margin-left:8px;
-                                                 font-weight:600;
-                                                 vertical-align:middle">
-                                @r.Rating / 5
-                            </span>
-                        </div>
+        ("app", "App Reviews", myReviews.Count),
+        ("transaction", "Transaction Reviews",
+        txReviews.Count),
+        ("agent", "Agent Reviews", agentReviews.Count)
+        };
+    }
+    @foreach (var tab in tabs)
+    {
+        <button onclick="showTab('@tab.Item1')"
+                id="tab_@tab.Item1"
+                style="padding:10px 18px;border:none;
+                           background:none;cursor:pointer;
+                           font-size:13px;font-weight:600;
+                           border-bottom:3px solid transparent;
+                           margin-bottom:-2px;
+                           color:var(--text-3);
+                           transition:var(--transition)"
+                class="review-tab">
+            @tab.Item2
+            <span style="background:var(--surface-2);
+                             border-radius:20px;
+                             padding:2px 8px;
+                             font-size:11px;
+                             margin-left:4px">
+                @tab.Item3
+            </span>
+        </button>
+    }
+</div>
 
-                        @if (!string.IsNullOrEmpty(r.Comment))
-                        {
-                            <p style="font-size:14px;color:var(--text-1);
-                                                  margin:0 0 8px;line-height:1.6">
-                                "@r.Comment"
-                            </p>
-                        }
-                        else
-                        {
-                            <p style="font-size:13px;color:var(--text-3);
-                                                  margin:0 0 8px;font-style:italic">
-                                No comment written.
-                            </p>
-                        }
-
-                        <!-- Date -->
-                        <div style="font-size:11px;color:var(--text-3)">
-                            @r.CreatedAt.ToString("MMMM dd, yyyy")
-                            at @r.CreatedAt.ToString("HH:mm")
-                        </div>
-                    </div>
-
-                    <div style="display:flex;flex-direction:column;
-                                        align-items:flex-end;gap:8px;flex-shrink:0">
-                        <span class="badge-tp success">
-                            <i class="bi bi-check-circle"></i> Submitted
+<!-- App Reviews -->
+<div id="tab-app">
+    @if (!myReviews.Any())
+    {
+        <div class="tp-card">
+            <div class="empty-state">
+                <i class="bi bi-star"></i>
+                <p>No app reviews yet.</p>
+                <a asp-action="Create"
+                   class="btn-tp-primary">
+                    Write First Review
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="d-flex flex-column gap-3">
+            @foreach (var r in myReviews)
+            {
+                <div class="tp-card">
+                    <div style="display:flex;
+                                        align-items:flex-start;
+                                        justify-content:space-between;
+                                        gap:12px">
+                        <div style="flex:1">
+                            <div style="color:#f0a500;
+                                                font-size:22px;
+                                                margin-bottom:8px">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <span>
+                                        @(i <= r.Rating
+                                                                    ? "★" : "☆")
                         </span>
-                        <form asp-action="Delete"
-                              asp-route-id="@r.Id"
-                              method="post"
-                              onsubmit="return confirm('Delete this review?')">
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="btn-tp-danger"
-                                    style="padding:5px 10px;font-size:11px">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </form>
+                                                }
+                                <span style="font-size:13px;
+                                                     color:var(--text-3);
+                                                     margin-left:8px">
+                                    @r.Rating / 5
+                                </span>
+                            </div>
+                            @if (!string.IsNullOrEmpty(r.Comment))
+                            {
+                                <p style="font-size:14px;
+                                                      color:var(--text-1);
+                                                      margin:0 0 8px">
+                                    "@r.Comment"
+                                </p>
+                            }
+                            <div style="font-size:11px;
+                                                color:var(--text-3)">
+                                @r.CreatedAt.ToString(
+                                "MMMM dd, yyyy HH:mm")
                     </div>
                 </div>
+                <div style="display:flex;
+                                    flex-direction:column;
+                                    gap:6px">
+                    <a asp-action="EditReview"
+                       asp-route-id="@r.Id"
+                       class="btn-tp-secondary"
+                       style="padding:5px 10px;
+                                      font-size:11px">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <form asp-action="Delete"
+                          asp-route-id="@r.Id"
+                          method="post"
+                          onsubmit="return confirm(
+                                    'Delete?')">
+                        @Html.AntiForgeryToken()
+                        <button type="submit"
+                                class="btn-tp-danger"
+                                style="padding:5px 10px;
+                                               font-size:11px">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </div>
             </div>
+        </div>
+                }
+        </div>
+    }
+</div>
+
+<!-- Transaction Reviews -->
+<div id="tab-transaction" style="display:none">
+    @if (!txReviews.Any())
+    {
+        <div class="tp-card">
+            <div class="empty-state">
+                <i class="bi bi-receipt"></i>
+                <p>
+                    No transaction reviews yet.
+                    Rate a transfer from the
+                    Transactions page.
+                </p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="d-flex flex-column gap-3">
+            @foreach (var r in txReviews)
+            {
+                <div class="tp-card">
+                    <div style="display:flex;
+                                        align-items:center;
+                                        gap:10px;
+                                        margin-bottom:10px;
+                                        padding-bottom:10px;
+                                        border-bottom:
+                                        1px solid var(--border)">
+                        <i class="bi bi-receipt"
+                           style="color:var(--teal)"></i>
+                        <div style="font-size:12px;
+                                            color:var(--text-3);
+                                            font-family:monospace">
+                            Transaction #@r.TransactionId
+                        </div>
+                    </div>
+                    <div style="color:#f0a500;
+                                        font-size:18px;
+                                        margin-bottom:6px">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            <span>
+                                @(i <= r.Rating
+                                                    ? "★" : "☆")
+                </span>
+                                }
+                    </div>
+                    @if (!string.IsNullOrEmpty(r.Comment))
+                    {
+                        <p style="font-size:14px;
+                                              color:var(--text-1);
+                                              margin:0 0 6px">
+                            "@r.Comment"
+                        </p>
+                    }
+                    <div style="font-size:11px;
+                                        color:var(--text-3)">
+                        @r.CreatedAt.ToString("MMM dd, yyyy")
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<!-- Agent Reviews -->
+<div id="tab-agent" style="display:none">
+    @if (!agentReviews.Any())
+    {
+        <div class="tp-card">
+            <div class="empty-state">
+                <i class="bi bi-shop"></i>
+                <p>No agent reviews yet.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="d-flex flex-column gap-3">
+            @foreach (var r in agentReviews)
+            {
+                <div class="tp-card">
+                    <div style="display:flex;
+                                        align-items:center;
+                                        gap:10px;
+                                        margin-bottom:10px;
+                                        padding-bottom:10px;
+                                        border-bottom:
+                                        1px solid var(--border)">
+                        <i class="bi bi-shop"
+                           style="color:var(--teal)"></i>
+                        <div style="font-size:12px;
+                                            color:var(--text-2)">
+                            Agent Review
+                        </div>
+                    </div>
+                    <div style="color:#f0a500;
+                                        font-size:18px;
+                                        margin-bottom:6px">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            <span>
+                                @(i <= r.Rating
+                                                    ? "★" : "☆")
+                </span>
+                                }
+                    </div>
+                    @if (!string.IsNullOrEmpty(r.Comment))
+                    {
+                        <p style="font-size:14px;
+                                              color:var(--text-1);
+                                              margin:0 0 6px">
+                            "@r.Comment"
+                        </p>
+                    }
+                    <div style="font-size:11px;
+                                        color:var(--text-3)">
+                        @r.CreatedAt.ToString("MMM dd, yyyy")
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function showTab(name) {
+            ['app','transaction','agent'].forEach(t => {
+                const tab =
+                    document.getElementById('tab-' + t);
+                const btn =
+                    document.getElementById('tab_' + t);
+                if (tab) tab.style.display =
+                    t === name ? 'block' : 'none';
+                if (btn) {
+                    btn.style.color = t === name
+                        ? 'var(--teal)' : 'var(--text-3)';
+                    btn.style.borderBottomColor = t === name
+                        ? 'var(--teal)' : 'transparent';
+                }
+            });
         }
-    </div>
+        showTab('app');
+    </script>
 }

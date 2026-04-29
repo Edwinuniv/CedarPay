@@ -585,6 +585,72 @@ namespace MoneyTransfer.Migrations
                             LastUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "UAE Dirham",
                             Symbol = "د.إ"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Code = "GBP",
+                            ExchangeRateToUSD = 1.270000m,
+                            FlagUrl = "/images/flags/gbp.png",
+                            IsActive = true,
+                            LastUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "British Pound",
+                            Symbol = "£"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Code = "SAR",
+                            ExchangeRateToUSD = 0.266000m,
+                            FlagUrl = "/images/flags/sar.png",
+                            IsActive = true,
+                            LastUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Saudi Riyal",
+                            Symbol = "﷼"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Code = "TRY",
+                            ExchangeRateToUSD = 0.031000m,
+                            FlagUrl = "/images/flags/try.png",
+                            IsActive = true,
+                            LastUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Turkish Lira",
+                            Symbol = "₺"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Code = "EGP",
+                            ExchangeRateToUSD = 0.021000m,
+                            FlagUrl = "/images/flags/egp.png",
+                            IsActive = true,
+                            LastUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Egyptian Pound",
+                            Symbol = "E£"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Code = "JOD",
+                            ExchangeRateToUSD = 1.410000m,
+                            FlagUrl = "/images/flags/jod.png",
+                            IsActive = true,
+                            LastUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Jordanian Dinar",
+                            Symbol = "JD"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Code = "KWD",
+                            ExchangeRateToUSD = 3.240000m,
+                            FlagUrl = "/images/flags/kwd.png",
+                            IsActive = true,
+                            LastUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Kuwaiti Dinar",
+                            Symbol = "KD"
                         });
                 });
 
@@ -697,11 +763,38 @@ namespace MoneyTransfer.Migrations
                     b.Property<int>("ConversationId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("EditedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeletedForEveryone")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeletedForSender")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsEdited")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsFromAdmin")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsRead")
                         .HasColumnType("bit");
+
+                    b.Property<string>("MediaFileName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long?>("MediaFileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("MediaUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("MessageType")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ReplyToId")
+                        .HasColumnType("int");
 
                     b.Property<string>("SenderId")
                         .HasColumnType("nvarchar(450)");
@@ -713,9 +806,41 @@ namespace MoneyTransfer.Migrations
 
                     b.HasIndex("ConversationId");
 
+                    b.HasIndex("ReplyToId");
+
                     b.HasIndex("SenderId");
 
                     b.ToTable("Messages");
+                });
+
+            modelBuilder.Entity("MoneyTransfer.Models.MessageReaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Emoji")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("MessageId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ReactedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MessageId", "UserId", "Emoji")
+                        .IsUnique();
+
+                    b.ToTable("MessageReactions");
                 });
 
             modelBuilder.Entity("MoneyTransfer.Models.Notification", b =>
@@ -780,6 +905,9 @@ namespace MoneyTransfer.Migrations
                     b.Property<int>("Target")
                         .HasColumnType("int");
 
+                    b.Property<int?>("TransactionId")
+                        .HasColumnType("int");
+
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
@@ -787,6 +915,8 @@ namespace MoneyTransfer.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AgentId");
+
+                    b.HasIndex("TransactionId");
 
                     b.HasIndex("UserId");
 
@@ -1384,6 +1514,10 @@ namespace MoneyTransfer.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("MoneyTransfer.Models.Message", "ReplyTo")
+                        .WithMany()
+                        .HasForeignKey("ReplyToId");
+
                     b.HasOne("MoneyTransfer.Models.User", "Sender")
                         .WithMany()
                         .HasForeignKey("SenderId")
@@ -1391,7 +1525,20 @@ namespace MoneyTransfer.Migrations
 
                     b.Navigation("Conversation");
 
+                    b.Navigation("ReplyTo");
+
                     b.Navigation("Sender");
+                });
+
+            modelBuilder.Entity("MoneyTransfer.Models.MessageReaction", b =>
+                {
+                    b.HasOne("MoneyTransfer.Models.Message", "Message")
+                        .WithMany("Reactions")
+                        .HasForeignKey("MessageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Message");
                 });
 
             modelBuilder.Entity("MoneyTransfer.Models.Notification", b =>
@@ -1412,6 +1559,10 @@ namespace MoneyTransfer.Migrations
                         .HasForeignKey("AgentId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("MoneyTransfer.Models.Transaction", "Transaction")
+                        .WithMany()
+                        .HasForeignKey("TransactionId");
+
                     b.HasOne("MoneyTransfer.Models.User", "User")
                         .WithMany("Reviews")
                         .HasForeignKey("UserId")
@@ -1419,6 +1570,8 @@ namespace MoneyTransfer.Migrations
                         .IsRequired();
 
                     b.Navigation("Agent");
+
+                    b.Navigation("Transaction");
 
                     b.Navigation("User");
                 });
@@ -1556,6 +1709,11 @@ namespace MoneyTransfer.Migrations
                     b.Navigation("TopUps");
 
                     b.Navigation("Wallets");
+                });
+
+            modelBuilder.Entity("MoneyTransfer.Models.Message", b =>
+                {
+                    b.Navigation("Reactions");
                 });
 
             modelBuilder.Entity("MoneyTransfer.Models.Transaction", b =>

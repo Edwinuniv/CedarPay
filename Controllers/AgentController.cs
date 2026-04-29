@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using MoneyTransfer.Data;
 using MoneyTransfer.Models;
 using MoneyTransfer.Repositories.Interfaces;
+using MoneyTransfer.Services.Interfaces;
 
 namespace MoneyTransfer.Controllers
 {
@@ -15,8 +16,8 @@ namespace MoneyTransfer.Controllers
         private readonly IWalletRepository _walletRepository;
         private readonly ITopUpRepository _topUpRepository;
         private readonly INotificationRepository _notificationRepository;
-        private readonly UserManager<User> _userManager;
         private readonly ApplicationDbContext _context;
+        private readonly IEmailService _emailService;
 
         public AgentController(
             IAgentRepository agentRepository,
@@ -25,47 +26,60 @@ namespace MoneyTransfer.Controllers
             INotificationRepository notificationRepository,
             UserManager<User> userManager,
             IUserRepository userRepository,
-            ApplicationDbContext context)
+            ApplicationDbContext context,
+            IEmailService emailService)
             : base(userManager, userRepository)
         {
             _agentRepository = agentRepository;
             _walletRepository = walletRepository;
             _topUpRepository = topUpRepository;
             _notificationRepository = notificationRepository;
-            _userManager = userManager;
             _context = context;
+            _emailService = emailService;
         }
 
         public async Task<IActionResult> Dashboard()
         {
             var userId = _userManager.GetUserId(User);
-            var agent = await _agentRepository.GetByUserIdAsync(userId);
+            var agents = (await _agentRepository
+                .GetByUserIdAsync(userId)).ToList();
 
-            if (agent == null)
+            if (!agents.Any())
             {
-                if (User.IsInRole("Admin"))
+                if (User.IsInRole("admin"))
                 {
-                    TempData["Error"] = "You are not registered as an agent. Use 'Become Agent' in Admin section first.";
+                    TempData["Error"] =
+                        "Use 'Become Agent' in Admin section first.";
                     return RedirectToAction("Index", "Admin");
                 }
-                TempData["Error"] = "You are not registered as an agent. Please apply first.";
+                TempData["Error"] =
+                    "You are not registered as an agent.";
                 return RedirectToAction("Apply", "AgentApplication");
             }
 
+            // Get selected agent from cookie, or default to first
+            Agent? agent = null;
+            if (Request.Cookies.TryGetValue(
+                "SelectedAgentId", out var cookieId) &&
+                int.TryParse(cookieId, out var agentId))
+            {
+                agent = agents.FirstOrDefault(a => a.Id == agentId);
+            }
+            agent ??= agents.FirstOrDefault();
+
             var topUps = await _context.TopUps
-                .Include(t => t.Wallet)
-                    .ThenInclude(w => w.User)
                 .Where(t => t.Method == TopUpMethod.Cash)
                 .OrderByDescending(t => t.CreatedAt)
                 .Take(10)
                 .ToListAsync();
 
-            var commissions = await _context.Commissions
-                .Include(c => c.Transaction)
-                .Where(c => c.AgentId == agent.Id)
-                .OrderByDescending(c => c.EarnedAt)
-                .ToListAsync();
+            var commissions = agent != null
+                ? await _context.Commissions
+                    .Where(c => c.AgentId == agent.Id)
+                    .ToListAsync()
+                : new List<Commission>();
 
+            ViewBag.Agents = agents;
             ViewBag.Agent = agent;
             ViewBag.TotalCashIn = topUps.Sum(t => t.Amount);
             ViewBag.TotalCommissions = commissions.Sum(c => c.Amount);
@@ -74,7 +88,100 @@ namespace MoneyTransfer.Controllers
             return View("Dashboard");
         }
 
-        public IActionResult CashIn() => View();
+        // Create new store (agents can have multiple)
+        public IActionResult Register()
+        {
+            return View(new Agent());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Register(Agent agent)
+        {
+            var userId = _userManager.GetUserId(User);
+
+            ModelState.Remove("UserId");
+            ModelState.Remove("User");
+            ModelState.Remove("Status");
+
+            if (!ModelState.IsValid)
+                return View(agent);
+
+            agent.UserId = userId;
+            agent.Status = AgentStatus.Approved;
+            agent.RegisteredAt = DateTime.Now;
+            agent.ApprovedAt = DateTime.Now;
+            agent.CommissionRate = 0.02m;
+
+            await _agentRepository.AddAsync(agent);
+
+            // Set cookie to this new agent
+            Response.Cookies.Append("SelectedAgentId",
+                agent.Id.ToString(),
+                new CookieOptions
+                {
+                    Expires = DateTimeOffset.UtcNow.AddHours(8)
+                });
+
+            TempData["Success"] = $"Store '{agent.StoreName}' created!";
+            return RedirectToAction("Dashboard");
+        }
+
+        // Edit store
+        public async Task<IActionResult> EditStore(int id)
+        {
+            var agent = await _agentRepository.GetByIdAsync(id);
+            if (agent == null) return NotFound();
+            return View(agent);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditStore(Agent agent)
+        {
+            ModelState.Remove("UserId");
+            ModelState.Remove("User");
+
+            if (!ModelState.IsValid)
+                return View(agent);
+
+            var existing = await _agentRepository.GetByIdAsync(agent.Id);
+            if (existing == null) return NotFound();
+
+            existing.StoreName = agent.StoreName;
+            existing.AgentName = agent.AgentName;
+            existing.PhoneNumber = agent.PhoneNumber;
+            existing.Email = agent.Email;
+            existing.Street = agent.Street;
+            existing.City = agent.City;
+            existing.Region = agent.Region;
+            existing.Country = agent.Country;
+            existing.WorkingHours = agent.WorkingHours;
+            existing.Description = agent.Description;
+
+            await _agentRepository.UpdateAsync(existing);
+
+            TempData["Success"] = "Store updated!";
+            return RedirectToAction("Dashboard");
+        }
+
+        // Delete store
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteStore(int id)
+        {
+            var agent = await _agentRepository.GetByIdAsync(id);
+            if (agent == null) return NotFound();
+
+            await _agentRepository.DeleteAsync(id);
+            TempData["Success"] = $"Store '{agent.StoreName}' deleted.";
+            return RedirectToAction("Dashboard");
+        }
+
+        public IActionResult CashIn()
+        {
+            return View();
+        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -84,11 +191,19 @@ namespace MoneyTransfer.Controllers
             string? note)
         {
             var userId = _userManager.GetUserId(User);
-            var agent = await _agentRepository.GetByUserIdAsync(userId);
+            var agents = (await _agentRepository.GetByUserIdAsync(userId)).ToList();
+
+            if (!agents.Any())
+            {
+                TempData["Error"] = "Agent profile not found.";
+                return RedirectToAction("Dashboard");
+            }
+
+            var agent = agents.FirstOrDefault();
 
             if (agent == null)
             {
-                TempData["Error"] = "Agent profile not found.";
+                TempData["Error"] = "Please select a store first.";
                 return RedirectToAction("Dashboard");
             }
 
@@ -136,6 +251,22 @@ namespace MoneyTransfer.Controllers
 
             await _context.SaveChangesAsync();
 
+            // Send email notification for cash deposit
+            var walletUser = wallet.User;
+            if (walletUser?.Email != null)
+            {
+                _ = Task.Run(async () =>
+                {
+                    await _emailService.SendNotificationAsync(
+                        walletUser.Email,
+                        $"{walletUser.FirstName} {walletUser.LastName}",
+                        "Cash Deposit Received",
+                        $"Agent {agent.StoreName} has deposited {wallet.Currency?.Symbol}{amount:N2} into your wallet ({walletSerial}).\n\n" +
+                        $"Your new balance is: {wallet.Currency?.Symbol}{wallet.Balance:N2}\n\n" +
+                        $"Transaction Reference: CASH-{DateTime.Now.Ticks}");
+                });
+            }
+
             TempData["Success"] = $"Cash deposit of {wallet.Currency?.Symbol}{amount:N2} added to {walletSerial}!";
             return RedirectToAction("CashIn");
         }
@@ -150,11 +281,19 @@ namespace MoneyTransfer.Controllers
             string? note)
         {
             var userId = _userManager.GetUserId(User);
-            var agent = await _agentRepository.GetByUserIdAsync(userId);
+            var agents = (await _agentRepository.GetByUserIdAsync(userId)).ToList();
+
+            if (!agents.Any())
+            {
+                TempData["Error"] = "Agent profile not found.";
+                return RedirectToAction("Dashboard");
+            }
+
+            var agent = agents.FirstOrDefault();
 
             if (agent == null)
             {
-                TempData["Error"] = "Agent profile not found.";
+                TempData["Error"] = "Please select a store first.";
                 return RedirectToAction("Dashboard");
             }
 
@@ -195,6 +334,22 @@ namespace MoneyTransfer.Controllers
 
             await _context.SaveChangesAsync();
 
+            // Send email notification for cash withdrawal
+            var walletUser = wallet.User;
+            if (walletUser?.Email != null)
+            {
+                _ = Task.Run(async () =>
+                {
+                    await _emailService.SendNotificationAsync(
+                        walletUser.Email,
+                        $"{walletUser.FirstName} {walletUser.LastName}",
+                        "Cash Withdrawal Processed",
+                        $"Agent {agent.StoreName} has processed a withdrawal of {wallet.Currency?.Symbol}{amount:N2} from your wallet ({walletSerial}).\n\n" +
+                        $"Your new balance is: {wallet.Currency?.Symbol}{wallet.Balance:N2}\n\n" +
+                        $"If you did not authorize this transaction, please contact support immediately.");
+                });
+            }
+
             TempData["Success"] = $"Withdrawal of {wallet.Currency?.Symbol}{amount:N2} processed!";
             return RedirectToAction("CashOut");
         }
@@ -202,11 +357,19 @@ namespace MoneyTransfer.Controllers
         public async Task<IActionResult> Commissions()
         {
             var userId = _userManager.GetUserId(User);
-            var agent = await _agentRepository.GetByUserIdAsync(userId);
+            var agents = (await _agentRepository.GetByUserIdAsync(userId)).ToList();
+
+            if (!agents.Any())
+            {
+                TempData["Error"] = "Agent profile not found.";
+                return RedirectToAction("Dashboard");
+            }
+
+            var agent = agents.FirstOrDefault();
 
             if (agent == null)
             {
-                TempData["Error"] = "Agent profile not found.";
+                TempData["Error"] = "Please select a store first.";
                 return RedirectToAction("Dashboard");
             }
 
@@ -218,75 +381,84 @@ namespace MoneyTransfer.Controllers
 
             ViewBag.TotalEarned = commissions.Sum(c => c.Amount);
             ViewBag.TotalPaid = commissions.Where(c => c.IsPaid).Sum(c => c.Amount);
+            ViewBag.Agent = agent;
 
             return View(commissions);
         }
 
-        public async Task<IActionResult> SetLocation()
+        // ✅ FIX: Takes int? id from the URL route so each store loads correctly
+        public async Task<IActionResult> SetLocation(int? id)
         {
             var userId = _userManager.GetUserId(User);
-            var agent = await _agentRepository.GetByUserIdAsync(userId);
+            var agents = (await _agentRepository
+                .GetByUserIdAsync(userId)).ToList();
 
-            if (agent == null)
+            if (!agents.Any())
             {
-                if (User.IsInRole("Admin"))
+                if (User.IsInRole("admin"))
                 {
-                    TempData["Error"] = "No agent store found. Use 'Become Agent' in Admin section first.";
+                    TempData["Error"] =
+                        "Use 'Become Agent' first to create a store.";
                     return RedirectToAction("Index", "Admin");
                 }
-                TempData["Error"] = "Agent profile not found.";
+                TempData["Error"] = "No agent store found.";
                 return RedirectToAction("Dashboard");
             }
+
+            // ✅ FIX: Load the specific store by route id, fall back to first
+            Agent? agent;
+            if (id.HasValue)
+            {
+                // Security: only allow stores that belong to this user
+                agent = agents.FirstOrDefault(a => a.Id == id.Value)
+                        ?? agents.First();
+            }
+            else
+            {
+                agent = agents.First();
+            }
+
+            // ✅ FIX: Pass all stores so the dropdown switcher renders
+            ViewBag.AllStores = agents;
 
             return View(agent);
         }
 
+        // ✅ FIX: Added latitude and longitude parameters + calls UpdateLocationAsync
+        //         to save to the SPECIFIC store identified by id
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SetLocation(int id, double latitude, double longitude)
         {
-            var agent = await _agentRepository.GetByIdAsync(id);
-            if (agent == null) return NotFound();
+            var userId = _userManager.GetUserId(User);
+            var agents = (await _agentRepository.GetByUserIdAsync(userId)).ToList();
 
-            agent.Latitude = latitude;
-            agent.Longitude = longitude;
-            await _agentRepository.UpdateAsync(agent);
+            // Security: verify this store belongs to the current user
+            var agent = agents.FirstOrDefault(a => a.Id == id);
 
-            TempData["Success"] = "Location saved! Your store now appears on the agent map.";
+            if (agent == null)
+            {
+                TempData["Error"] = "Store not found.";
+                return RedirectToAction("Dashboard");
+            }
+
+            // ✅ FIX: Actually save the lat/lng to the correct store
+            await _agentRepository.UpdateLocationAsync(id, latitude, longitude);
+
+            TempData["Success"] = $"Location saved for '{agent.StoreName}'!";
             return RedirectToAction("Dashboard");
         }
 
-        public async Task<IActionResult> EditLocation(int id)
-        {
-            var agent = await _agentRepository.GetByIdAsync(id);
-            if (agent == null) return NotFound();
-
-            var userId = _userManager.GetUserId(User);
-            if (agent.UserId != userId && !User.IsInRole("Admin"))
-            {
-                return Unauthorized();
-            }
-
-            return View(agent);
-        }
-
         [HttpPost]
-        public async Task<IActionResult> EditLocation(int id, double latitude, double longitude)
+        [ValidateAntiForgeryToken]
+        public IActionResult SelectStore(int agentId)
         {
-            var agent = await _agentRepository.GetByIdAsync(id);
-            if (agent == null) return NotFound();
-
-            var userId = _userManager.GetUserId(User);
-            if (agent.UserId != userId && !User.IsInRole("Admin"))
-            {
-                return Unauthorized();
-            }
-
-            agent.Latitude = latitude;
-            agent.Longitude = longitude;
-            await _agentRepository.UpdateAsync(agent);
-
-            TempData["Success"] = "Location updated successfully!";
+            Response.Cookies.Append("SelectedAgentId",
+                agentId.ToString(),
+                new CookieOptions
+                {
+                    Expires = DateTimeOffset.UtcNow.AddHours(8)
+                });
             return RedirectToAction("Dashboard");
         }
     }

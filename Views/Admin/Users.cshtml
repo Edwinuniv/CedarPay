@@ -8,9 +8,20 @@
         <h2>User Management</h2>
         <p>@Model.Count() total users</p>
     </div>
-    <a asp-action="Index" class="btn-tp-secondary">
-        <i class="bi bi-arrow-left"></i> Back
-    </a>
+    <div style="display:flex;gap:8px">
+        <form asp-action="CreateGuestUser" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit"
+                    class="btn-tp-secondary"
+                    onclick="return confirm('Create a guest account?')">
+                <i class="bi bi-person-plus"></i>
+                + Guest User
+            </button>
+        </form>
+        <a asp-action="Index" class="btn-tp-secondary">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
 </div>
 
 <div class="tp-card mb-3">
@@ -67,26 +78,26 @@
                     data-roles="@(ViewBag.UserRoles != null && ((Dictionary<string, List<string>>)ViewBag.UserRoles).ContainsKey(u.Id) ? string.Join(",", ((Dictionary<string, List<string>>)ViewBag.UserRoles)[u.Id]).ToLower() : "user")">
                     <td>
                         <div style="display:flex;
-                                        align-items:center;gap:10px">
+                                            align-items:center;gap:10px">
                             @if (!string.IsNullOrEmpty(
                                                     u.ProfilePictureUrl))
                             {
                                 <img src="@u.ProfilePictureUrl"
                                      style="width:36px;height:36px;
-                                                    border-radius:50%;
-                                                    object-fit:cover" />
+                                                            border-radius:50%;
+                                                            object-fit:cover" />
                             }
                             else
                             {
                                 <div class="ben-avatar"
                                      style="width:36px;height:36px;
-                                                    font-size:12px">
+                                                            font-size:12px">
                                     @u.FirstName?.Substring(0, 1)@u.LastName?.Substring(0, 1)
                                 </div>
                             }
                             <div>
                                 <div style="font-weight:600;
-                                                font-size:13px">
+                                                    font-size:13px">
                                     @u.FirstName @u.LastName
                                 </div>
                                 @{
@@ -135,7 +146,7 @@
                     </td>
                     <td>
                         <div style="display:flex;gap:4px;
-                                        flex-wrap:wrap">
+                                            flex-wrap:wrap">
                             @if (!roles.Contains("admin"))
                             {
                                 <form asp-action="PromoteToAdmin"
@@ -146,7 +157,7 @@
                                     <button type="submit"
                                             class="btn-tp-secondary"
                                             style="padding:4px 8px;
-                                                           font-size:11px"
+                                                                   font-size:11px"
                                             title="Make Admin">
                                         <i class="bi bi-shield-fill"></i>
                                     </button>
@@ -159,7 +170,7 @@
                                 <button type="submit"
                                         class="btn-tp-@(u.IsActive ? "danger" : "success")"
                                         style="padding:4px 8px;
-                                                   font-size:11px"
+                                                       font-size:11px"
                                         title="@(u.IsActive ? "Disable" : "Enable")">
                                     <i class="bi bi-@(u.IsActive ? "person-x" : "person-check")"></i>
                                 </button>

@@ -5,7 +5,7 @@ using MoneyTransfer.Repositories.Interfaces;
 
 namespace MoneyTransfer.Repositories.Implementations
 {
-    public class AgentRepository: GenericRepository<Agent>, IAgentRepository
+    public class AgentRepository : GenericRepository<Agent>, IAgentRepository
     {
         public AgentRepository(ApplicationDbContext context) : base(context) { }
 
@@ -24,10 +24,11 @@ namespace MoneyTransfer.Repositories.Implementations
                 .ToListAsync();
         }
 
-        public async Task<Agent?> GetByUserIdAsync(string userId)
+        public async Task<IEnumerable<Agent>> GetByUserIdAsync(string userId)
         {
             return await _context.Agents
-                .FirstOrDefaultAsync(a => a.UserId == userId);
+                .Where(a => a.UserId == userId)
+                .ToListAsync();
         }
 
         public async Task<IEnumerable<Agent>> GetByCityAsync(string city)
@@ -54,5 +55,15 @@ namespace MoneyTransfer.Repositories.Implementations
                 .FirstOrDefaultAsync(a => a.Id == id);
         }
 
+        public async Task UpdateLocationAsync(int agentId, double latitude, double longitude)
+        {
+            var agent = await _context.Agents.FindAsync(agentId);
+            if (agent != null)
+            {
+                agent.Latitude = latitude;
+                agent.Longitude = longitude;
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }
