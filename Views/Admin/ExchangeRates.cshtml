@@ -1,0 +1,152 @@
+﻿@{
+    ViewData["Title"] = "Exchange Rates";
+    var currencies = ViewBag.Currencies as
+        List<MoneyTransfer.Models.Currency>
+        ?? new List<MoneyTransfer.Models.Currency>();
+    var rates = ViewBag.Rates as
+        Dictionary<string, Dictionary<string, decimal>>
+        ?? new Dictionary<string, Dictionary<string, decimal>>();
+}
+
+<div class="page-header">
+    <div>
+        <h2>Live Exchange Rates</h2>
+        <p>
+            Last updated:
+            @(ViewBag.LastUpdated is DateTime dt
+                        ? dt.ToString("MMM dd, yyyy HH:mm:ss")
+                        : "—")
+        </p>
+    </div>
+    <div style="display:flex;gap:8px">
+        <a asp-action="Index" class="btn-tp-secondary">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+        <a asp-action="ExchangeRates"
+           class="btn-tp-primary">
+            <i class="bi bi-arrow-clockwise"></i> Refresh
+        </a>
+    </div>
+</div>
+
+<!-- Rate Table -->
+<div class="tp-card" style="overflow-x:auto">
+    <table class="tp-table">
+        <thead>
+            <tr>
+                <th style="min-width:80px">From \ To</th>
+                @foreach (var c in currencies)
+                {
+                    <th style="text-align:center;
+                                   min-width:100px">
+                        @c.Code
+                        <div style="font-size:10px;
+                                        color:var(--text-3);
+                                        font-weight:400">
+                            @c.Symbol
+                        </div>
+                    </th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var fromCurr in currencies)
+            {
+                <tr>
+                    <td style="font-weight:700">
+                        <div>@fromCurr.Code</div>
+                        <div style="font-size:11px;
+                                        color:var(--text-3)">
+                            @fromCurr.Symbol
+                        </div>
+                    </td>
+                    @foreach (var toCurr in currencies)
+                    {
+                        var rate = 0m;
+                        if (rates.TryGetValue(
+                        fromCurr.Code, out var toRates) &&
+                        toRates.TryGetValue(
+                        toCurr.Code, out var r))
+                        {
+                            rate = r;
+                        }
+
+                        bool isSelf =
+                        fromCurr.Code == toCurr.Code;
+
+                        <td style="text-align:center;
+                                           background:@(isSelf
+                                                                   ? "var(--surface-2)"
+                                                                   : "transparent")">
+                    @if (isSelf)
+                            {
+                                <span style="color:var(--text-3)">
+                                    1.0000
+                                </span>
+                            }
+                            else if (rate > 0)
+                            {
+                                <span style="font-weight:600;
+                                                         color:var(--teal)">
+                                    @rate.ToString("N4")
+                                </span>
+                            }
+                            else
+                            {
+                                <span style="color:var(--red)">
+                                    Error
+                                </span>
+                            }
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Example Conversions -->
+<div class="tp-card mt-3">
+    <div class="tp-card-header">
+        <span class="tp-card-title">
+            Quick Conversion Examples
+        </span>
+    </div>
+    <div style="display:grid;
+                grid-template-columns:repeat(3,1fr);
+                gap:12px">
+        @foreach (var fromC in currencies.Where(
+                c => c.Code == "USD"))
+        {
+            @foreach (var toC in currencies.Where(
+                    c => c.Code != "USD"))
+            {
+                var r = 0m;
+                if (rates.TryGetValue(
+                fromC.Code, out var tr) &&
+                tr.TryGetValue(toC.Code, out var rv))
+                    r = rv;
+
+                <div style="padding:14px;
+                                    background:var(--surface-2);
+                                    border-radius:var(--r-md);
+                                    border:1px solid var(--border)">
+                    <div style="font-size:12px;
+                                        color:var(--text-3);
+                                        margin-bottom:4px">
+                        1 @fromC.Code →
+                    </div>
+                    <div style="font-size:20px;
+                                        font-weight:800;
+                                        color:var(--teal)">
+                        @toC.Symbol@r.ToString("N2")
+                    </div>
+                    <div style="font-size:12px;
+                                        color:var(--text-2)">
+                        @toC.Code — @toC.Name
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>

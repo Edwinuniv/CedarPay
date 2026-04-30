@@ -9,8 +9,8 @@ namespace MoneyTransfer.Controllers
     {
         private readonly IAgentRepository _agentRepository;
 
-        public MapController(IAgentRepository agentRepository,UserManager<User> userManager,
-            IUserRepository userRepository): base(userManager, userRepository)
+        public MapController(IAgentRepository agentRepository, UserManager<User> userManager,
+            IUserRepository userRepository) : base(userManager, userRepository)
         {
             _agentRepository = agentRepository;
         }
@@ -18,6 +18,14 @@ namespace MoneyTransfer.Controllers
         public async Task<IActionResult> Index()
         {
             var agents = await _agentRepository.GetApprovedAgentsAsync();
+
+            if (User.IsInRole("Agent") || User.IsInRole("Admin"))
+            {
+                var userId = _userManager.GetUserId(User);
+                var userAgents = await _agentRepository.GetByUserIdAsync(userId);
+                ViewBag.UserAgents = userAgents.ToList();
+            }
+
             return View(agents.ToList());
         }
     }

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using MoneyTransfer.Models;
 using MoneyTransfer.Repositories.Interfaces;
 using MoneyTransfer.ViewModels;
+using MoneyTransfer.Services.Interfaces;
 
 namespace MoneyTransfer.Controllers
 {
@@ -12,12 +13,17 @@ namespace MoneyTransfer.Controllers
     {
         private readonly INotificationRepository _notificationRepository;
         private readonly UserManager<User> _userManager;
+        private readonly IEmailService _emailService;
 
-        public NotificationController(INotificationRepository notificationRepository,
-            UserManager<User> userManager, IUserRepository userRepository): base(userManager, userRepository)
+        public NotificationController(
+            INotificationRepository notificationRepository,
+            UserManager<User> userManager,
+            IUserRepository userRepository,
+            IEmailService emailService) : base(userManager, userRepository)
         {
             _notificationRepository = notificationRepository;
             _userManager = userManager;
+            _emailService = emailService;
         }
 
         public async Task<IActionResult> Index()

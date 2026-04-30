@@ -27,12 +27,11 @@
                             font-size:22px;
                             margin:0 auto 12px;
                             @(!string.IsNullOrEmpty(Model.OtherPartyPictureUrl) ? "padding:0;overflow:hidden" : "")">
-                    @if (!string.IsNullOrEmpty(
-                                        Model.OtherPartyPictureUrl))
+                    @if (!string.IsNullOrEmpty(Model.OtherPartyPictureUrl))
                     {
                         <img src="@Model.OtherPartyPictureUrl"
                              style="width:100%;height:100%;
-                                        object-fit:cover" />
+                                            object-fit:cover" />
                     }
                     else
                     {
@@ -128,9 +127,7 @@
                     </div>
                     <div style="font-size:14px;font-weight:600;
                                 margin-top:3px">
-                        @(Model.ConvertedAmount > 0
-                                                ? Model.ConvertedAmount.ToString("N2")
-                                                : Model.Amount.ToString("N2"))
+                        @(Model.ConvertedAmount > 0 ? Model.ConvertedAmount.ToString("N2") : Model.Amount.ToString("N2"))
                         @Model.ReceiverCurrency
                     </div>
                 </div>
@@ -195,8 +192,7 @@
                     </div>
                     <div style="font-size:14px;font-weight:600;
                                 margin-top:3px">
-                        @Model.CreatedAt.ToString(
-                        "MMM dd, yyyy HH:mm")
+                        @Model.CreatedAt.ToString("MMM dd, yyyy HH:mm")
                     </div>
                 </div>
             </div>
@@ -204,10 +200,10 @@
             @if (!string.IsNullOrEmpty(Model.Description))
             {
                 <div style="padding:14px;
-                                background:var(--surface-2);
-                                border-radius:var(--r-sm);
-                                font-size:13px;
-                                color:var(--text-2)">
+                                    background:var(--surface-2);
+                                    border-radius:var(--r-sm);
+                                    font-size:13px;
+                                    color:var(--text-2)">
                     <strong style="color:var(--text-1)">
                         Note:
                     </strong>
@@ -215,5 +211,34 @@
                 </div>
             }
         </div>
+
+        <!-- Review Popup for Completed Sent Transactions -->
+        @if (Model.Status == "Completed" && Model.IsSent)
+        {
+            <div class="tp-card mt-3"
+                 style="border:1px solid rgba(240,165,0,.3);
+                            background:var(--yellow-light)">
+                <div style="display:flex;align-items:center;
+                                gap:12px">
+                    <span style="font-size:24px">⭐</span>
+                    <div style="flex:1">
+                        <div style="font-size:14px;font-weight:700">
+                            How was this transfer?
+                        </div>
+                        <div style="font-size:13px;
+                                        color:var(--text-2)">
+                            Rate your experience
+                        </div>
+                    </div>
+                    <a asp-controller="Review"
+                       asp-action="Create"
+                       asp-route-transactionId="@Model.Id"
+                       class="btn-tp-primary"
+                       style="padding:8px 16px;font-size:12px">
+                        Rate This Transfer
+                    </a>
+                </div>
+            </div>
+        }
     </div>
 </div>

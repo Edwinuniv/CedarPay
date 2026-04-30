@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using MoneyTransfer.Constants;
 using MoneyTransfer.Models;
 using MoneyTransfer.Repositories.Interfaces;
+using MoneyTransfer.Services.Interfaces;
 
 namespace MoneyTransfer.Controllers
 {
@@ -12,15 +13,18 @@ namespace MoneyTransfer.Controllers
     {
         private readonly IAgentApplicationRepository _applicationRepository;
         private readonly IAgentRepository _agentRepository;
-        private readonly UserManager<User> _userManager;
+        private readonly IEmailService _emailService;
 
-        public AgentApplicationController(IAgentApplicationRepository applicationRepository,
-            IAgentRepository agentRepository, UserManager<User> userManager,
-            IUserRepository userRepository) : base(userManager, userRepository)
+        public AgentApplicationController(
+            IAgentApplicationRepository applicationRepository,
+            IAgentRepository agentRepository,
+            UserManager<User> userManager,
+            IUserRepository userRepository,
+            IEmailService emailService) : base(userManager, userRepository)
         {
             _applicationRepository = applicationRepository;
             _agentRepository = agentRepository;
-            _userManager = userManager;
+            _emailService = emailService;
         }
 
         public async Task<IActionResult> Apply()
@@ -92,11 +96,32 @@ namespace MoneyTransfer.Controllers
                 return View(application);
             }
 
+            var user = await _userManager.FindByIdAsync(userId);
+
             application.UserId = userId;
             application.Status = ApplicationStatus.Pending;
             application.SubmittedAt = DateTime.Now;
 
             await _applicationRepository.AddAsync(application);
+
+            // Send email confirmation to user
+            if (user?.Email != null)
+            {
+                _ = Task.Run(async () =>
+                {
+                    await _emailService.SendNotificationAsync(
+                        user.Email,
+                        $"{user.FirstName} {user.LastName}",
+                        "Agent Application Received",
+                        $"Thank you for submitting your agent application for '{application.StoreName}'. Our team will review your application and notify you within 1-2 business days.\n\n" +
+                        $"Application Summary:\n" +
+                        $"• Store Name: {application.StoreName}\n" +
+                        $"• Agent Name: {application.AgentName}\n" +
+                        $"• Email: {application.Email}\n" +
+                        $"• Phone: {application.PhoneNumber}\n\n" +
+                        $"You can check the status of your application anytime from your profile page.");
+                });
+            }
 
             TempData["Success"] = "Your agent application has been submitted! You will be notified once reviewed.";
 

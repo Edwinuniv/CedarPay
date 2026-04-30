@@ -1,9 +1,10 @@
 ﻿using Microsoft.Extensions.Configuration;
 using System.Text.Json;
+using MoneyTransfer.Services.Interfaces;
 
 namespace MoneyTransfer.Services.Implementations
 {
-    public class CurrencyExchangeService: Interfaces.ICurrencyExchangeService
+    public class CurrencyExchangeService: ICurrencyExchangeService
     {
         private readonly HttpClient _httpClient;
         private readonly string _baseUrl;

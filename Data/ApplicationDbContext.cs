@@ -35,6 +35,8 @@ namespace MoneyTransfer.Data
         public DbSet<WalletRequest> WalletRequests { get; set; }
         public DbSet<ConversationParticipant> ConversationParticipants { get; set; }
 
+        public DbSet<MessageReaction> MessageReactions { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -251,6 +253,10 @@ namespace MoneyTransfer.Data
                 .HasForeignKey(a => a.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<MessageReaction>()
+                .HasIndex(r => new { r.MessageId, r.UserId, r.Emoji })
+                .IsUnique();
+
             modelBuilder.Entity<Currency>().HasData(
                 new Currency
                 {
@@ -293,6 +299,72 @@ namespace MoneyTransfer.Data
                     Symbol = "د.إ",
                     FlagUrl = "/images/flags/aed.png",
                     ExchangeRateToUSD = 0.272000m,
+                    IsActive = true,
+                    LastUpdated = new DateTime(2026, 1, 1)
+                },
+                new Currency
+                {
+                    Id = 5,
+                    Code = "GBP",
+                    Name = "British Pound",
+                    Symbol = "£",
+                    FlagUrl = "/images/flags/gbp.png",
+                    ExchangeRateToUSD = 1.270000m,
+                    IsActive = true,
+                    LastUpdated = new DateTime(2026, 1, 1)
+                },
+                new Currency
+                {
+                    Id = 6,
+                    Code = "SAR",
+                    Name = "Saudi Riyal",
+                    Symbol = "﷼",
+                    FlagUrl = "/images/flags/sar.png",
+                    ExchangeRateToUSD = 0.266000m,
+                    IsActive = true,
+                    LastUpdated = new DateTime(2026, 1, 1)
+                },
+                new Currency
+                {
+                    Id = 7,
+                    Code = "TRY",
+                    Name = "Turkish Lira",
+                    Symbol = "₺",
+                    FlagUrl = "/images/flags/try.png",
+                    ExchangeRateToUSD = 0.031000m,
+                    IsActive = true,
+                    LastUpdated = new DateTime(2026, 1, 1)
+                },
+                new Currency
+                {
+                    Id = 8,
+                    Code = "EGP",
+                    Name = "Egyptian Pound",
+                    Symbol = "E£",
+                    FlagUrl = "/images/flags/egp.png",
+                    ExchangeRateToUSD = 0.021000m,
+                    IsActive = true,
+                    LastUpdated = new DateTime(2026, 1, 1)
+                },
+                new Currency
+                {
+                    Id = 9,
+                    Code = "JOD",
+                    Name = "Jordanian Dinar",
+                    Symbol = "JD",
+                    FlagUrl = "/images/flags/jod.png",
+                    ExchangeRateToUSD = 1.410000m,
+                    IsActive = true,
+                    LastUpdated = new DateTime(2026, 1, 1)
+                },
+                new Currency
+                {
+                    Id = 10,
+                    Code = "KWD",
+                    Name = "Kuwaiti Dinar",
+                    Symbol = "KD",
+                    FlagUrl = "/images/flags/kwd.png",
+                    ExchangeRateToUSD = 3.240000m,
                     IsActive = true,
                     LastUpdated = new DateTime(2026, 1, 1)
                 }

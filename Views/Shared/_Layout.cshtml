@@ -18,400 +18,436 @@
     @await RenderSectionAsync("Styles", required: false)
 
     <script>
-        // Apply dark mode before render to prevent flash
         (function() {
             if (localStorage.getItem('darkMode') === '1') {
-                document.documentElement.classList.add(
-                    'dark-mode');
+                document.documentElement.classList.add('dark-mode');
             }
         })();
     </script>
 </head>
 <body class="@(User.IsInRole("admin") ? "admin-theme" : User.IsInRole("agent") ? "agent-theme" : "")">
 
-@{
-    var ctrl = ViewContext.RouteData.Values["controller"]
-        ?.ToString() ?? "";
-    var action = ViewContext.RouteData.Values["action"]
-        ?.ToString() ?? "";
-    bool isAuth = User.Identity?.IsAuthenticated == true;
-    bool isAdmin = User.IsInRole("admin");
-    bool isAgent = User.IsInRole("agent");
-}
+    @{
+        var ctrl = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+        var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+        bool isAuth = User.Identity?.IsAuthenticated == true;
+        bool isAdmin = User.IsInRole("admin");
+        bool isAgent = User.IsInRole("agent");
+    }
 
-@if (!isAuth)
-{
-    <!-- Public layout - no sidebar -->
-    <nav class="public-nav">
-        <div class="sidebar-brand"
-             style="padding:0;margin:0">
-            <div class="brand-icon">
-                <svg viewBox="0 0 34 34" width="28" height="28">
-                    <rect width="34" height="34"
-                          rx="8" fill="white" opacity=".2"/>
-                    <rect x="15.5" y="22" width="3"
-                          height="6" fill="#fff"/>
-                    <polygon points="5,24 17,10 29,24"
-                             fill="#fff" opacity=".85"/>
-                    <polygon points="8,19 17,7 26,19"
-                             fill="#fff"/>
-                    <polygon points="11,14 17,4 23,14"
-                             fill="#fff"/>
-                </svg>
+    @if (!isAuth)
+    {
+        <!-- Public layout - no sidebar -->
+        <nav class="public-nav">
+            <div class="sidebar-brand" style="padding:0;margin:0">
+                <div class="brand-icon" style="background:var(--teal);border-radius:12px;display:flex;align-items:center;justify-content:center;width:32px;height:32px">
+
+                    <!-- UPDATED LOGO -->
+                    <svg viewBox="0 0 34 34" width="28" height="28">
+                        <rect width="34" height="34" rx="8" fill="#00b894" />
+
+                        <path d="M17 5
+                                     L23 11
+                                     H20
+                                     L25 16
+                                     H21
+                                     L27 22
+                                     H20
+                                     V27
+                                     H14
+                                     V22
+                                     H7
+                                     L13 16
+                                     H9
+                                     L14 11
+                                     H11
+                                     Z"
+                              fill="#ffffff"
+                              opacity="0.95" />
+
+                        <text x="17" y="21"
+                              text-anchor="middle"
+                              font-size="10"
+                              font-weight="bold"
+                              fill="#00b894"
+                              font-family="Arial">$</text>
+                    </svg>
+
+                </div>
+                <span class="brand-name">
+                    Cedar<span class="brand-accent">Pay</span>
+                </span>
             </div>
-            <span class="brand-name">
-                Cedar<span class="brand-accent">Pay</span>
-            </span>
-        </div>
-        <div class="public-nav-links">
-            <a asp-area="Identity" asp-page="/Account/Login"
-               class="btn-login">Login</a>
-            <a asp-area="Identity" asp-page="/Account/Register"
-               class="btn-register">Register</a>
-        </div>
-    </nav>
-    <div class="public-content">
-        @RenderBody()
-    </div>
-}
-else
-{
-    <div class="app-wrapper">
-
-        <!-- ═══════════════════════════════════
-             SIDEBAR
-        ═══════════════════════════════════ -->
-        <aside class="sidebar" id="sidebar">
-
-            <!-- Brand / Toggle -->
-            <div class="sidebar-brand">
-                <button onclick="toggleSidebar()"
-                        style="background:none;border:none;
-                               display:flex;align-items:center;
-                               gap:10px;padding:0;cursor:pointer;
-                               width:100%">
-                    <div class="brand-icon" style="flex-shrink:0">
-                        <svg viewBox="0 0 34 34"
-                             width="34" height="34">
-                            <rect width="34" height="34"
-                                  rx="8" fill="#00b894"/>
-                            <rect x="15.5" y="22" width="3"
-                                  height="6" fill="#fff"/>
-                            <polygon points="5,24 17,10 29,24"
-                                     fill="#fff" opacity=".85"/>
-                            <polygon points="8,19 17,7 26,19"
-                                     fill="#fff"/>
-                            <polygon points="11,14 17,4 23,14"
-                                     fill="#fff"/>
-                        </svg>
-                    </div>
-                    <span class="brand-name brand-text">
-                        Cedar<span class="brand-accent">Pay</span>
-                    </span>
-                </button>
+            <div class="public-nav-links">
+                <a asp-area="Identity" asp-page="/Account/Login" class="btn-login">Login</a>
+                <a asp-area="Identity" asp-page="/Account/Register" class="btn-register">Register</a>
             </div>
+        </nav>
+        <div class="public-content">
+            @RenderBody()
+        </div>
+    }
+    else
+    {
+        <div class="app-wrapper">
+            <aside class="sidebar" id="sidebar">
 
-            <!-- ─── MAIN (all users) ─── -->
-            <div class="sidebar-section-label">MAIN</div>
-            <nav class="sidebar-nav">
-                <a asp-controller="Dashboard"
-                   asp-action="Index"
-                   class="nav-item @(ctrl=="Dashboard" ? "active" : "")">
-                    <i class="bi bi-grid-1x2-fill"></i>
-                    <span class="brand-text">Dashboard</span>
-                </a>
-                <a asp-controller="Transaction"
-                   asp-action="Index"
-                   class="nav-item @(ctrl=="Transaction" ? "active" : "")">
-                    <i class="bi bi-receipt"></i>
-                    <span class="brand-text">Transactions</span>
-                </a>
-                <a asp-controller="Beneficiary"
-                   asp-action="Index"
-                   class="nav-item @(ctrl=="Beneficiary" ? "active" : "")">
-                    <i class="bi bi-people-fill"></i>
-                    <span class="brand-text">Beneficiaries</span>
-                </a>
-            </nav>
+                <!-- Brand / Toggle -->
+                <div class="sidebar-brand">
+                    <button onclick="toggleSidebar()"
+                            style="background:none;border:none;display:flex;align-items:center;gap:10px;padding:0;cursor:pointer;width:100%">
+                        <div class="brand-icon" style="flex-shrink:0;background:var(--teal);border-radius:12px;width:34px;height:34px;display:flex;align-items:center;justify-content:center">
 
-            <!-- ─── TOOLS (all users) ─── -->
-            <div class="sidebar-section-label">TOOLS</div>
-            <nav class="sidebar-nav">
-                <a asp-controller="Transfer"
-                   asp-action="Create"
-                   class="nav-item @(ctrl=="Transfer" ? "active" : "")">
-                    <i class="bi bi-send-fill"></i>
-                    <span class="brand-text">Send Money</span>
-                </a>
-                <a asp-controller="TopUp"
-                   asp-action="Create"
-                   class="nav-item @(ctrl=="TopUp" ? "active" : "")">
-                    <i class="bi bi-plus-circle-fill"></i>
-                    <span class="brand-text">Top Up</span>
-                </a>
-                <a asp-controller="Wallet"
-                   asp-action="Index"
-                   class="nav-item @(ctrl=="Wallet" ? "active" : "")">
-                    <i class="bi bi-wallet2"></i>
-                    <span class="brand-text">Wallets</span>
-                </a>
-                <a asp-controller="Finance"
-                   asp-action="Index"
-                   class="nav-item @(ctrl=="Finance" ? "active" : "")">
-                    <i class="bi bi-bar-chart-fill"></i>
-                    <span class="brand-text">Finance</span>
-                </a>
-                <a asp-controller="Review"
-                   asp-action="MyReviews"
-                   class="nav-item @(ctrl=="Review" ? "active" : "")">
-                    <i class="bi bi-star-fill"></i>
-                    <span class="brand-text">Reviews</span>
-                </a>
-                <a asp-controller="Map"
-                   asp-action="Index"
-                   class="nav-item @(ctrl=="Map" ? "active" : "")">
-                    <i class="bi bi-geo-alt-fill"></i>
-                    <span class="brand-text">Agent Map</span>
-                </a>
-                <a asp-controller="Settings"
-                   asp-action="Index"
-                   class="nav-item @(ctrl=="Settings" ? "active" : "")">
-                    <i class="bi bi-gear-fill"></i>
-                    <span class="brand-text">Settings</span>
-                </a>
-                <a asp-controller="Account"
-                   asp-action="Profile"
-                   class="nav-item @(ctrl=="Account" && action!="Report" ? "active" : "")">
-                    <i class="bi bi-person-fill"></i>
-                    <span class="brand-text">Profile</span>
-                </a>
-                <a asp-controller="Account"
-                   asp-action="Report"
-                   target="_blank"
-                   class="nav-item">
-                    <i class="bi bi-file-earmark-text"></i>
-                    <span class="brand-text">My Report</span>
-                </a>
-            </nav>
+                            <!-- UPDATED LOGO -->
+                            <svg viewBox="0 0 34 34" width="28" height="28">
+                                <rect width="34" height="34" rx="8" fill="#00b894" />
 
-            <!-- ─── AGENT SECTION ─── -->
-            @if (isAgent || isAdmin)
-            {
-                <div class="sidebar-section-label">AGENT</div>
-                <nav class="sidebar-nav">
-                    <a asp-controller="Agent"
-                       asp-action="Dashboard"
-                       class="nav-item @(ctrl=="Agent" && action=="Dashboard" ? "active" : "")">
-                        <i class="bi bi-speedometer2"></i>
-                        <span class="brand-text">
-                            Agent Dashboard
-                        </span>
-                    </a>
-                    <a asp-controller="Agent"
-                       asp-action="CashIn"
-                       class="nav-item @(action=="CashIn" ? "active" : "")">
-                        <i class="bi bi-cash-coin"></i>
-                        <span class="brand-text">Cash In</span>
-                    </a>
-                    <a asp-controller="Agent"
-                       asp-action="CashOut"
-                       class="nav-item @(action=="CashOut" ? "active" : "")">
-                        <i class="bi bi-cash-stack"></i>
-                        <span class="brand-text">Cash Out</span>
-                    </a>
-                    <a asp-controller="Agent"
-                       asp-action="Commissions"
-                       class="nav-item @(action=="Commissions" ? "active" : "")">
-                        <i class="bi bi-percent"></i>
-                        <span class="brand-text">Commissions</span>
-                    </a>
-                    <a asp-controller="Agent"
-                       asp-action="SetLocation"
-                       class="nav-item @(action=="SetLocation" ? "active" : "")">
-                        <i class="bi bi-pin-map-fill"></i>
-                        <span class="brand-text">
-                            Set Map Location
-                        </span>
-                    </a>
-                </nav>
-            }
+                                <path d="M17 5
+                                             L23 11
+                                             H20
+                                             L25 16
+                                             H21
+                                             L27 22
+                                             H20
+                                             V27
+                                             H14
+                                             V22
+                                             H7
+                                             L13 16
+                                             H9
+                                             L14 11
+                                             H11
+                                             Z"
+                                      fill="#ffffff"
+                                      opacity="0.95" />
 
-            <!-- ─── ADMIN SECTION ─── -->
-            @if (isAdmin)
-            {
-                <div class="sidebar-section-label">ADMIN</div>
-                <nav class="sidebar-nav">
-                    <a asp-controller="Admin"
-                       asp-action="Index"
-                       class="nav-item @(ctrl=="Admin" && action=="Index" ? "active" : "")">
-                        <i class="bi bi-shield-fill"></i>
-                        <span class="brand-text">
-                            Control Center
-                        </span>
-                    </a>
-                    <a asp-controller="Admin"
-                       asp-action="Users"
-                       class="nav-item @(action=="Users" || action=="UserDetails" ? "active" : "")">
-                        <i class="bi bi-people-fill"></i>
-                        <span class="brand-text">
-                            Manage Users
-                        </span>
-                    </a>
-                    <a asp-controller="Admin"
-                       asp-action="AgentApplications"
-                       class="nav-item @(action=="AgentApplications" ? "active" : "")">
-                        <i class="bi bi-person-check-fill"></i>
-                        <span class="brand-text">
-                            Applications
-                        </span>
-                        @{
-                            var pendingCount =
-                                ViewBag.PendingAgentsCount
-                                as int? ?? 0;
-                        }
-                        @if (pendingCount > 0)
-                        {
-                            <span class="nav-badge">
-                                @pendingCount
-                            </span>
-                        }
-                    </a>
-                    <a asp-controller="Admin"
-                       asp-action="KYCReview"
-                       class="nav-item @(action=="KYCReview" ? "active" : "")">
-                        <i class="bi bi-shield-check"></i>
-                        <span class="brand-text">KYC Review</span>
-                    </a>
-                    <a asp-controller="Admin"
-                       asp-action="WalletRequests"
-                       class="nav-item @(action=="WalletRequests" ? "active" : "")">
-                        <i class="bi bi-wallet2"></i>
-                        <span class="brand-text">
-                            Wallet Approvals
-                        </span>
-                    </a>
-                    <a asp-controller="Admin"
-                       asp-action="AllTransactions"
-                       class="nav-item @(action=="AllTransactions" ? "active" : "")">
-                        <i class="bi bi-list-check"></i>
-                        <span class="brand-text">
-                            All Transactions
-                        </span>
-                    </a>
-                    <a asp-controller="Admin"
-                       asp-action="FeeSettings"
-                       class="nav-item @(action=="FeeSettings" ? "active" : "")">
-                        <i class="bi bi-percent"></i>
-                        <span class="brand-text">
-                            Fee Settings
-                        </span>
-                    </a>
-                    <a asp-controller="Admin"
-                       asp-action="InstantAgent"
-                       class="nav-item @(isAgent ? "active" : "")">
-                        <i class="bi bi-shop"></i>
-                        <span class="brand-text">
-                            @(isAgent
-                                ? "Agent Active ✓"
-                                : "Become Agent")
-                        </span>
-                    </a>
-                </nav>
-            }
+                                <text x="17" y="21"
+                                      text-anchor="middle"
+                                      font-size="10"
+                                      font-weight="bold"
+                                      fill="#00b894"
+                                      font-family="Arial">$</text>
+                            </svg>
 
-            <!-- ─── Bottom User Strip ─── -->
-            <div class="sidebar-bottom">
-                <div style="display:flex;align-items:center;
-                            gap:10px;padding:10px 12px;
-                            margin-bottom:4px">
-                    @if (!string.IsNullOrEmpty(
-                        ViewBag.ProfilePictureUrl as string))
-                    {
-                        <img src="@ViewBag.ProfilePictureUrl"
-                             style="width:32px;height:32px;
-                                    border-radius:50%;
-                                    object-fit:cover;
-                                    flex-shrink:0" />
-                    }
-                    else
-                    {
-                        <div style="width:32px;height:32px;
-                                    border-radius:50%;
-                                    background:linear-gradient(
-                                        135deg,var(--teal),
-                                        var(--teal-mid));
-                                    display:flex;
-                                    align-items:center;
-                                    justify-content:center;
-                                    font-size:11px;
-                                    font-weight:800;
-                                    color:#fff;flex-shrink:0">
-                            @(ViewBag.UserInitials ?? "?")
                         </div>
-                    }
-                    <div style="overflow:hidden"
-                         class="brand-text">
-                        <div style="font-size:13px;
-                                    font-weight:600;
-                                    color:var(--text-1);
-                                    white-space:nowrap;
-                                    overflow:hidden;
-                                    text-overflow:ellipsis">
-                            @(ViewBag.FullName ?? "User")
-                        </div>
-                        <div style="font-size:11px;
-                                    color:var(--text-3)">
-                            @if (isAdmin)
-                            {
-                                <span>Admin</span>
-                            }
-                            else if (isAgent)
-                            {
-                                <span>Agent</span>
-                            }
-                            else
-                            {
-                                <span>User</span>
-                            }
-                        </div>
-                    </div>
+                        <span class="brand-name brand-text">
+                            Cedar<span class="brand-accent">Pay</span>
+                        </span>
+                    </button>
                 </div>
 
+                <!-- ─── MAIN (all users) ─── -->
+                <div class="sidebar-section-label">MAIN</div>
                 <nav class="sidebar-nav">
-                    <form asp-area="Identity"
-                          asp-page="/Account/Logout"
-                          asp-route-returnUrl="/"
-                          method="post">
-                        <button type="submit"
-                                class="nav-item logout-btn"
-                                style="width:100%">
-                            <i class="bi bi-box-arrow-left"></i>
-                            <span class="brand-text">Logout</span>
-                        </button>
-                    </form>
+                    <a asp-controller="Dashboard"
+                       asp-action="Index"
+                       class="nav-item @(ctrl == "Dashboard" ? "active" : "")">
+                        <i class="bi bi-grid-1x2-fill"></i>
+                        <span class="brand-text">Dashboard</span>
+                    </a>
+                    <a asp-controller="Transaction"
+                       asp-action="Index"
+                       class="nav-item @(ctrl == "Transaction" ? "active" : "")">
+                        <i class="bi bi-receipt"></i>
+                        <span class="brand-text">Transactions</span>
+                    </a>
+                    <a asp-controller="Beneficiary"
+                       asp-action="Index"
+                       class="nav-item @(ctrl == "Beneficiary" ? "active" : "")">
+                        <i class="bi bi-people-fill"></i>
+                        <span class="brand-text">Beneficiaries</span>
+                    </a>
                 </nav>
-            </div>
-        </aside>
 
-        <!-- ═══════════════════════════════════
-             MAIN CONTENT
-        ═══════════════════════════════════ -->
-        <div class="main-content" id="mainContent">
+                <!-- ─── TOOLS (all users) ─── -->
+                <div class="sidebar-section-label">TOOLS</div>
+                <nav class="sidebar-nav">
+                    <a asp-controller="Transfer"
+                       asp-action="Create"
+                       class="nav-item @(ctrl == "Transfer" ? "active" : "")">
+                        <i class="bi bi-send-fill"></i>
+                        <span class="brand-text">Send Money</span>
+                    </a>
+                    <a asp-controller="TopUp"
+                       asp-action="Create"
+                       class="nav-item @(ctrl == "TopUp" ? "active" : "")">
+                        <i class="bi bi-plus-circle-fill"></i>
+                        <span class="brand-text">Top Up</span>
+                    </a>
+                    <a asp-controller="Wallet"
+                       asp-action="Index"
+                       class="nav-item @(ctrl == "Wallet" ? "active" : "")">
+                        <i class="bi bi-wallet2"></i>
+                        <span class="brand-text">Wallets</span>
+                    </a>
+                    <a asp-controller="Finance"
+                       asp-action="Index"
+                       class="nav-item @(ctrl == "Finance" ? "active" : "")">
+                        <i class="bi bi-bar-chart-fill"></i>
+                        <span class="brand-text">Finance</span>
+                    </a>
+                    <a asp-controller="Review"
+                       asp-action="MyReviews"
+                       class="nav-item @(ctrl == "Review" ? "active" : "")">
+                        <i class="bi bi-star-fill"></i>
+                        <span class="brand-text">Reviews</span>
+                    </a>
+                    <a asp-controller="Map"
+                       asp-action="Index"
+                       class="nav-item @(ctrl == "Map" ? "active" : "")">
+                        <i class="bi bi-geo-alt-fill"></i>
+                        <span class="brand-text">Agent Map</span>
+                    </a>
+                    <!-- My Report (above Settings) -->
+                    <a asp-controller="Account"
+                       asp-action="Report"
+                       target="_blank"
+                       class="nav-item">
+                        <i class="bi bi-file-earmark-text"></i>
+                        <span class="brand-text">My Report</span>
+                    </a>
+                    <!-- Settings (above Profile) -->
+                    <a asp-controller="Settings"
+                       asp-action="Index"
+                       class="nav-item @(ctrl == "Settings" ? "active" : "")">
+                        <i class="bi bi-gear-fill"></i>
+                        <span class="brand-text">Settings</span>
+                    </a>
+                    <!-- Profile (Last) -->
+                    <a asp-controller="Account"
+                       asp-action="Profile"
+                       class="nav-item @(ctrl == "Account" && action != "Report" ? "active" : "")">
+                        <i class="bi bi-person-fill"></i>
+                        <span class="brand-text">Profile</span>
+                    </a>
+                </nav>
 
-            <!-- Topbar -->
-            <header class="topbar">
-                <div class="topbar-left">
-                    <div class="page-title">
-                        <h1>@(ViewData["Title"] ?? "CedarPay")</h1>
-                        <div class="page-date">
-                            @DateTime.Now.ToString(
+                <!-- ─── AGENT SECTION ─── -->
+                @if (isAgent || isAdmin)
+                {
+                    <div class="sidebar-section-label">AGENT</div>
+                    <nav class="sidebar-nav">
+                        <a asp-controller="Agent"
+                           asp-action="Dashboard"
+                           class="nav-item @(ctrl == "Agent" && action == "Dashboard" ? "active" : "")">
+                            <i class="bi bi-speedometer2"></i>
+                            <span class="brand-text">
+                                Agent Dashboard
+                            </span>
+                        </a>
+                        <a asp-controller="Agent"
+                           asp-action="CashIn"
+                           class="nav-item @(action == "CashIn" ? "active" : "")">
+                            <i class="bi bi-cash-coin"></i>
+                            <span class="brand-text">Cash In</span>
+                        </a>
+                        <a asp-controller="Agent"
+                           asp-action="CashOut"
+                           class="nav-item @(action == "CashOut" ? "active" : "")">
+                            <i class="bi bi-cash-stack"></i>
+                            <span class="brand-text">Cash Out</span>
+                        </a>
+                        <a asp-controller="Agent"
+                           asp-action="Commissions"
+                           class="nav-item @(action == "Commissions" ? "active" : "")">
+                            <i class="bi bi-percent"></i>
+                            <span class="brand-text">Commissions</span>
+                        </a>
+                        <a asp-controller="Agent"
+                           asp-action="SetLocation"
+                           class="nav-item @(action == "SetLocation" ? "active" : "")">
+                            <i class="bi bi-pin-map-fill"></i>
+                            <span class="brand-text">
+                                Set Map Location
+                            </span>
+                        </a>
+                        <a asp-controller="Agent"
+                           asp-action="Register"
+                           class="nav-item @(ctrl == "Agent" && action == "Register" ? "active" : "")">
+                            <i class="bi bi-shop-window"></i>
+                            <span class="brand-text">+ New Store</span>
+                        </a>
+                    </nav>
+                }
+
+                <!-- ─── ADMIN SECTION ─── -->
+                @if (isAdmin)
+                {
+                    <div class="sidebar-section-label">ADMIN</div>
+                    <nav class="sidebar-nav">
+                        <a asp-controller="Admin"
+                           asp-action="Index"
+                           class="nav-item @(ctrl == "Admin" && action == "Index" ? "active" : "")">
+                            <i class="bi bi-shield-fill"></i>
+                            <span class="brand-text">
+                                Control Center
+                            </span>
+                        </a>
+                        <a asp-controller="Admin"
+                           asp-action="Users"
+                           class="nav-item @(action == "Users" || action == "UserDetails" ? "active" : "")">
+                            <i class="bi bi-people-fill"></i>
+                            <span class="brand-text">
+                                Manage Users
+                            </span>
+                        </a>
+                        <a asp-controller="Admin"
+                           asp-action="AgentApplications"
+                           class="nav-item @(action=="AgentApplications" ? "active" : "")">
+                            <i class="bi bi-person-check-fill"></i>
+                            <span class="brand-text">
+                                Applications
+                            </span>
+                            @{
+                                var pendingCount = ViewBag.PendingAgentsCount as int? ?? 0;
+                            }
+                            @if (pendingCount > 0)
+                            {
+                                <span class="nav-badge">
+                                    @pendingCount
+                                </span>
+                            }
+                        </a>
+                        <a asp-controller="Admin"
+                           asp-action="KYCReview"
+                           class="nav-item @(action == "KYCReview" ? "active" : "")">
+                            <i class="bi bi-shield-check"></i>
+                            <span class="brand-text">KYC Review</span>
+                        </a>
+                        <a asp-controller="Admin"
+                           asp-action="WalletRequests"
+                           class="nav-item @(action == "WalletRequests" ? "active" : "")">
+                            <i class="bi bi-wallet2"></i>
+                            <span class="brand-text">
+                                Wallet Approvals
+                            </span>
+                        </a>
+                        <a asp-controller="Admin"
+                           asp-action="AllTransactions"
+                           class="nav-item @(action == "AllTransactions" ? "active" : "")">
+                            <i class="bi bi-list-check"></i>
+                            <span class="brand-text">
+                                All Transactions
+                            </span>
+                        </a>
+                        <a asp-controller="Admin"
+                           asp-action="EarningsReport"
+                           class="nav-item @(action == "EarningsReport" ? "active" : "")">
+                            <i class="bi bi-graph-up-arrow"></i>
+                            <span class="brand-text">Earnings Report</span>
+                        </a>
+                        <a asp-controller="Admin"
+                           asp-action="FeeSettings"
+                           class="nav-item @(action == "FeeSettings" ? "active" : "")">
+                            <i class="bi bi-percent"></i>
+                            <span class="brand-text">
+                                Fee Settings
+                            </span>
+                        </a>
+                        <a asp-controller="Admin"
+                           asp-action="ExchangeRates"
+                           class="nav-item @(action == "ExchangeRates" ? "active" : "")">
+                            <i class="bi bi-currency-exchange"></i>
+                            <span class="brand-text">Exchange Rates</span>
+                        </a>
+                        <a asp-controller="Admin"
+                           asp-action="InstantAgent"
+                           class="nav-item @(isAgent ? "active" : "")">
+                            <i class="bi bi-shop"></i>
+                            <span class="brand-text">
+                                @(isAgent ? "Agent Active ✓" : "Become Agent")
+                            </span>
+                        </a>
+                    </nav>
+                }
+
+                <div class="sidebar-bottom">
+                    <div style="display:flex;align-items:center;
+                                            gap:10px;padding:10px 12px;
+                                            margin-bottom:4px">
+                        @if (!string.IsNullOrEmpty(
+                                            ViewBag.ProfilePictureUrl as string))
+                        {
+                            <img src="@ViewBag.ProfilePictureUrl"
+                                 style="width:32px;height:32px;
+                                                        border-radius:50%;
+                                                        object-fit:cover;
+                                                        flex-shrink:0" />
+                        }
+                        else
+                        {
+                            <div style="width:32px;height:32px;
+                                                        border-radius:50%;
+                                                        background:linear-gradient(
+                                                            135deg,var(--teal),
+                                                            var(--teal-mid));
+                                                        display:flex;
+                                                        align-items:center;
+                                                        justify-content:center;
+                                                        font-size:11px;
+                                                        font-weight:800;
+                                                        color:#fff;flex-shrink:0">
+                                @(ViewBag.UserInitials ?? "?")
+                            </div>
+                        }
+                        <div style="overflow:hidden"
+                             class="brand-text">
+                            <div style="font-size:13px;
+                                                font-weight:600;
+                                                color:var(--text-1);
+                                                white-space:nowrap;
+                                                overflow:hidden;
+                                                text-overflow:ellipsis">
+                                @(ViewBag.FullName ?? "User")
+                            </div>
+                            <div style="font-size:11px;
+                                                color:var(--text-3)">
+                                @if (isAdmin)
+                                {
+                                    <span>Admin</span>
+                                }
+                                else if (isAgent)
+                                {
+                                    <span>Agent</span>
+                                }
+                                else
+                                {
+                                    <span>User</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <nav class="sidebar-nav">
+                        <form asp-area="Identity"
+                              asp-page="/Account/Logout"
+                              asp-route-returnUrl="/"
+                              method="post">
+                            <button type="submit"
+                                    class="nav-item logout-btn"
+                                    style="width:100%">
+                                <i class="bi bi-box-arrow-left"></i>
+                                <span class="brand-text">Logout</span>
+                            </button>
+                        </form>
+                    </nav>
+                </div>
+            </aside>
+
+            <div class="main-content" id="mainContent">
+
+                <header class="topbar">
+                    <div class="topbar-left">
+                        <div class="page-title">
+                            <h1>@(ViewData["Title"] ?? "CedarPay")</h1>
+                            <div class="page-date">
+                                @DateTime.Now.ToString(
                                 "dddd, MMMM dd, yyyy")
                         </div>
                     </div>
                 </div>
 
                 <div class="topbar-right">
-                    <!-- Chat -->
                     <a asp-controller="Chat"
                        asp-action="Index"
                        class="topbar-btn"
@@ -420,22 +456,21 @@ else
                         <i class="bi bi-chat-dots-fill"></i>
                         <span id="chatBadge"
                               style="display:none;
-                                     position:absolute;
-                                     top:-4px;right:-4px;
-                                     width:16px;height:16px;
-                                     background:var(--teal);
-                                     border-radius:50%;
-                                     font-size:9px;
-                                     font-weight:700;
-                                     color:#fff;
-                                     align-items:center;
-                                     justify-content:center;
-                                     border:2px solid var(--surface)">
+                                         position:absolute;
+                                         top:-4px;right:-4px;
+                                         width:16px;height:16px;
+                                         background:var(--teal);
+                                         border-radius:50%;
+                                         font-size:9px;
+                                         font-weight:700;
+                                         color:#fff;
+                                         align-items:center;
+                                         justify-content:center;
+                                         border:2px solid var(--surface)">
                             0
                         </span>
                     </a>
 
-                    <!-- Notifications -->
                     <a asp-controller="Notification"
                        asp-action="Index"
                        class="topbar-btn"
@@ -448,187 +483,237 @@ else
                               style="display:none">0</span>
                     </a>
 
-                    <!-- Avatar -->
                     <a asp-controller="Account"
                        asp-action="Profile"
                        class="user-avatar"
                        title="Profile">
                         @if (!string.IsNullOrEmpty(
-                            ViewBag.ProfilePictureUrl
-                            as string))
-                        {
-                            <img src="@ViewBag.ProfilePictureUrl"
-                                 style="width:36px;height:36px;
-                                        border-radius:var(--r-sm);
-                                        object-fit:cover" />
-                        }
-                        else
-                        {
-                            <span>
-                                @(ViewBag.UserInitials ?? "?")
-                            </span>
-                        }
-                    </a>
-                </div>
-            </header>
-
-            <!-- TempData Alerts -->
-            @if (TempData["Success"] != null)
-            {
-                <div class="alerts-container">
-                    <div class="alert-tp success">
-                        <i class="bi bi-check-circle-fill"></i>
-                        @TempData["Success"]
+                                                ViewBag.ProfilePictureUrl
+                                                as string))
+                            {
+                                <img src="@ViewBag.ProfilePictureUrl"
+                                     style="width:36px;height:36px;
+                                                            border-radius:var(--r-sm);
+                                                            object-fit:cover" />
+                            }
+                            else
+                            {
+                                <span>
+                                    @(ViewBag.UserInitials ?? "?")
+                                </span>
+                            }
+                        </a>
                     </div>
-                </div>
-            }
-            @if (TempData["Error"] != null)
-            {
-                <div class="alerts-container">
-                    <div class="alert-tp error">
-                        <i class="bi bi-exclamation-circle-fill"></i>
-                        @TempData["Error"]
-                    </div>
-                </div>
-            }
+                </header>
 
-            <!-- Page Content -->
-            <main class="page-content">
-                @RenderBody()
-            </main>
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alerts-container">
+                        <div class="alert-tp success">
+                            <i class="bi bi-check-circle-fill"></i>
+                            @TempData["Success"]
+                        </div>
+                    </div>
+                }
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alerts-container">
+                        <div class="alert-tp error">
+                            <i class="bi bi-exclamation-circle-fill"></i>
+                            @TempData["Error"]
+                        </div>
+                    </div>
+                }
+
+                <main class="page-content">
+                    @RenderBody()
+                </main>
+            </div>
+
         </div>
+    }
 
-    </div>
-}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">
+    </script>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">
-</script>
+    @if (isAuth)
+    {
+        <script>
+            function applyDarkMode(on) {
+                document.body.classList.toggle('dark-mode', on);
+                document.documentElement.classList
+                    .toggle('dark-mode', on);
+            }
 
-@if (isAuth)
-{
-    <script>
-        // ── Dark mode (runs on every page) ──────
-        function applyDarkMode(on) {
-            document.body.classList.toggle('dark-mode', on);
-            document.documentElement.classList
-                .toggle('dark-mode', on);
-        }
+            applyDarkMode(
+                localStorage.getItem('darkMode') === '1');
 
-        // Apply on load
-        applyDarkMode(
-            localStorage.getItem('darkMode') === '1');
+            function toggleDarkMode(cb) {
+                const on = cb.checked;
+                localStorage.setItem('darkMode',
+                    on ? '1' : '0');
+                applyDarkMode(on);
+                const knob =
+                    document.getElementById('darkKnob');
+                const slider =
+                    document.getElementById('darkSlider');
+                if (knob) knob.style.transform =
+                    on ? 'translateX(22px)' : '';
+                if (slider) slider.style.background =
+                    on ? 'var(--teal)' : '#d0d7e0';
+            }
 
-        function toggleDarkMode(cb) {
-            const on = cb.checked;
-            localStorage.setItem('darkMode',
-                on ? '1' : '0');
-            applyDarkMode(on);
-            const knob =
-                document.getElementById('darkKnob');
-            const slider =
-                document.getElementById('darkSlider');
-            if (knob) knob.style.transform =
-                on ? 'translateX(22px)' : '';
-            if (slider) slider.style.background =
-                on ? 'var(--teal)' : '#d0d7e0';
-        }
-
-        // ── Sidebar toggle with persistence ─────
-        function toggleSidebar() {
-            const sidebar =
-                document.getElementById('sidebar');
-            const main =
-                document.getElementById('mainContent');
-            const isMini =
-                sidebar.classList.toggle('mini');
-            main.classList.toggle(
-                'sidebar-mini', isMini);
-            localStorage.setItem(
-                'sidebarMini', isMini ? '1' : '0');
-            updateSidebarText(isMini);
-        }
-
-        function updateSidebarText(isMini) {
-            document.querySelectorAll('.brand-text')
-                .forEach(el => {
-                    el.style.display =
-                        isMini ? 'none' : '';
-                });
-            document.querySelectorAll(
-                '.sidebar-section-label')
-                .forEach(el => {
-                    el.style.display =
-                        isMini ? 'none' : '';
-                });
-        }
-
-        // Restore sidebar state
-        document.addEventListener('DOMContentLoaded',
-        () => {
-            const isMini =
-                localStorage.getItem('sidebarMini')
-                === '1';
-            if (isMini) {
+            function toggleSidebar() {
                 const sidebar =
                     document.getElementById('sidebar');
                 const main =
-                    document.getElementById(
-                        'mainContent');
-                if (sidebar) {
-                    sidebar.classList.add('mini');
-                }
-                if (main) {
-                    main.classList.add('sidebar-mini');
-                }
-                updateSidebarText(true);
+                    document.getElementById('mainContent');
+                const isMini =
+                    sidebar.classList.toggle('mini');
+                main.classList.toggle(
+                    'sidebar-mini', isMini);
+                localStorage.setItem(
+                    'sidebarMini', isMini ? '1' : '0');
+                updateSidebarText(isMini);
             }
-        });
 
-        // ── Live notification count ──────────────
-        function loadNotificationCount() {
-            fetch('/api/NotificationApi/unread-count')
-                .then(r => r.json())
-                .then(data => {
-                    const badge = document
-                        .getElementById('notifBadge');
-                    if (badge) {
+            function updateSidebarText(isMini) {
+                document.querySelectorAll('.brand-text')
+                    .forEach(el => {
+                        el.style.display =
+                            isMini ? 'none' : '';
+                    });
+                document.querySelectorAll(
+                    '.sidebar-section-label')
+                    .forEach(el => {
+                        el.style.display =
+                            isMini ? 'none' : '';
+                    });
+            }
+
+            document.addEventListener('DOMContentLoaded',
+            () => {
+                const isMini =
+                    localStorage.getItem('sidebarMini')
+                    === '1';
+                if (isMini) {
+                    const sidebar =
+                        document.getElementById('sidebar');
+                    const main =
+                        document.getElementById(
+                            'mainContent');
+                    if (sidebar) {
+                        sidebar.classList.add('mini');
+                    }
+                    if (main) {
+                        main.classList.add('sidebar-mini');
+                    }
+                    updateSidebarText(true);
+                }
+            });
+
+            function loadNotificationCount() {
+                fetch('/api/NotificationApi/unread-count')
+                    .then(r => r.json())
+                    .then(data => {
+                        const badge = document
+                            .getElementById('notifBadge');
+                        if (badge) {
+                            const count =
+                                data.unreadCount
+                                || data.UnreadCount || 0;
+                            badge.textContent = count;
+                            badge.style.display =
+                                count > 0 ? 'flex' : 'none';
+                        }
+                    })
+                    .catch(() => {});
+            }
+
+            function loadChatCount() {
+                fetch('/Chat/UnreadCount')
+                    .then(r => r.json())
+                    .then(data => {
+                        const badge = document
+                            .getElementById('chatBadge');
+                        if (badge) {
+                            const count = data.count || 0;
+                            badge.textContent = count;
+                            badge.style.display =
+                                count > 0 ? 'flex' : 'none';
+                        }
+                    })
+                    .catch(() => {});
+            }
+
+            if ('Notification' in window &&
+                Notification.permission === 'default')
+            {
+                setTimeout(() => {
+                    Notification.requestPermission();
+                }, 3000);
+            }
+
+            function showPushNotification(title, body, icon) {
+                if (Notification.permission === 'granted')
+                {
+                    const notif = new Notification(title, {
+                        body: body,
+                        icon: icon || '/favicon.ico',
+                        badge: '/favicon.ico',
+                        tag: 'cedarpay-notif',
+                        requireInteraction: false
+                    });
+
+                    notif.onclick = () => {
+                        window.focus();
+                        notif.close();
+                    };
+
+                    setTimeout(() => notif.close(), 5000);
+                }
+            }
+
+            let lastNotifCount = 0;
+            function checkNewNotifications() {
+                fetch('/api/NotificationApi/unread-count')
+                    .then(r => r.json())
+                    .then(data => {
                         const count =
-                            data.unreadCount
-                            || data.UnreadCount || 0;
-                        badge.textContent = count;
-                        badge.style.display =
-                            count > 0 ? 'flex' : 'none';
-                    }
-                })
-                .catch(() => {});
-        }
+                            data.unreadCount ||
+                            data.UnreadCount || 0;
+                        if (count > lastNotifCount &&
+                            lastNotifCount > 0)
+                        {
+                            showPushNotification(
+                                'CedarPay',
+                                `You have ${count} new notification${count > 1 ? 's' : ''}`,
+                                '/cedar-icon.svg'
+                            );
+                        }
+                        lastNotifCount = count;
 
-        // ── Live chat count ──────────────────────
-        function loadChatCount() {
-            fetch('/Chat/UnreadCount')
-                .then(r => r.json())
-                .then(data => {
-                    const badge = document
-                        .getElementById('chatBadge');
-                    if (badge) {
-                        const count = data.count || 0;
-                        badge.textContent = count;
-                        badge.style.display =
-                            count > 0 ? 'flex' : 'none';
-                    }
-                })
-                .catch(() => {});
-        }
+                        const badge =
+                            document.getElementById('notifBadge');
+                        if (badge) {
+                            badge.textContent = count;
+                            badge.style.display =
+                                count > 0 ? 'flex' : 'none';
+                        }
+                    })
+                    .catch(() => {});
+            }
 
-        loadNotificationCount();
-        loadChatCount();
-        setInterval(loadNotificationCount, 30000);
-        setInterval(loadChatCount, 30000);
-    </script>
-}
+            loadNotificationCount();
+            loadChatCount();
+            checkNewNotifications();
+            setInterval(loadNotificationCount, 30000);
+            setInterval(loadChatCount, 30000);
+            setInterval(checkNewNotifications, 30000);
+        </script>
+    }
 
-@await RenderSectionAsync("Scripts", required: false)
+    @await RenderSectionAsync("Scripts", required: false)
 
 </body>
 </html>

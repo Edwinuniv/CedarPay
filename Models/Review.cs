@@ -18,8 +18,10 @@ namespace MoneyTransfer.Models
         [Required]
         public string UserId { get; set; }
         public int? AgentId { get; set; }
+        public int? TransactionId { get; set; }
 
         public User User { get; set; }
         public Agent? Agent { get; set; }
+        public Transaction? Transaction { get; set; }
     }
 }

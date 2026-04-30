@@ -13,7 +13,6 @@ namespace MoneyTransfer.Controllers
         private readonly ITransactionRepository _transactionRepository;
         private readonly ITopUpRepository _topUpRepository;
         private readonly IWalletRepository _walletRepository;
-        private readonly UserManager<User> _userManager;
 
         public FinanceController(
             ITransactionRepository transactionRepository,
@@ -26,7 +25,6 @@ namespace MoneyTransfer.Controllers
             _transactionRepository = transactionRepository;
             _topUpRepository = topUpRepository;
             _walletRepository = walletRepository;
-            _userManager = userManager;
         }
 
         public async Task<IActionResult> Index()

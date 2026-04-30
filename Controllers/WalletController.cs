@@ -7,6 +7,7 @@ using MoneyTransfer.Models;
 using MoneyTransfer.Repositories.Interfaces;
 using MoneyTransfer.ViewModels;
 using MoneyTransfer.Data;
+using MoneyTransfer.Services.Interfaces;
 
 namespace MoneyTransfer.Controllers
 {
@@ -16,18 +17,23 @@ namespace MoneyTransfer.Controllers
         private readonly IWalletRepository _walletRepository;
         private readonly IAccountRepository _accountRepository;
         private readonly ICurrencyRepository _currencyRepository;
-        private readonly UserManager<User> _userManager;
         private readonly ApplicationDbContext _context;
+        private readonly IEmailService _emailService;
 
-        public WalletController(IWalletRepository walletRepository, IAccountRepository accountRepository,
-            ICurrencyRepository currencyRepository, UserManager<User> userManager,
-            IUserRepository userRepository, ApplicationDbContext context) : base(userManager, userRepository)
+        public WalletController(
+            IWalletRepository walletRepository,
+            IAccountRepository accountRepository,
+            ICurrencyRepository currencyRepository,
+            UserManager<User> userManager,
+            IUserRepository userRepository,
+            ApplicationDbContext context,
+            IEmailService emailService) : base(userManager, userRepository)
         {
             _walletRepository = walletRepository;
             _accountRepository = accountRepository;
             _currencyRepository = currencyRepository;
-            _userManager = userManager;
             _context = context;
+            _emailService = emailService;
         }
 
         public async Task<IActionResult> Index()
@@ -136,6 +142,25 @@ namespace MoneyTransfer.Controllers
                 };
 
                 await _walletRepository.AddAsync(wallet);
+
+                // Send email notification for wallet creation
+                if (user?.Email != null)
+                {
+                    var currency = await _currencyRepository.GetByIdAsync(vm.CurrencyId);
+                    _ = Task.Run(async () =>
+                    {
+                        await _emailService.SendNotificationAsync(
+                            user.Email,
+                            $"{user.FirstName} {user.LastName}",
+                            "Wallet Created Successfully",
+                            $"A new {currency?.Code} wallet has been created for you.\n\n" +
+                            $"Wallet Serial: {wallet.SerialNumber}\n" +
+                            $"Currency: {currency?.Code} - {currency?.Name}\n" +
+                            $"Created on: {DateTime.Now:MMMM dd, yyyy}\n\n" +
+                            $"You can now use this wallet to send and receive money.");
+                    });
+                }
+
                 TempData["Success"] = "Wallet created!";
                 return RedirectToAction("Index");
             }
@@ -174,6 +199,8 @@ namespace MoneyTransfer.Controllers
                 return RedirectToAction("MyRequests");
             }
 
+            var currencyForRequest = await _currencyRepository.GetByIdAsync(vm.CurrencyId);
+
             await _context.WalletRequests.AddAsync(new WalletRequest
             {
                 UserId = userId,
@@ -183,6 +210,22 @@ namespace MoneyTransfer.Controllers
                 RequestedAt = DateTime.Now
             });
             await _context.SaveChangesAsync();
+
+            // Send email notification for wallet request
+            if (user?.Email != null)
+            {
+                _ = Task.Run(async () =>
+                {
+                    await _emailService.SendNotificationAsync(
+                        user.Email,
+                        $"{user.FirstName} {user.LastName}",
+                        "Wallet Request Submitted",
+                        $"Your request for a {currencyForRequest?.Code} wallet has been submitted for review.\n\n" +
+                        $"Currency: {currencyForRequest?.Code} - {currencyForRequest?.Name}\n" +
+                        $"Requested on: {DateTime.Now:MMMM dd, yyyy}\n\n" +
+                        $"You will be notified once an admin approves your request.");
+                });
+            }
 
             TempData["Success"] =
                 "Wallet request submitted! " +
@@ -228,6 +271,18 @@ namespace MoneyTransfer.Controllers
             var year = DateTime.Now.Year;
             var random = new Random().Next(10000, 99999);
             return $"{prefix}-{year}-{random}";
+        }
+
+        public async Task<IActionResult> MyRequests()
+        {
+            var userId = _userManager.GetUserId(User);
+            var requests = await _context.WalletRequests
+                .Include(r => r.Currency)
+                .Where(r => r.UserId == userId)
+                .OrderByDescending(r => r.RequestedAt)
+                .ToListAsync();
+
+            return View(requests);
         }
     }
 }

@@ -7,37 +7,39 @@ using MoneyTransfer.Data;
 using MoneyTransfer.Models;
 using MoneyTransfer.Repositories.Implementations;
 using MoneyTransfer.Repositories.Interfaces;
+using MoneyTransfer.Services.Interfaces;
 
 namespace MoneyTransfer.Controllers
 {
     [Authorize(Roles = Roles.Admin)]
     public class AdminController : BaseController
     {
-        private readonly IUserRepository _userRepository;
         private readonly IAgentRepository _agentRepository;
         private readonly ITransactionRepository _transactionRepository;
         private readonly IReviewRepository _reviewRepository;
         private readonly IAgentApplicationRepository _applicationRepository;
-        private readonly UserManager<User> _userManager;
         private readonly ApplicationDbContext _context;
         private readonly IAccountRepository _accountRepository;
         private readonly IWalletRepository _walletRepository;
+        private readonly ICurrencyExchangeService _exchangeService;
+        private readonly IEmailService _emailService;
 
         public AdminController(IUserRepository userRepository, IAgentRepository agentRepository,
-            ITransactionRepository transactionRepository,IReviewRepository reviewRepository,
+            ITransactionRepository transactionRepository, IReviewRepository reviewRepository,
             IAgentApplicationRepository applicationRepository,
             UserManager<User> userManager, ApplicationDbContext context,
-            IAccountRepository accountRepository, IWalletRepository walletRepository): base(userManager, userRepository)
+            IAccountRepository accountRepository, IWalletRepository walletRepository,
+            ICurrencyExchangeService currencyExchangeService, IEmailService emailService) : base(userManager, userRepository)
         {
-            _userRepository = userRepository;
             _agentRepository = agentRepository;
             _transactionRepository = transactionRepository;
             _reviewRepository = reviewRepository;
             _applicationRepository = applicationRepository;
-            _userManager = userManager;
             _context = context;
-            _accountRepository = accountRepository; 
+            _accountRepository = accountRepository;
             _walletRepository = walletRepository;
+            _exchangeService = currencyExchangeService;
+            _emailService = emailService;
         }
 
         [Authorize(Roles = Roles.Admin)]
@@ -170,6 +172,19 @@ namespace MoneyTransfer.Controllers
             };
             await _agentRepository.AddAsync(agent);
 
+            // Send email notification for approval
+            if (user?.Email != null)
+            {
+                _ = Task.Run(async () =>
+                {
+                    await _emailService.SendNotificationAsync(
+                        user.Email,
+                        $"{user.FirstName} {user.LastName}",
+                        "Agent Application Approved!",
+                        $"Congratulations! Your agent application for '{application.StoreName}' has been approved. You can now access your agent dashboard and start serving customers.");
+                });
+            }
+
             TempData["Success"] = $"Agent {application.StoreName} approved!";
             return RedirectToAction("AgentApplications");
         }
@@ -184,6 +199,21 @@ namespace MoneyTransfer.Controllers
             application.RejectionReason = reason;
             application.ReviewedAt = DateTime.Now;
             await _applicationRepository.UpdateAsync(application);
+
+            var user = await _userManager.FindByIdAsync(application.UserId);
+
+            // Send email notification for rejection
+            if (user?.Email != null)
+            {
+                _ = Task.Run(async () =>
+                {
+                    await _emailService.SendNotificationAsync(
+                        user.Email,
+                        $"{user.FirstName} {user.LastName}",
+                        "Agent Application Update",
+                        $"Your agent application for '{application.StoreName}' has been reviewed. Status: Rejected.\nReason: {reason}\n\nYou can reapply after addressing the issues mentioned.");
+                });
+            }
 
             TempData["Success"] = "Application rejected.";
             return RedirectToAction("AgentApplications");
@@ -239,6 +269,20 @@ namespace MoneyTransfer.Controllers
             }
 
             await _context.SaveChangesAsync();
+
+            // Send email notification for KYC approval
+            if (user?.Email != null)
+            {
+                _ = Task.Run(async () =>
+                {
+                    await _emailService.SendNotificationAsync(
+                        user.Email,
+                        $"{user.FirstName} {user.LastName}",
+                        "KYC Approved!",
+                        "Congratulations! Your identity has been verified. You now have full access to all CedarPay features including higher transfer limits.");
+                });
+            }
+
             TempData["Success"] = "KYC approved!";
             return RedirectToAction("KYCReview");
         }
@@ -254,7 +298,23 @@ namespace MoneyTransfer.Controllers
             kyc.ReviewedAt = DateTime.Now;
             _context.KYCDocuments.Update(kyc);
 
+            var user = await _userManager.FindByIdAsync(kyc.UserId);
+
             await _context.SaveChangesAsync();
+
+            // Send email notification for KYC rejection
+            if (user?.Email != null)
+            {
+                _ = Task.Run(async () =>
+                {
+                    await _emailService.SendNotificationAsync(
+                        user.Email,
+                        $"{user.FirstName} {user.LastName}",
+                        "KYC Update Required",
+                        $"Your identity verification has been reviewed.\nStatus: Rejected\nReason: {reason}\n\nPlease upload new documents addressing the issues mentioned.");
+                });
+            }
+
             TempData["Success"] = "KYC rejected.";
             return RedirectToAction("KYCReview");
         }
@@ -322,13 +382,26 @@ namespace MoneyTransfer.Controllers
             await _walletRepository.AddAsync(wallet);
             await _context.SaveChangesAsync();
 
+            // Send email notification for wallet approval
+            var user = request.User;
+            if (user?.Email != null)
+            {
+                _ = Task.Run(async () =>
+                {
+                    await _emailService.SendNotificationAsync(
+                        user.Email,
+                        $"{user.FirstName} {user.LastName}",
+                        "Wallet Request Approved!",
+                        $"Your request for a {request.Currency?.Code} wallet has been approved. You can now start using your new wallet.");
+                });
+            }
+
             TempData["Success"] = $"Wallet approved for {request.User?.FirstName}!";
             return RedirectToAction("WalletRequests");
         }
 
         [HttpPost]
-        public async Task<IActionResult> RejectWallet(
-            int id, string reason)
+        public async Task<IActionResult> RejectWallet(int id, string reason)
         {
             var request = await _context.WalletRequests.FindAsync(id);
             if (request == null)
@@ -340,6 +413,20 @@ namespace MoneyTransfer.Controllers
             request.ReviewedAt = DateTime.Now;
             _context.WalletRequests.Update(request);
             await _context.SaveChangesAsync();
+
+            // Send email notification for wallet rejection
+            var user = request.User;
+            if (user?.Email != null)
+            {
+                _ = Task.Run(async () =>
+                {
+                    await _emailService.SendNotificationAsync(
+                        user.Email,
+                        $"{user.FirstName} {user.LastName}",
+                        "Wallet Request Update",
+                        $"Your wallet request for {request.Currency?.Code} has been reviewed.\nStatus: Rejected\nReason: {reason}\n\nYou can submit a new request after addressing the issues.");
+                });
+            }
 
             TempData["Success"] = "Wallet request rejected.";
             return RedirectToAction("WalletRequests");
@@ -390,9 +477,9 @@ namespace MoneyTransfer.Controllers
             var userId = _userManager.GetUserId(User);
             var user = await _userManager.FindByIdAsync(userId);
 
-            var existing = await _agentRepository.GetByUserIdAsync(userId);
+            var existingAgent = await _agentRepository.GetByUserIdAsync(userId);
 
-            if (!existing.Any())
+            if (existingAgent == null)
             {
                 await _agentRepository.AddAsync(new Agent
                 {
@@ -516,6 +603,155 @@ namespace MoneyTransfer.Controllers
             ViewBag.GeneratedAt = DateTime.Now;
 
             return View("~/Views/Account/Report.cshtml");
+        }
+
+        public async Task<IActionResult> ExchangeRates()
+        {
+            var currencies = await _context.Currencies
+                .Where(c => c.IsActive)
+                .ToListAsync();
+
+            var rates = new Dictionary<string, Dictionary<string, decimal>>();
+            var baseCurrencies = currencies.Select(c => c.Code).ToList();
+
+            foreach (var fromCode in baseCurrencies)
+            {
+                rates[fromCode] = new Dictionary<string, decimal>();
+                foreach (var toCode in baseCurrencies)
+                {
+                    if (fromCode == toCode)
+                    {
+                        rates[fromCode][toCode] = 1m;
+                        continue;
+                    }
+                    try
+                    {
+                        var rate = await _exchangeService
+                            .GetRateAsync(fromCode, toCode);
+                        rates[fromCode][toCode] = rate;
+                    }
+                    catch
+                    {
+                        rates[fromCode][toCode] = 0m;
+                    }
+                }
+            }
+
+            ViewBag.Currencies = currencies;
+            ViewBag.Rates = rates;
+            ViewBag.LastUpdated = DateTime.Now;
+
+            return View();
+        }
+
+        public async Task<IActionResult> EarningsReport()
+        {
+            var totalFees = await _context.Transactions
+                .Where(t => t.Status == TransactionStatus.Completed
+                         && !t.FeeWaived)
+                .SumAsync(t => (decimal?)t.FeeAmount) ?? 0;
+
+            var freeTransactions = await _context.Transactions
+                .CountAsync(t => t.FeeWaived);
+
+            var agentEarnings = await _context.Agents
+                .Include(a => a.Commissions)
+                .Select(a => new
+                {
+                    a.Id,
+                    a.StoreName,
+                    a.AgentName,
+                    a.City,
+                    TotalCommissions =
+                        a.Commissions.Sum(c => c.Amount),
+                    PaidCommissions =
+                        a.Commissions
+                            .Where(c => c.IsPaid)
+                            .Sum(c => c.Amount),
+                    UnpaidCommissions =
+                        a.Commissions
+                            .Where(c => !c.IsPaid)
+                            .Sum(c => c.Amount),
+                    CommissionCount = a.Commissions.Count
+                })
+                .ToListAsync();
+
+            var feePolicy = await _context.FeePolicies
+                .FirstOrDefaultAsync();
+
+            ViewBag.TotalFees = totalFees;
+            ViewBag.FreeTransactions = freeTransactions;
+            ViewBag.AgentEarnings = agentEarnings;
+            ViewBag.FeePolicy = feePolicy;
+
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateGuestUser()
+        {
+            var guestId = Guid.NewGuid().ToString("N")
+                .Substring(0, 8).ToUpper();
+            var email = $"guest_{guestId}@cedarpay.guest";
+            var password = $"Guest@{guestId}123";
+
+            var guest = new User
+            {
+                UserName = email,
+                Email = email,
+                FirstName = "Guest",
+                LastName = guestId,
+                EmailConfirmed = true,
+                IsActive = true,
+                ProfileCompleted = true,
+                CreatedAt = DateTime.Now
+            };
+
+            var result = await _userManager.CreateAsync(
+                guest, password);
+            if (result.Succeeded)
+            {
+                await _userManager.AddToRoleAsync(
+                    guest, "user");
+
+                var account = new Account
+                {
+                    SerialNumber = GenerateAdminSerial("ACC"),
+                    UserId = guest.Id,
+                    IsActive = true,
+                    IsDefault = true,
+                    CreatedAt = DateTime.Now
+                };
+                await _accountRepository.AddAsync(account);
+
+                var wallet = new Wallet
+                {
+                    SerialNumber = GenerateAdminSerial("WAL"),
+                    Balance = 1000m, 
+                    IsActive = true,
+                    IsDefault = true,
+                    CreatedAt = DateTime.Now,
+                    UserId = guest.Id,
+                    AccountId = account.Id,
+                    CurrencyId = 1 
+                };
+                await _walletRepository.AddAsync(wallet);
+
+                TempData["Success"] =
+                    $"Guest account created!\n" +
+                    $"Email: {email}\n" +
+                    $"Password: {password}\n" +
+                    $"Balance: $1,000 USD (demo)";
+            }
+            else
+            {
+                TempData["Error"] =
+                    "Failed to create guest: " +
+                    string.Join(", ",
+                        result.Errors.Select(e => e.Description));
+            }
+
+            return RedirectToAction("Users");
         }
     }
 }

@@ -86,6 +86,8 @@ namespace MoneyTransfer.ViewModels
         [Required(ErrorMessage = "Document number is required")]
         public string DocumentNumber { get; set; } = "";
 
+        public string? UserUsername { get; set; }
+
         public string? Description { get; set; }
         public string? ProfilePictureUrl { get; set; }
         public bool RemoveProfilePicture { get; set; }

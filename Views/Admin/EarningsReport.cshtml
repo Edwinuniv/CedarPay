@@ -1,0 +1,143 @@
+﻿@{
+    ViewData["Title"] = "Earnings Report";
+    var feePolicy = ViewBag.FeePolicy as MoneyTransfer.Models.FeePolicy;
+    var agentEarnings = ViewBag.AgentEarnings as dynamic;
+}
+
+<div class="page-header">
+    <div>
+        <h2>Platform Earnings Report</h2>
+        <p>Fees collected and agent commissions</p>
+    </div>
+    <a asp-action="Index" class="btn-tp-secondary">
+        <i class="bi bi-arrow-left"></i> Back
+    </a>
+</div>
+
+<!-- Fee Policy Summary -->
+<div class="tp-card mb-3"
+     style="background:var(--teal-light);
+            border:1px solid rgba(0,184,148,.2)">
+    <div class="tp-card-header">
+        <span class="tp-card-title">
+            Current Fee Policy
+        </span>
+        <a asp-action="FeeSettings"
+           class="tp-card-link">Edit →</a>
+    </div>
+    <div style="display:flex;gap:24px;
+                font-size:13px;flex-wrap:wrap">
+        <div>
+            <span style="color:var(--text-3)">Fee:</span>
+            <strong style="margin-left:6px">
+                @(((feePolicy?.FeePercentage ?? 0.02m) * 100).ToString("F1"))%
+                + $@((feePolicy?.FixedFee ?? 0.50m).ToString("F2"))
+            </strong>
+        </div>
+        <div>
+            <span style="color:var(--text-3)">
+                Free every:
+            </span>
+            <strong style="margin-left:6px">
+                @(feePolicy?.FreeTransactionThreshold ?? 10)
+                transactions
+            </strong>
+        </div>
+    </div>
+</div>
+
+<!-- Platform Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon received">
+                <i class="bi bi-cash-coin"></i>
+            </div>
+            <div class="stat-value">
+                $@((ViewBag.TotalFees as decimal? ?? 0).ToString("N2"))
+            </div>
+            <div class="stat-label">Total Fees Collected</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon beneficiaries">
+                <i class="bi bi-gift-fill"></i>
+            </div>
+            <div class="stat-value">
+                @(ViewBag.FreeTransactions ?? 0)
+            </div>
+            <div class="stat-label">Free Transactions Given</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon sent">
+                <i class="bi bi-percent"></i>
+            </div>
+            <div class="stat-value">
+                $@{
+                decimal total = 0;
+                if (ViewBag.AgentEarnings != null)
+                {
+                    foreach (var e in ViewBag.AgentEarnings)
+                    {
+                        total += (decimal)e.TotalCommissions;
+                    }
+                }
+                @total.ToString("N2")
+                                }
+            </div>
+            <div class="stat-label">Total Agent Commissions</div>
+        </div>
+    </div>
+</div>
+
+<!-- Agent Earnings Table -->
+<div class="tp-card">
+    <div class="tp-card-header">
+        <span class="tp-card-title">
+            Agent Commission Breakdown
+        </span>
+    </div>
+    <table class="tp-table">
+        <thead>
+            <tr>
+                <th>Store</th>
+                <th>Agent</th>
+                <th>City</th>
+                <th>Total Earned</th>
+                <th>Paid</th>
+                <th>Unpaid</th>
+                <th>Transactions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (ViewBag.AgentEarnings != null)
+            {
+                foreach (var e in ViewBag.AgentEarnings)
+                {
+                    <tr>
+                        <td style="font-weight:600">
+                            @e.StoreName
+                        </td>
+                        <td>@e.AgentName</td>
+                        <td style="color:var(--text-3)">
+                            @e.City
+                        </td>
+                        <td style="color:var(--teal); font-weight:600">
+                            $@(((decimal)e.TotalCommissions).ToString("N2"))
+                        </td>
+                        <td style="color:var(--teal)">
+                            $@(((decimal)e.PaidCommissions).ToString("N2"))
+                        </td>
+                        <td style="color:var(--yellow)">
+                            $@(((decimal)e.UnpaidCommissions).ToString("N2"))
+                        </td>
+                        <td>@e.CommissionCount</td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

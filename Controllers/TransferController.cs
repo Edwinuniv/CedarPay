@@ -2,10 +2,12 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using MoneyTransfer.Constants;
+using MoneyTransfer.Data;
 using MoneyTransfer.Models;
 using MoneyTransfer.Repositories.Interfaces;
 using MoneyTransfer.Services.Interfaces;
 using MoneyTransfer.ViewModels;
+using Microsoft.EntityFrameworkCore;
 
 namespace MoneyTransfer.Controllers
 {
@@ -20,12 +22,23 @@ namespace MoneyTransfer.Controllers
         private readonly IAccountRepository _accountRepository;
         private readonly UserManager<User> _userManager;
         private readonly ICurrencyExchangeService _exchangeService;
+        private readonly IEmailService _emailService;
+        private readonly ApplicationDbContext _context;
+        private readonly IServiceProvider _serviceProvider;
 
-        public TransferController(IWalletRepository walletRepository, ITransactionRepository transactionRepository,
-            IBeneficiaryRepository beneficiaryRepository, ICurrencyRepository currencyRepository,
-            INotificationRepository notificationRepository, IAccountRepository accountRepository,
-            UserManager<User> userManager, IUserRepository userRepository,
-            ICurrencyExchangeService exchangeService) : base(userManager, userRepository)
+        public TransferController(
+            IWalletRepository walletRepository,
+            ITransactionRepository transactionRepository,
+            IBeneficiaryRepository beneficiaryRepository,
+            ICurrencyRepository currencyRepository,
+            INotificationRepository notificationRepository,
+            IAccountRepository accountRepository,
+            UserManager<User> userManager,
+            IUserRepository userRepository,
+            ICurrencyExchangeService exchangeService,
+            IEmailService emailService,
+            ApplicationDbContext context,
+            IServiceProvider serviceProvider) : base(userManager, userRepository)
         {
             _walletRepository = walletRepository;
             _transactionRepository = transactionRepository;
@@ -35,6 +48,9 @@ namespace MoneyTransfer.Controllers
             _accountRepository = accountRepository;
             _userManager = userManager;
             _exchangeService = exchangeService;
+            _emailService = emailService;
+            _context = context;
+            _serviceProvider = serviceProvider;
         }
 
         public async Task<IActionResult> Create()
@@ -124,15 +140,31 @@ namespace MoneyTransfer.Controllers
                 return View("Create", await RepopulateTransferVM(vm, userId));
             }
 
-            var transactionCount = await _transactionRepository
-                .GetUserTransactionCountAsync(userId);
-            var feePercentage = 0.02m;
-            var fixedFee = 0.50m;
-            var threshold = 10;
+            var feePolicy = await _context.FeePolicies
+                .AsNoTracking()
+                .FirstOrDefaultAsync()
+                ?? new FeePolicy
+                {
+                    FeePercentage = 0.02m,
+                    FixedFee = 0.50m,
+                    FreeTransactionThreshold = 10
+                };
 
-            var isFreeTransaction = (transactionCount + 1) % threshold == 0;
-            var feeAmount = isFreeTransaction ? 0 :
-                (vm.Amount * feePercentage) + fixedFee;
+            decimal feeAmount = 0;
+            bool feeWaived = false;
+
+            var txCount = await _transactionRepository
+                .GetUserTransactionCountAsync(userId);
+
+            if ((txCount + 1) % feePolicy.FreeTransactionThreshold == 0)
+            {
+                feeWaived = true;
+            }
+            else
+            {
+                feeAmount = (vm.Amount * feePolicy.FeePercentage)
+                    + feePolicy.FixedFee;
+            }
 
             Wallet? receiverWallet = null;
             if (vm.TransferType == "WalletToWallet" &&
@@ -182,7 +214,7 @@ namespace MoneyTransfer.Controllers
                 Amount = vm.Amount,
                 ConvertedAmount = convertedAmount,
                 FeeAmount = feeAmount,
-                FeeWaived = isFreeTransaction,
+                FeeWaived = feeWaived,
                 ExchangeRateUsed = exchangeRate,
                 Description = vm.Description,
                 Status = TransactionStatus.Completed,
@@ -205,12 +237,17 @@ namespace MoneyTransfer.Controllers
             senderWallet.Balance -= (vm.Amount + feeAmount);
             await _walletRepository.UpdateAsync(senderWallet);
 
+            var senderUser = await _userManager.FindByIdAsync(userId);
+            var receiverUser = receiverWallet != null
+                ? await _userManager.FindByIdAsync(receiverWallet.UserId)
+                : null;
+
             if (receiverWallet != null)
             {
                 receiverWallet.Balance += convertedAmount;
                 await _walletRepository.UpdateAsync(receiverWallet);
 
-                await _notificationRepository.AddAsync(new Notification
+                var notification = new Notification
                 {
                     Title = "Money Received!",
                     Message = $"You received {convertedAmount:F2} " +
@@ -219,20 +256,54 @@ namespace MoneyTransfer.Controllers
                     UserId = receiverWallet.UserId,
                     CreatedAt = DateTime.Now,
                     IsRead = false
-                });
+                };
+                await _notificationRepository.AddAsync(notification);
+
+                // Send email to receiver using scoped service
+                if (receiverUser?.Email != null)
+                {
+                    var receiverCurrencySymbol = receiverWallet.Currency?.Symbol ?? "";
+                    var senderName = $"{senderUser?.FirstName} {senderUser?.LastName}".Trim();
+
+                    SendEmailAsync(receiverUser.Email,
+                        $"{receiverUser.FirstName} {receiverUser.LastName}",
+                        "Money Received!",
+                        $"You have received {receiverCurrencySymbol}{convertedAmount:N2} from {senderName}.\n\n" +
+                        $"Transaction ID: {transaction.SerialNumber}\n" +
+                        $"Amount: {receiverCurrencySymbol}{convertedAmount:N2}\n" +
+                        $"New balance: {receiverCurrencySymbol}{receiverWallet.Balance:N2}\n\n" +
+                        $"Thank you for using CedarPay!");
+                }
             }
 
-            await _notificationRepository.AddAsync(new Notification
+            var sentNotification = new Notification
             {
                 Title = "Transfer Sent!",
                 Message = $"Your transfer of {vm.Amount:F2} " +
                           $"{senderWallet.Currency?.Symbol} was successful." +
-                          (isFreeTransaction ? " (Fee Waived! 🎉)" : ""),
+                          (feeWaived ? " (Fee Waived! 🎉)" : ""),
                 Type = NotificationType.TransactionSent,
                 UserId = userId,
                 CreatedAt = DateTime.Now,
                 IsRead = false
-            });
+            };
+            await _notificationRepository.AddAsync(sentNotification);
+
+            // Send email to sender using scoped service
+            if (senderUser?.Email != null)
+            {
+                var senderCurrencySymbol = senderWallet.Currency?.Symbol ?? "";
+
+                SendEmailAsync(senderUser.Email,
+                    $"{senderUser.FirstName} {senderUser.LastName}",
+                    "Transfer Successful",
+                    $"Your transfer of {senderCurrencySymbol}{vm.Amount:N2} has been completed successfully.\n\n" +
+                    $"Transaction ID: {transaction.SerialNumber}\n" +
+                    $"Amount sent: {senderCurrencySymbol}{vm.Amount:N2}\n" +
+                    $"Fee: {(feeWaived ? "FREE" : $"{senderCurrencySymbol}{feeAmount:N2}")}\n" +
+                    $"New balance: {senderCurrencySymbol}{senderWallet.Balance:N2}\n\n" +
+                    $"Thank you for using CedarPay!");
+            }
 
             var user = await _userManager.FindByIdAsync(userId);
             if (user != null)
@@ -241,12 +312,34 @@ namespace MoneyTransfer.Controllers
                 await _userManager.UpdateAsync(user);
             }
 
-            TempData["Success"] = isFreeTransaction
+            TempData["Success"] = feeWaived
                 ? "Transfer successful! This transaction was fee-free! 🎉"
                 : "Transfer successful!";
 
             return RedirectToAction("Details", "Transaction",
                 new { id = transaction.Id });
+        }
+
+        /// <summary>
+        /// Helper method to send emails asynchronously using a new scope.
+        /// This prevents DbContext disposed issues in background tasks.
+        /// </summary>
+        private void SendEmailAsync(string email, string name, string subject, string body)
+        {
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    using var scope = _serviceProvider.CreateScope();
+                    var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
+                    await emailService.SendNotificationAsync(email, name, subject, body);
+                }
+                catch (Exception ex)
+                {
+                    // Log error if needed - optionally add logging service
+                    Console.WriteLine($"Email send failed: {ex.Message}");
+                }
+            });
         }
 
         private async Task<TransferViewModel> RepopulateTransferVM(TransferViewModel vm, string userId)

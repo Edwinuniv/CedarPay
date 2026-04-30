@@ -1,14 +1,79 @@
 ﻿@model List<MoneyTransfer.Models.Agent>
 @{
     ViewData["Title"] = "Agent Map";
+    var userAgents = ViewBag.UserAgents as
+        List<MoneyTransfer.Models.Agent>
+        ?? new List<MoneyTransfer.Models.Agent>();
+    bool isAgentOrAdmin = User.IsInRole("Agent") || User.IsInRole("Admin");
 }
 
 <div class="page-header">
     <div>
-        <h2>Agent Locations</h2>
+        <h2>Agent Map</h2>
         <p>Find a CedarPay agent near you</p>
     </div>
+    @if (isAgentOrAdmin)
+    {
+        <a asp-controller="Agent"
+           asp-action="SetLocation"
+           class="btn-tp-primary">
+            <i class="bi bi-geo-alt-fill"></i>
+            @(userAgents.Any(a => a.Latitude != 0)
+                ? "Update My Location"
+                : "Set My Location")
+        </a>
+    }
 </div>
+
+<!-- Your Stores Section for agents and admins -->
+@if (isAgentOrAdmin)
+{
+    <div class="tp-card mb-3">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+            <div>
+                <i class="bi bi-shop" style="color:var(--teal);font-size:20px"></i>
+                <span style="font-weight:600">Your Stores</span>
+            </div>
+            <a asp-controller="AgentApplication" asp-action="Apply" class="btn-tp-primary" style="padding:6px 12px">
+                <i class="bi bi-plus"></i> Register New Store
+            </a>
+        </div>
+        
+        @if (userAgents.Any())
+        {
+            <div style="display:flex;flex-direction:column;gap:8px">
+                @foreach (var store in userAgents)
+                {
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--surface-2);border-radius:var(--r-sm)">
+                        <div>
+                            <div style="font-weight:600">@store.StoreName</div>
+                            <div style="font-size:12px;color:var(--text-3)">@store.City, @store.Country</div>
+                            @if (store.Latitude != 0 && store.Longitude != 0)
+                            {
+                                <span class="badge-tp success" style="font-size:10px">Location Set ✓</span>
+                            }
+                            else
+                            {
+                                <span class="badge-tp warning" style="font-size:10px">Location Not Set</span>
+                            }
+                        </div>
+                        <a asp-controller="Agent" asp-action="SetLocation" asp-route-id="@store.Id" class="btn-tp-secondary" style="padding:4px 10px;font-size:12px">
+                            <i class="bi bi-geo-alt-fill"></i> Set Location
+                        </a>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div style="text-align:center;padding:20px;color:var(--text-3)">
+                <i class="bi bi-shop" style="font-size:32px;display:block;margin-bottom:8px"></i>
+                <p>You don't have any stores yet.</p>
+                <a asp-controller="AgentApplication" asp-action="Apply" class="btn-tp-primary">Register Your First Store</a>
+            </div>
+        }
+    </div>
+}
 
 <div class="tp-card mb-3">
     <div style="display:flex;gap:12px;align-items:center">

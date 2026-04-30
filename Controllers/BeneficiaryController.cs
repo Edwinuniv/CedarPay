@@ -14,7 +14,6 @@ namespace MoneyTransfer.Controllers
     {
         private readonly IBeneficiaryRepository _beneficiaryRepository;
         private readonly IWalletRepository _walletRepository;
-        private readonly UserManager<User> _userManager;
         private readonly ApplicationDbContext _context;
 
         public BeneficiaryController(IBeneficiaryRepository beneficiaryRepository,
@@ -25,7 +24,6 @@ namespace MoneyTransfer.Controllers
         {
             _beneficiaryRepository = beneficiaryRepository;
             _walletRepository = walletRepository;
-            _userManager = userManager;
             _context = context;
         }
 
