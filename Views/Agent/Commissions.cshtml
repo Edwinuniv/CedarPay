@@ -1,6 +1,7 @@
 ﻿@model List<MoneyTransfer.Models.Commission>
 @{
     ViewData["Title"] = "My Commissions";
+    ViewBag.PageClass = "page-agent";
 }
 
 <div class="page-header">
@@ -64,13 +65,13 @@ else
                 @foreach (var c in Model)
                 {
                     <tr>
-                        <td style="font-family:monospace; font-size:12px">
+                        <td class="commission-transaction-cell">
                             @c.Transaction?.SerialNumber
                         </td>
-                        <td style="font-weight:600; color:var(--teal)">
+                        <td class="commission-amount-cell">
                             $@c.Amount.ToString("N2")
                         </td>
-                        <td style="font-size:13px; color:var(--text-2)">
+                        <td class="commission-rate-cell">
                             @(c.Percentage * 100)%
                         </td>
                         <td>
@@ -78,7 +79,7 @@ else
                                 @(c.IsPaid ? "Paid" : "Pending")
                             </span>
                         </td>
-                        <td style="font-size:12px; color:var(--text-3)">
+                        <td class="commission-date-cell">
                             @c.EarnedAt.ToString("MMM dd, yyyy")
                         </td>
                     </tr>

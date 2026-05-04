@@ -1,5 +1,6 @@
 ﻿@{
     ViewData["Title"] = "Exchange Rates";
+    ViewBag.PageClass = "page-admin";
     var currencies = ViewBag.Currencies as
         List<MoneyTransfer.Models.Currency>
         ?? new List<MoneyTransfer.Models.Currency>();
@@ -18,31 +19,27 @@
                         : "—")
         </p>
     </div>
-    <div style="display:flex;gap:8px">
+    <div class="rates-header-actions">
         <a asp-action="Index" class="btn-tp-secondary">
             <i class="bi bi-arrow-left"></i> Back
         </a>
-        <a asp-action="ExchangeRates"
-           class="btn-tp-primary">
+        <a asp-action="ExchangeRates" class="btn-tp-primary">
             <i class="bi bi-arrow-clockwise"></i> Refresh
         </a>
     </div>
 </div>
 
 <!-- Rate Table -->
-<div class="tp-card" style="overflow-x:auto">
-    <table class="tp-table">
+<div class="tp-card rates-table-container">
+    <table class="tp-table rates-table">
         <thead>
             <tr>
-                <th style="min-width:80px">From \ To</th>
+                <th>From \ To</th>
                 @foreach (var c in currencies)
                 {
-                    <th style="text-align:center;
-                                   min-width:100px">
+                    <th style="text-align:center; min-width:100px">
                         @c.Code
-                        <div style="font-size:10px;
-                                        color:var(--text-3);
-                                        font-weight:400">
+                        <div class="rates-currency-header">
                             @c.Symbol
                         </div>
                     </th>
@@ -53,49 +50,33 @@
             @foreach (var fromCurr in currencies)
             {
                 <tr>
-                    <td style="font-weight:700">
-                        <div>@fromCurr.Code</div>
-                        <div style="font-size:11px;
-                                        color:var(--text-3)">
-                            @fromCurr.Symbol
-                        </div>
+                    <td class="rates-from-cell">
+                        <div class="rates-from-code">@fromCurr.Code</div>
+                        <div class="rates-from-symbol">@fromCurr.Symbol</div>
                     </td>
                     @foreach (var toCurr in currencies)
                     {
                         var rate = 0m;
-                        if (rates.TryGetValue(
-                        fromCurr.Code, out var toRates) &&
-                        toRates.TryGetValue(
-                        toCurr.Code, out var r))
+                        if (rates.TryGetValue(fromCurr.Code, out var toRates) &&
+                        toRates.TryGetValue(toCurr.Code, out var r))
                         {
                             rate = r;
                         }
 
-                        bool isSelf =
-                        fromCurr.Code == toCurr.Code;
+                        bool isSelf = fromCurr.Code == toCurr.Code;
 
-                        <td style="text-align:center;
-                                           background:@(isSelf
-                                                                   ? "var(--surface-2)"
-                                                                   : "transparent")">
-                    @if (isSelf)
+                        <td class="rates-rate-cell @(isSelf ? "rates-rate-cell-self" : "")">
+                            @if (isSelf)
                             {
-                                <span style="color:var(--text-3)">
-                                    1.0000
-                                </span>
+                                <span class="rates-rate-self">1.0000</span>
                             }
                             else if (rate > 0)
                             {
-                                <span style="font-weight:600;
-                                                         color:var(--teal)">
-                                    @rate.ToString("N4")
-                                </span>
+                                <span class="rates-rate-value">@rate.ToString("N4")</span>
                             }
                             else
                             {
-                                <span style="color:var(--red)">
-                                    Error
-                                </span>
+                                <span class="rates-rate-error">Error</span>
                             }
                         </td>
                     }
@@ -112,37 +93,24 @@
             Quick Conversion Examples
         </span>
     </div>
-    <div style="display:grid;
-                grid-template-columns:repeat(3,1fr);
-                gap:12px">
-        @foreach (var fromC in currencies.Where(
-                c => c.Code == "USD"))
+    <div class="rates-conversion-grid">
+        @foreach (var fromC in currencies.Where(c => c.Code == "USD"))
         {
-            @foreach (var toC in currencies.Where(
-                    c => c.Code != "USD"))
+            @foreach (var toC in currencies.Where(c => c.Code != "USD"))
             {
                 var r = 0m;
-                if (rates.TryGetValue(
-                fromC.Code, out var tr) &&
+                if (rates.TryGetValue(fromC.Code, out var tr) &&
                 tr.TryGetValue(toC.Code, out var rv))
                     r = rv;
 
-                <div style="padding:14px;
-                                    background:var(--surface-2);
-                                    border-radius:var(--r-md);
-                                    border:1px solid var(--border)">
-                    <div style="font-size:12px;
-                                        color:var(--text-3);
-                                        margin-bottom:4px">
+                <div class="rates-conversion-card">
+                    <div class="rates-conversion-label">
                         1 @fromC.Code →
                     </div>
-                    <div style="font-size:20px;
-                                        font-weight:800;
-                                        color:var(--teal)">
+                    <div class="rates-conversion-value">
                         @toC.Symbol@r.ToString("N2")
                     </div>
-                    <div style="font-size:12px;
-                                        color:var(--text-2)">
+                    <div class="rates-conversion-currency">
                         @toC.Code — @toC.Name
                     </div>
                 </div>

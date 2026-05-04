@@ -1,6 +1,7 @@
 ﻿@model List<MoneyTransfer.Models.AgentApplication>
 @{
     ViewData["Title"] = "My Agent Application";
+    ViewBag.PageClass = "page-dashboard";
 }
 
 <div class="page-header">
@@ -30,17 +31,14 @@
 }
 else
 {
-    <div class="d-flex flex-column gap-3">
+    <div class="applications-container">
         @foreach (var app in Model)
         {
-            <div class="tp-card">
-                <div style="display:flex;align-items:flex-start;
-                                    justify-content:space-between;gap:12px">
-                    <div style="flex:1">
-                        <div style="display:flex;align-items:center;gap:10px;
-                                            margin-bottom:12px">
-                            <div style="font-size:16px;font-weight:700;
-                                                color:var(--text-1)">
+            <div class="tp-card application-card">
+                <div class="application-header">
+                    <div class="application-content">
+                        <div class="application-store-row">
+                            <div class="application-store-name">
                                 @app.StoreName
                             </div>
                             @{
@@ -60,33 +58,28 @@ else
                             </span>
                         </div>
 
-                        <div style="display:grid;grid-template-columns:1fr 1fr;
-                                            gap:8px;font-size:13px;color:var(--text-2)">
-                            <div>
+                        <div class="application-details-grid">
+                            <div class="application-detail-item">
                                 <i class="bi bi-person"></i>
                                 @app.AgentName
                             </div>
-                            <div>
+                            <div class="application-detail-item">
                                 <i class="bi bi-telephone"></i>
                                 @app.PhoneNumber
                             </div>
-                            <div>
+                            <div class="application-detail-item">
                                 <i class="bi bi-geo-alt"></i>
                                 @app.City, @app.Country
                             </div>
-                            <div>
+                            <div class="application-detail-item">
                                 <i class="bi bi-clock"></i>
                                 @app.WorkingHours
                             </div>
                         </div>
 
-                        @if (app.Status == MoneyTransfer.Models.ApplicationStatus.Rejected
-                                        && !string.IsNullOrEmpty(app.RejectionReason))
+                        @if (app.Status == MoneyTransfer.Models.ApplicationStatus.Rejected && !string.IsNullOrEmpty(app.RejectionReason))
                         {
-                            <div style="margin-top:12px;padding:10px 14px;
-                                                    background:var(--red-light);
-                                                    border-radius:var(--r-sm);
-                                                    font-size:13px;color:var(--red)">
+                            <div class="rejection-reason-box">
                                 <i class="bi bi-exclamation-circle"></i>
                                 <strong>Rejection reason:</strong>
                                 @app.RejectionReason
@@ -95,20 +88,16 @@ else
 
                         @if (app.Status == MoneyTransfer.Models.ApplicationStatus.Approved)
                         {
-                            <div style="margin-top:12px;padding:10px 14px;
-                                                    background:var(--teal-light);
-                                                    border-radius:var(--r-sm);
-                                                    font-size:13px;color:var(--teal-dark)">
+                            <div class="approved-box">
                                 <i class="bi bi-check-circle-fill"></i>
                                 Approved on @app.ReviewedAt?.ToString("MMM dd, yyyy")
                             </div>
                         }
                     </div>
 
-                    <div style="font-size:11px;color:var(--text-3);
-                                        text-align:right;flex-shrink:0">
+                    <div class="application-date">
                         Submitted<br />
-                        @app.SubmittedAt.ToString("MMM dd, yyyy")
+                        <strong>@app.SubmittedAt.ToString("MMM dd, yyyy")</strong>
                     </div>
                 </div>
             </div>

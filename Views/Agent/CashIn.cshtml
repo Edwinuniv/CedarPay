@@ -1,5 +1,6 @@
 ﻿@{
     ViewData["Title"] = "Cash In";
+    ViewBag.PageClass = "page-agent";
 }
 
 <div class="row justify-content-center">
@@ -9,23 +10,16 @@
                 <h2>Cash In</h2>
                 <p>Add cash funds to a user's wallet</p>
             </div>
-            <a asp-action="Dashboard"
-               class="btn-tp-secondary">
+            <a asp-action="Dashboard" class="btn-tp-secondary">
                 <i class="bi bi-arrow-left"></i> Back
             </a>
         </div>
 
         <div class="tp-card">
-            <form asp-action="CashIn" method="post"
-                  class="tp-form">
+            <form asp-action="CashIn" method="post" class="tp-form">
                 @Html.AntiForgeryToken()
 
-                <div style="background:var(--teal-light);
-                            border-radius:var(--r-sm);
-                            padding:12px 16px;
-                            font-size:13px;
-                            color:var(--teal-dark);
-                            margin-bottom:4px">
+                <div class="cash-info-alert">
                     <i class="bi bi-info-circle"></i>
                     You are <strong>adding</strong> cash
                     to the user's wallet.
@@ -34,9 +28,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">
-                        User's Wallet Serial *
-                    </label>
+                    <label class="form-label">User's Wallet Serial *</label>
                     <input type="text" name="walletSerial"
                            class="form-control"
                            placeholder="WAL-2026-XXXXX"
@@ -44,9 +36,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">
-                        Amount to Deposit *
-                    </label>
+                    <label class="form-label">Amount to Deposit *</label>
                     <input type="number" name="amount"
                            class="form-control"
                            step="0.01" min="0.01"
@@ -54,19 +44,13 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">
-                        Note (Optional)
-                    </label>
+                    <label class="form-label">Note (Optional)</label>
                     <input type="text" name="note"
                            class="form-control"
                            placeholder="Cash deposit note" />
                 </div>
 
-                <button type="submit"
-                        class="btn-tp-primary"
-                        style="width:100%;
-                               justify-content:center;
-                               padding:13px">
+                <button type="submit" class="btn-tp-primary cash-submit-btn">
                     <i class="bi bi-cash-coin"></i>
                     Confirm Cash Deposit
                 </button>

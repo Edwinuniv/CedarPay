@@ -1,10 +1,13 @@
 ﻿@model MoneyTransfer.ViewModels.TransferViewModel
 @{
     ViewData["Title"] = "Send Money";
+    ViewBag.PageClass = "page-transfer";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-7">
+<!-- Remove the row justify-content-center that might be causing flex height issues -->
+<div class="transfer-container">
+    <div class="col-md-7 mx-auto">
+
         <div class="page-header">
             <div>
                 <h2>Send Money</h2>
@@ -14,70 +17,44 @@
 
         <div class="tp-card">
             <form asp-action="Store" method="post" class="tp-form">
+                @Html.AntiForgeryToken()
+
                 <div asp-validation-summary="All" class="alert-tp error"
                      style="@(ViewData.ModelState.ErrorCount > 0 ? "" : "display:none")"></div>
 
+                <!-- Transfer Type Selection -->
                 <div class="form-group">
                     <label class="form-label">Transfer Type</label>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="transferTypeGrid">
-                        <label style="cursor:pointer" id="lblWallet">
+                    <div class="transfer-type-grid" id="transferTypeGrid">
+                        <label class="transfer-type-label" id="lblWallet">
                             <input type="radio" asp-for="TransferType"
                                    value="WalletToWallet"
                                    id="typeWallet"
                                    style="display:none"
                                    onchange="selectTransferType('WalletToWallet')" />
-                            <div id="cardWallet"
-                                 style="padding:16px;border-radius:var(--r-md);
-                                        border:2px solid var(--border);
-                                        background:var(--surface-2);
-                                        text-align:center;
-                                        transition:var(--transition)">
-                                <i class="bi bi-wallet2"
-                                   style="font-size:24px;
-                                          color:var(--text-2);
-                                          display:block;margin-bottom:6px"></i>
-                                <div style="font-size:13px;font-weight:600;
-                                            color:var(--text-1)">
-                                    Wallet to Wallet
-                                </div>
-                                <div style="font-size:11px;
-                                            color:var(--text-3);
-                                            margin-top:2px">
-                                    Transfer to any wallet
-                                </div>
+                            <div id="cardWallet" class="transfer-type-card">
+                                <i class="bi bi-wallet2 transfer-type-icon"></i>
+                                <div class="transfer-type-title">Wallet to Wallet</div>
+                                <div class="transfer-type-desc">Transfer to any wallet</div>
                             </div>
                         </label>
 
-                        <label style="cursor:pointer" id="lblMobile">
+                        <label class="transfer-type-label" id="lblMobile">
                             <input type="radio" asp-for="TransferType"
                                    value="MobileTransfer"
                                    id="typeMobile"
                                    style="display:none"
                                    onchange="selectTransferType('MobileTransfer')" />
-                            <div id="cardMobile"
-                                 style="padding:16px;border-radius:var(--r-md);
-                                        border:2px solid var(--border);
-                                        background:var(--surface-2);
-                                        text-align:center;
-                                        transition:var(--transition)">
-                                <i class="bi bi-phone"
-                                   style="font-size:24px;
-                                          color:var(--text-2);
-                                          display:block;margin-bottom:6px"></i>
-                                <div style="font-size:13px;font-weight:600;
-                                            color:var(--text-1)">
-                                    Mobile Transfer
-                                </div>
-                                <div style="font-size:11px;
-                                            color:var(--text-3);
-                                            margin-top:2px">
-                                    Send via phone number
-                                </div>
+                            <div id="cardMobile" class="transfer-type-card">
+                                <i class="bi bi-phone transfer-type-icon"></i>
+                                <div class="transfer-type-title">Mobile Transfer</div>
+                                <div class="transfer-type-desc">Send via phone number</div>
                             </div>
                         </label>
                     </div>
                 </div>
 
+                <!-- From Wallet -->
                 <div class="form-group">
                     <label class="form-label">From Wallet</label>
                     <select asp-for="SenderWalletId" class="form-select">
@@ -91,14 +68,15 @@
                         }
                     </select>
                     <span asp-validation-for="SenderWalletId"
-                          class="text-danger" style="font-size:12px"></span>
+                          class="text-danger validation-error"></span>
                 </div>
 
+                <!-- Receiver Wallet Serial -->
                 <div class="form-group" id="walletField">
                     <label class="form-label">Receiver Wallet Serial</label>
                     @if (Model.Beneficiaries.Any())
                     {
-                        <select class="form-select mb-2" id="beneficiarySelect"
+                        <select class="form-select beneficiary-select" id="beneficiarySelect"
                                 onchange="fillBeneficiary(this)">
                             <option value="">— Or select from beneficiaries —</option>
                             @foreach (var b in Model.Beneficiaries)
@@ -116,6 +94,7 @@
                            placeholder="WAL-2026-XXXXX" id="walletInput" />
                 </div>
 
+                <!-- Mobile Transfer Fields -->
                 <div id="mobileFields" style="display:none">
                     <div class="form-group">
                         <label class="form-label">Receiver Phone Number</label>
@@ -129,27 +108,50 @@
                     </div>
                 </div>
 
+                <!-- Amount -->
                 <div class="form-group">
                     <label class="form-label">Amount</label>
                     <input asp-for="Amount" class="form-control"
                            type="number" step="0.01" min="0.01"
                            placeholder="0.00" />
                     <span asp-validation-for="Amount"
-                          class="text-danger" style="font-size:12px"></span>
+                          class="text-danger validation-error"></span>
                 </div>
 
+                <!-- Note -->
                 <div class="form-group">
                     <label class="form-label">Note (Optional)</label>
                     <input asp-for="Description" class="form-control"
                            placeholder="What's this for?" />
                 </div>
 
-                <div style="background:var(--teal-light);border-radius:var(--r-sm);padding:12px 16px;font-size:13px;color:var(--teal-dark)">
-                    <i class="bi bi-info-circle"></i>
-                    Standard fee: 2% + $0.50 per transfer.
-                    Every 10th transaction is <strong>free</strong>! 🎉
-                </div>
+                <!-- Fee Information -->
+                @{
+                    bool nxtFree = ViewBag.NextIsFree == true;
+                    decimal feePct = ViewBag.FeePercentage != null ? (decimal)ViewBag.FeePercentage : 2.0m;
+                    decimal fixedFee = ViewBag.FixedFee != null ? (decimal)ViewBag.FixedFee : 0.50m;
+                    int freeEvery = ViewBag.FreeThreshold != null ? (int)ViewBag.FreeThreshold : 10;
+                    int txsDone = ViewBag.TxCount != null ? (int)ViewBag.TxCount : 0;
+                    int remaining = nxtFree ? 0 : (freeEvery - (txsDone % freeEvery));
+                }
+                @if (nxtFree)
+                {
+                    <div class="free-transfer-alert">
+                        <i class="bi bi-gift-fill"></i>
+                        <strong>🎉 This transfer is FREE!</strong> No fee will be charged.
+                    </div>
+                }
+                else
+                {
+                    <div class="fee-info-alert">
+                        <i class="bi bi-info-circle"></i>
+                        Fee: <strong>@feePct.ToString("F1")% + $@fixedFee.ToString("F2")</strong> per transfer.
+                        Every <strong>@freeEvery</strong>th is free 🎉 —
+                        <strong>@remaining</strong> transfer@(remaining == 1 ? "" : "s") until your next free one.
+                    </div>
+                }
 
+                <!-- Buttons -->
                 <div class="d-flex gap-2">
                     <button type="submit" class="btn-tp-primary">
                         <i class="bi bi-send-fill"></i> Send Money
@@ -172,35 +174,20 @@
             const mobileIco = mobileCard?.querySelector('i');
 
             if (type === 'WalletToWallet') {
-                if (walletCard) {
-                    walletCard.style.borderColor = 'var(--teal)';
-                    walletCard.style.background = 'var(--teal-light)';
-                }
-                if (walletIco) walletIco.style.color = 'var(--teal)';
-
-                if (mobileCard) {
-                    mobileCard.style.borderColor = 'var(--border)';
-                    mobileCard.style.background = 'var(--surface-2)';
-                }
-                if (mobileIco) mobileIco.style.color = 'var(--text-2)';
+                if (walletCard) walletCard.classList.add('active');
+                if (walletIco) walletIco.classList.add('active');
+                if (mobileCard) mobileCard.classList.remove('active');
+                if (mobileIco) mobileIco.classList.remove('active');
 
                 const wf = document.getElementById('walletField');
                 const mf = document.getElementById('mobileFields');
                 if (wf) wf.style.display = 'block';
                 if (mf) mf.style.display = 'none';
-
             } else {
-                if (mobileCard) {
-                    mobileCard.style.borderColor = 'var(--teal)';
-                    mobileCard.style.background = 'var(--teal-light)';
-                }
-                if (mobileIco) mobileIco.style.color = 'var(--teal)';
-
-                if (walletCard) {
-                    walletCard.style.borderColor = 'var(--border)';
-                    walletCard.style.background = 'var(--surface-2)';
-                }
-                if (walletIco) walletIco.style.color = 'var(--text-2)';
+                if (mobileCard) mobileCard.classList.add('active');
+                if (mobileIco) mobileIco.classList.add('active');
+                if (walletCard) walletCard.classList.remove('active');
+                if (walletIco) walletIco.classList.remove('active');
 
                 const wf = document.getElementById('walletField');
                 const mf = document.getElementById('mobileFields');

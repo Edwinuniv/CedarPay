@@ -1,6 +1,7 @@
 ﻿@model IEnumerable<MoneyTransfer.Models.User>
 @{
     ViewData["Title"] = "User Management";
+    ViewBag.PageClass = "page-admin";
 }
 
 <div class="page-header">
@@ -8,14 +9,11 @@
         <h2>User Management</h2>
         <p>@Model.Count() total users</p>
     </div>
-    <div style="display:flex;gap:8px">
+    <div class="user-management-actions">
         <form asp-action="CreateGuestUser" method="post">
             @Html.AntiForgeryToken()
-            <button type="submit"
-                    class="btn-tp-secondary"
-                    onclick="return confirm('Create a guest account?')">
-                <i class="bi bi-person-plus"></i>
-                + Guest User
+            <button type="submit" class="btn-tp-secondary" onclick="return confirm('Create a guest account?')">
+                <i class="bi bi-person-plus"></i> + Guest User
             </button>
         </form>
         <a asp-action="Index" class="btn-tp-secondary">
@@ -25,26 +23,19 @@
 </div>
 
 <div class="tp-card mb-3">
-    <div style="display:flex;gap:12px;flex-wrap:wrap">
+    <div class="user-filters-container">
         <input type="text"
                id="userSearch"
-               class="form-control"
+               class="form-control user-search-input"
                placeholder="Search by name, email, phone..."
-               oninput="filterUsers(this.value)"
-               style="flex:1;min-width:200px" />
-        <select id="sortSelect"
-                class="form-select"
-                style="width:auto"
-                onchange="sortUsers(this.value)">
+               oninput="filterUsers(this.value)" />
+        <select id="sortSelect" class="form-select user-sort-select" onchange="sortUsers(this.value)">
             <option value="name">Sort by Name</option>
             <option value="email">Sort by Email</option>
             <option value="date">Sort by Date</option>
             <option value="verified">Sort by Verified</option>
         </select>
-        <select id="filterRole"
-                class="form-select"
-                style="width:auto"
-                onchange="filterUsers(document.getElementById('userSearch').value)">
+        <select id="filterRole" class="form-select user-role-filter" onchange="filterUsers(document.getElementById('userSearch').value)">
             <option value="">All Roles</option>
             <option value="admin">Admin</option>
             <option value="agent">Agent</option>
@@ -53,7 +44,7 @@
     </div>
 </div>
 
-<div class="tp-card" style="overflow-x:auto">
+<div class="tp-card users-table-container">
     <table class="tp-table" id="usersTable">
         <thead>
             <tr>
@@ -76,30 +67,21 @@
                     data-email="@u.Email?.ToLower()"
                     data-phone="@u.PhoneNumber?.ToLower()"
                     data-roles="@(ViewBag.UserRoles != null && ((Dictionary<string, List<string>>)ViewBag.UserRoles).ContainsKey(u.Id) ? string.Join(",", ((Dictionary<string, List<string>>)ViewBag.UserRoles)[u.Id]).ToLower() : "user")">
-                    <td>
-                        <div style="display:flex;
-                                            align-items:center;gap:10px">
-                            @if (!string.IsNullOrEmpty(
-                                                    u.ProfilePictureUrl))
+
+                    <td class="user-cell">
+                        <div class="user-avatar-row">
+                            @if (!string.IsNullOrEmpty(u.ProfilePictureUrl))
                             {
-                                <img src="@u.ProfilePictureUrl"
-                                     style="width:36px;height:36px;
-                                                            border-radius:50%;
-                                                            object-fit:cover" />
+                                <img src="@u.ProfilePictureUrl" class="user-avatar-img" />
                             }
                             else
                             {
-                                <div class="ben-avatar"
-                                     style="width:36px;height:36px;
-                                                            font-size:12px">
+                                <div class="ben-avatar user-avatar-initials">
                                     @u.FirstName?.Substring(0, 1)@u.LastName?.Substring(0, 1)
                                 </div>
                             }
-                            <div>
-                                <div style="font-weight:600;
-                                                    font-size:13px">
-                                    @u.FirstName @u.LastName
-                                </div>
+                            <div class="user-info">
+                                <div class="user-name">@u.FirstName @u.LastName</div>
                                 @{
                                     var roles = ViewBag.UserRoles != null
                                     && ((Dictionary<string, List<string>>)ViewBag.UserRoles)
@@ -107,79 +89,52 @@
                                     ? ((Dictionary<string, List<string>>)ViewBag.UserRoles)[u.Id]
                                     : new List<string>();
                                 }
-                                @foreach (var role in roles)
-                                {
-                                    <span class="badge-tp @(role == "admin" ? "info" : role == "agent" ? "success" : "default")"
-                                          style="font-size:9px;padding:1px 6px;margin-right:2px">
-                                        @role
-                                    </span>
-                                }
+                                <div class="user-roles-container">
+                                    @foreach (var role in roles)
+                                    {
+                                        <span class="badge-tp @(role == "admin" ? "info" : role == "agent" ? "success" : "default") user-role-badge">
+                                            @role
+                                        </span>
+                                    }
+                                </div>
                             </div>
                         </div>
                     </td>
-                    <td style="font-size:13px;color:var(--text-2)">
-                        @u.Email
+                    <td class="user-email-cell">@u.Email</td>
+                    <td class="user-phone-cell">@(u.PhoneNumber ?? "—")</td>
+                    <td class="user-nationality-cell">@(u.Nationality ?? "—")</td>
+                    <td class="user-account-type-cell">
+                        <span class="badge-tp default">@(u.AccountType ?? "Individual")</span>
                     </td>
-                    <td style="font-size:13px;color:var(--text-2)">
-                        @(u.PhoneNumber ?? "—")
-                    </td>
-                    <td style="font-size:13px;color:var(--text-2)">
-                        @(u.Nationality ?? "—")
-                    </td>
-                    <td>
-                        <span class="badge-tp default">
-                            @(u.AccountType ?? "Individual")
-                        </span>
-                    </td>
-                    <td>
+                    <td class="user-kyc-cell">
                         <span class="badge-tp @(u.IsVerified ? "success" : "warning")">
                             @(u.IsVerified ? "Verified" : "Pending")
                         </span>
                     </td>
-                    <td>
+                    <td class="user-status-cell">
                         <span class="badge-tp @(u.IsActive ? "success" : "danger")">
                             @(u.IsActive ? "Active" : "Disabled")
                         </span>
                     </td>
-                    <td style="font-size:12px;color:var(--text-3)">
-                        @u.CreatedAt.ToString("MMM dd, yyyy")
-                    </td>
-                    <td>
-                        <div style="display:flex;gap:4px;
-                                            flex-wrap:wrap">
+                    <td class="user-joined-cell">@u.CreatedAt.ToString("MMM dd, yyyy")</td>
+                    <td class="user-actions-cell">
+                        <div class="user-actions">
                             @if (!roles.Contains("admin"))
                             {
-                                <form asp-action="PromoteToAdmin"
-                                      asp-route-userId="@u.Id"
-                                      method="post"
-                                      onsubmit="return confirm('Make this user an Admin?')">
+                                <form asp-action="PromoteToAdmin" asp-route-userId="@u.Id" method="post" onsubmit="return confirm('Make this user an Admin?')">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit"
-                                            class="btn-tp-secondary"
-                                            style="padding:4px 8px;
-                                                                   font-size:11px"
-                                            title="Make Admin">
+                                    <button type="submit" class="btn-tp-secondary user-action-btn" title="Make Admin">
                                         <i class="bi bi-shield-fill"></i>
                                     </button>
                                 </form>
                             }
-                            <form asp-action="ToggleAccount"
-                                  asp-route-userId="@u.Id"
-                                  method="post">
+                            <form asp-action="ToggleAccount" asp-route-userId="@u.Id" method="post">
                                 @Html.AntiForgeryToken()
-                                <button type="submit"
-                                        class="btn-tp-@(u.IsActive ? "danger" : "success")"
-                                        style="padding:4px 8px;
-                                                       font-size:11px"
-                                        title="@(u.IsActive ? "Disable" : "Enable")">
+                                <button type="submit" class="btn-tp-@(u.IsActive ? "danger" : "success") user-action-btn" title="@(u.IsActive ? "Disable" : "Enable")">
                                     <i class="bi bi-@(u.IsActive ? "person-x" : "person-check")"></i>
                                 </button>
                             </form>
-                            <a asp-action="UserDetails"
-                               asp-route-userId="@u.Id"
-                               class="btn-tp-secondary"
-                               style="padding:4px 8px;font-size:11px"
-                               title="View Details">
+                            <a asp-action="UserDetails" asp-route-userId="@u.Id" class="btn-tp-secondary user-action-btn" title="View Details">
                                 <i class="bi bi-eye"></i>
                             </a>
                         </div>
@@ -194,32 +149,23 @@
     <script>
         function filterUsers(q) {
             const lower = q.toLowerCase();
-            const role = document.getElementById(
-                'filterRole').value.toLowerCase();
-            document.querySelectorAll('.user-row')
-                .forEach(row => {
-                    const name = row.dataset.name || '';
-                    const email = row.dataset.email || '';
-                    const phone = row.dataset.phone || '';
-                    const roles = row.dataset.roles || '';
+            const role = document.getElementById('filterRole').value.toLowerCase();
+            document.querySelectorAll('.user-row').forEach(row => {
+                const name = row.dataset.name || '';
+                const email = row.dataset.email || '';
+                const phone = row.dataset.phone || '';
+                const roles = row.dataset.roles || '';
 
-                    const matchQ = !q ||
-                        name.includes(lower) ||
-                        email.includes(lower) ||
-                        phone.includes(lower);
-                    const matchRole = !role ||
-                        roles.includes(role);
+                const matchQ = !q || name.includes(lower) || email.includes(lower) || phone.includes(lower);
+                const matchRole = !role || roles.includes(role);
 
-                    row.style.display =
-                        matchQ && matchRole ? '' : 'none';
-                });
+                row.style.display = matchQ && matchRole ? '' : 'none';
+            });
         }
 
         function sortUsers(field) {
-            const tbody = document.querySelector(
-                '#usersTable tbody');
-            const rows = [...document.querySelectorAll(
-                '.user-row')];
+            const tbody = document.querySelector('#usersTable tbody');
+            const rows = [...document.querySelectorAll('.user-row')];
 
             rows.sort((a, b) => {
                 let av = '', bv = '';

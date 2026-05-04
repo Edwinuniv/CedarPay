@@ -8,7 +8,6 @@ namespace MoneyTransfer.Data
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
-
         }
 
         public DbSet<Account> Accounts { get; set; }
@@ -18,28 +17,34 @@ namespace MoneyTransfer.Data
         public DbSet<FeePolicy> FeePolicies { get; set; }
         public DbSet<Beneficiary> Beneficiaries { get; set; }
         public DbSet<TopUp> TopUps { get; set; }
-
         public DbSet<Agent> Agents { get; set; }
         public DbSet<Commission> Commissions { get; set; }
-
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<SupportTicket> SupportTickets { get; set; }
         public DbSet<Conversation> Conversations { get; set; }
         public DbSet<Message> Messages { get; set; }
-
         public DbSet<Review> Reviews { get; set; }
         public DbSet<KYCDocument> KYCDocuments { get; set; }
-
         public DbSet<AgentApplication> AgentApplications { get; set; }
-
         public DbSet<WalletRequest> WalletRequests { get; set; }
         public DbSet<ConversationParticipant> ConversationParticipants { get; set; }
-
         public DbSet<MessageReaction> MessageReactions { get; set; }
+        public DbSet<Announcement> Announcements { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Announcement>()
+                .HasOne(a => a.CreatedBy)
+                .WithMany()
+                .HasForeignKey(a => a.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.PhoneNumber)
+                .IsUnique()
+                .HasFilter("[PhoneNumber] IS NOT NULL");
 
             modelBuilder.Entity<Account>()
                 .HasOne(a => a.User)
@@ -240,8 +245,8 @@ namespace MoneyTransfer.Data
                 .HasPrecision(18, 4);
 
             modelBuilder.Entity<Agent>()
-            .Property(a => a.CommissionRate)
-            .HasPrecision(5, 4);
+                .Property(a => a.CommissionRate)
+                .HasPrecision(5, 4);
 
             modelBuilder.Entity<Commission>()
                 .Property(c => c.Percentage)
@@ -258,129 +263,20 @@ namespace MoneyTransfer.Data
                 .IsUnique();
 
             modelBuilder.Entity<Currency>().HasData(
-                new Currency
-                {
-                    Id = 1,
-                    Code = "USD",
-                    Name = "US Dollar",
-                    Symbol = "$",
-                    FlagUrl = "/images/flags/usd.png",
-                    ExchangeRateToUSD = 1.000000m,
-                    IsActive = true,
-                    LastUpdated = new DateTime(2026, 1, 1)
-                },
-                new Currency
-                {
-                    Id = 2,
-                    Code = "EUR",
-                    Name = "Euro",
-                    Symbol = "€",
-                    FlagUrl = "/images/flags/eur.png",
-                    ExchangeRateToUSD = 1.080000m,
-                    IsActive = true,
-                    LastUpdated = new DateTime(2026, 1, 1)
-                },
-                new Currency
-                {
-                    Id = 3,
-                    Code = "LBP",
-                    Name = "Lebanese Pound",
-                    Symbol = "ل.ل",
-                    FlagUrl = "/images/flags/lbp.png",
-                    ExchangeRateToUSD = 0.000011m,
-                    IsActive = true,
-                    LastUpdated = new DateTime(2026, 1, 1)
-                },
-                new Currency
-                {
-                    Id = 4,
-                    Code = "AED",
-                    Name = "UAE Dirham",
-                    Symbol = "د.إ",
-                    FlagUrl = "/images/flags/aed.png",
-                    ExchangeRateToUSD = 0.272000m,
-                    IsActive = true,
-                    LastUpdated = new DateTime(2026, 1, 1)
-                },
-                new Currency
-                {
-                    Id = 5,
-                    Code = "GBP",
-                    Name = "British Pound",
-                    Symbol = "£",
-                    FlagUrl = "/images/flags/gbp.png",
-                    ExchangeRateToUSD = 1.270000m,
-                    IsActive = true,
-                    LastUpdated = new DateTime(2026, 1, 1)
-                },
-                new Currency
-                {
-                    Id = 6,
-                    Code = "SAR",
-                    Name = "Saudi Riyal",
-                    Symbol = "﷼",
-                    FlagUrl = "/images/flags/sar.png",
-                    ExchangeRateToUSD = 0.266000m,
-                    IsActive = true,
-                    LastUpdated = new DateTime(2026, 1, 1)
-                },
-                new Currency
-                {
-                    Id = 7,
-                    Code = "TRY",
-                    Name = "Turkish Lira",
-                    Symbol = "₺",
-                    FlagUrl = "/images/flags/try.png",
-                    ExchangeRateToUSD = 0.031000m,
-                    IsActive = true,
-                    LastUpdated = new DateTime(2026, 1, 1)
-                },
-                new Currency
-                {
-                    Id = 8,
-                    Code = "EGP",
-                    Name = "Egyptian Pound",
-                    Symbol = "E£",
-                    FlagUrl = "/images/flags/egp.png",
-                    ExchangeRateToUSD = 0.021000m,
-                    IsActive = true,
-                    LastUpdated = new DateTime(2026, 1, 1)
-                },
-                new Currency
-                {
-                    Id = 9,
-                    Code = "JOD",
-                    Name = "Jordanian Dinar",
-                    Symbol = "JD",
-                    FlagUrl = "/images/flags/jod.png",
-                    ExchangeRateToUSD = 1.410000m,
-                    IsActive = true,
-                    LastUpdated = new DateTime(2026, 1, 1)
-                },
-                new Currency
-                {
-                    Id = 10,
-                    Code = "KWD",
-                    Name = "Kuwaiti Dinar",
-                    Symbol = "KD",
-                    FlagUrl = "/images/flags/kwd.png",
-                    ExchangeRateToUSD = 3.240000m,
-                    IsActive = true,
-                    LastUpdated = new DateTime(2026, 1, 1)
-                }
+                new Currency { Id = 1, Code = "USD", Name = "US Dollar", Symbol = "$", FlagUrl = "/images/flags/usd.png", ExchangeRateToUSD = 1.000000m, IsActive = true, LastUpdated = new DateTime(2026, 1, 1) },
+                new Currency { Id = 2, Code = "EUR", Name = "Euro", Symbol = "€", FlagUrl = "/images/flags/eur.png", ExchangeRateToUSD = 1.080000m, IsActive = true, LastUpdated = new DateTime(2026, 1, 1) },
+                new Currency { Id = 3, Code = "LBP", Name = "Lebanese Pound", Symbol = "ل.ل", FlagUrl = "/images/flags/lbp.png", ExchangeRateToUSD = 0.000011m, IsActive = true, LastUpdated = new DateTime(2026, 1, 1) },
+                new Currency { Id = 4, Code = "AED", Name = "UAE Dirham", Symbol = "د.إ", FlagUrl = "/images/flags/aed.png", ExchangeRateToUSD = 0.272000m, IsActive = true, LastUpdated = new DateTime(2026, 1, 1) },
+                new Currency { Id = 5, Code = "GBP", Name = "British Pound", Symbol = "£", FlagUrl = "/images/flags/gbp.png", ExchangeRateToUSD = 1.270000m, IsActive = true, LastUpdated = new DateTime(2026, 1, 1) },
+                new Currency { Id = 6, Code = "SAR", Name = "Saudi Riyal", Symbol = "﷼", FlagUrl = "/images/flags/sar.png", ExchangeRateToUSD = 0.266000m, IsActive = true, LastUpdated = new DateTime(2026, 1, 1) },
+                new Currency { Id = 7, Code = "TRY", Name = "Turkish Lira", Symbol = "₺", FlagUrl = "/images/flags/try.png", ExchangeRateToUSD = 0.031000m, IsActive = true, LastUpdated = new DateTime(2026, 1, 1) },
+                new Currency { Id = 8, Code = "EGP", Name = "Egyptian Pound", Symbol = "E£", FlagUrl = "/images/flags/egp.png", ExchangeRateToUSD = 0.021000m, IsActive = true, LastUpdated = new DateTime(2026, 1, 1) },
+                new Currency { Id = 9, Code = "JOD", Name = "Jordanian Dinar", Symbol = "JD", FlagUrl = "/images/flags/jod.png", ExchangeRateToUSD = 1.410000m, IsActive = true, LastUpdated = new DateTime(2026, 1, 1) },
+                new Currency { Id = 10, Code = "KWD", Name = "Kuwaiti Dinar", Symbol = "KD", FlagUrl = "/images/flags/kwd.png", ExchangeRateToUSD = 3.240000m, IsActive = true, LastUpdated = new DateTime(2026, 1, 1) }
             );
 
             modelBuilder.Entity<FeePolicy>().HasData(
-                new FeePolicy
-                {
-                    Id = 1,
-                    Name = "Standard",
-                    FeePercentage = 0.02m,
-                    FixedFee = 0.50m,
-                    FreeTransactionThreshold = 10,
-                    IsActive = true,
-                    CreatedAt = new DateTime(2026, 1, 1)
-                }
+                new FeePolicy { Id = 1, Name = "Standard", FeePercentage = 0.02m, FixedFee = 0.50m, FreeTransactionThreshold = 10, IsActive = true, CreatedAt = new DateTime(2026, 1, 1) }
             );
         }
     }

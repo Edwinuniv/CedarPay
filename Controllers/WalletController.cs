@@ -20,14 +20,7 @@ namespace MoneyTransfer.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IEmailService _emailService;
 
-        public WalletController(
-            IWalletRepository walletRepository,
-            IAccountRepository accountRepository,
-            ICurrencyRepository currencyRepository,
-            UserManager<User> userManager,
-            IUserRepository userRepository,
-            ApplicationDbContext context,
-            IEmailService emailService) : base(userManager, userRepository)
+        public WalletController(IWalletRepository walletRepository, IAccountRepository accountRepository, ICurrencyRepository currencyRepository, UserManager<User> userManager, IUserRepository userRepository, ApplicationDbContext context, IEmailService emailService) : base(userManager, userRepository)
         {
             _walletRepository = walletRepository;
             _accountRepository = accountRepository;
@@ -83,8 +76,7 @@ namespace MoneyTransfer.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var currencies = await _currencyRepository
-                    .GetActiveCurrenciesAsync();
+                var currencies = await _currencyRepository.GetActiveCurrenciesAsync();
                 vm.AvailableCurrencies = currencies
                     .Select(c => new CurrencySelectViewModel
                     {
@@ -101,16 +93,13 @@ namespace MoneyTransfer.Controllers
 
             if (user == null || !user.ProfileCompleted)
             {
-                TempData["Error"] =
-                    "Please complete your profile before " +
-                    "requesting a wallet.";
+                TempData["Error"] = "Please complete your profile before " + "requesting a wallet.";
                 return RedirectToAction("Profile", "Account");
             }
 
             if (User.IsInRole(Roles.Admin))
             {
-                var account = await _accountRepository
-                    .GetDefaultAccountAsync(userId);
+                var account = await _accountRepository.GetDefaultAccountAsync(userId);
                 if (account == null)
                 {
                     account = new Account
@@ -124,8 +113,23 @@ namespace MoneyTransfer.Controllers
                     await _accountRepository.AddAsync(account);
                 }
 
-                var existingWallets = await _walletRepository
-                    .GetByUserIdAsync(userId);
+                var existingWallets = await _walletRepository.GetByUserIdAsync(userId);
+
+                if (existingWallets.Any(w => w.CurrencyId == vm.CurrencyId))
+                {
+                    ModelState.AddModelError("", "You already have a wallet in this currency.");
+                    var currenciesForAdmin = await _currencyRepository.GetActiveCurrenciesAsync();
+                    vm.AvailableCurrencies = currenciesForAdmin
+                        .Select(c => new CurrencySelectViewModel
+                        {
+                            Id = c.Id,
+                            Code = c.Code,
+                            Name = c.Name,
+                            Symbol = c.Symbol
+                        }).ToList();
+                    return View("Create", vm);
+                }
+
                 var isFirst = !existingWallets.Any();
 
                 var wallet = new Wallet
@@ -143,7 +147,6 @@ namespace MoneyTransfer.Controllers
 
                 await _walletRepository.AddAsync(wallet);
 
-                // Send email notification for wallet creation
                 if (user?.Email != null)
                 {
                     var currency = await _currencyRepository.GetByIdAsync(vm.CurrencyId);
@@ -185,17 +188,11 @@ namespace MoneyTransfer.Controllers
                 return View("Create", vm);
             }
 
-            var pendingRequest = await _context.WalletRequests
-                .AnyAsync(r => r.UserId == userId
-                            && r.CurrencyId == vm.CurrencyId
-                            && r.Status == WalletRequestStatus.Pending);
+            var pendingRequest = await _context.WalletRequests.AnyAsync(r => r.UserId == userId && r.CurrencyId == vm.CurrencyId && r.Status == WalletRequestStatus.Pending);
 
             if (pendingRequest)
             {
-                TempData["Error"] =
-                    "You already have a pending wallet " +
-                    "request for this currency. " +
-                    "Please wait for admin approval.";
+                TempData["Error"] = "You already have a pending wallet " + "request for this currency. " + "Please wait for admin approval.";
                 return RedirectToAction("MyRequests");
             }
 
@@ -211,7 +208,6 @@ namespace MoneyTransfer.Controllers
             });
             await _context.SaveChangesAsync();
 
-            // Send email notification for wallet request
             if (user?.Email != null)
             {
                 _ = Task.Run(async () =>
@@ -227,9 +223,7 @@ namespace MoneyTransfer.Controllers
                 });
             }
 
-            TempData["Success"] =
-                "Wallet request submitted! " +
-                "An admin will review it shortly.";
+            TempData["Success"] = "Wallet request submitted! " + "An admin will review it shortly.";
             return RedirectToAction("MyRequests");
         }
 

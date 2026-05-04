@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using MoneyTransfer.Models;
 
 namespace MoneyTransfer.ViewModels
 {
@@ -80,14 +79,7 @@ namespace MoneyTransfer.ViewModels
         [Required(ErrorMessage = "Employer name is required")]
         public string EmployerName { get; set; } = "";
 
-        [Required(ErrorMessage = "Document type is required")]
-        public DocumentType DocumentType { get; set; }
-
-        [Required(ErrorMessage = "Document number is required")]
-        public string DocumentNumber { get; set; } = "";
-
         public string? UserUsername { get; set; }
-
         public string? Description { get; set; }
         public string? ProfilePictureUrl { get; set; }
         public bool RemoveProfilePicture { get; set; }
@@ -96,10 +88,8 @@ namespace MoneyTransfer.ViewModels
         public string? OtherIncomeSource { get; set; }
         public string? OtherNationality { get; set; }
 
-        public string? FrontImageUrl { get; set; }
-        public string? BackImageUrl { get; set; }
         public string? KYCStatus { get; set; }
-
+        
         public string? CompanyName { get; set; }
         public string? BusinessRegNumber { get; set; }
     }

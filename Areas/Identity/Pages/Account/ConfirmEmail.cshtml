@@ -1,8 +1,51 @@
 ﻿@page
 @model ConfirmEmailModel
 @{
-    ViewData["Title"] = "Confirm email";
+    ViewData["Title"] = "Confirm Email";
+    Layout = "/Views/Shared/_Layout.cshtml";
+    ViewBag.PageClass = "page-dashboard";
+
+    // Determine status type for styling
+    var isSuccess = Model.StatusMessage?.Contains("Thank you") == true ||
+                    Model.StatusMessage?.Contains("confirmed") == true;
 }
 
-<h1>@ViewData["Title"]</h1>
-<partial name="_StatusMessage" model="Model.StatusMessage" />
+<div class="confirm-email-container">
+    <div class="confirm-email-card">
+
+        @if (isSuccess)
+        {
+            <div class="confirm-email-icon success">✅</div>
+            <h1 class="confirm-email-title">Email Confirmed!</h1>
+            <div class="confirm-email-message">
+                <partial name="_StatusMessage" model="Model.StatusMessage" />
+            </div>
+            <div class="confirm-email-actions">
+                <a href="/" class="btn-tp-primary">
+                    <i class="bi bi-box-arrow-in-right"></i> Go to Dashboard
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="confirm-email-icon error">❌</div>
+            <h1 class="confirm-email-title">Email Confirmation</h1>
+            <div class="confirm-email-message">
+                <partial name="_StatusMessage" model="Model.StatusMessage" />
+            </div>
+            <div class="confirm-email-actions">
+                <a href="/Identity/Account/ResendEmailConfirmation" class="btn-tp-primary">
+                    <i class="bi bi-envelope-fill"></i> Resend Confirmation
+                </a>
+                <a href="/" class="btn-tp-secondary">
+                    <i class="bi bi-house-fill"></i> Go to Home
+                </a>
+            </div>
+        }
+
+        <div class="confirm-email-footer">
+            <i class="bi bi-tree-fill"></i>
+            <span>CedarPay — Secure Digital Wallet</span>
+        </div>
+    </div>
+</div>

@@ -1,5 +1,6 @@
 ﻿@{
     ViewData["Title"] = "New Chat";
+    ViewBag.PageClass = "page-chat";
 }
 
 <div class="row justify-content-center">
@@ -16,35 +17,17 @@
 
         @if (ViewBag.Error != null)
         {
-            <div style="background:var(--red-light);
-                                border:1px solid rgba(255,107,107,.25);
-                                border-radius:var(--r-md);
-                                padding:12px 16px;margin-bottom:16px;
-                                font-size:13px;color:var(--red);
-                                display:flex;align-items:center;gap:8px">
+            <div class="chat-error-alert">
                 <i class="bi bi-exclamation-circle"></i>
                 @ViewBag.Error
             </div>
         }
 
-        <div style="display:flex;gap:0;margin-bottom:16px;
-                    border-radius:var(--r-md);overflow:hidden;
-                    border:1px solid var(--border)">
-            <button id="tabPhone"
-                    onclick="switchTab('phone')"
-                    style="flex:1;padding:11px;font-size:13px;
-                           font-weight:600;border:none;cursor:pointer;
-                           background:var(--teal);color:#fff;
-                           transition:var(--transition)">
+        <div class="chat-tab-container">
+            <button id="tabPhone" onclick="switchTab('phone')" class="chat-tab-btn active">
                 <i class="bi bi-telephone"></i> By Phone
             </button>
-            <button id="tabUsername"
-                    onclick="switchTab('username')"
-                    style="flex:1;padding:11px;font-size:13px;
-                           font-weight:600;border:none;cursor:pointer;
-                           background:var(--surface-2);
-                           color:var(--text-2);
-                           transition:var(--transition)">
+            <button id="tabUsername" onclick="switchTab('username')" class="chat-tab-btn inactive">
                 <i class="bi bi-at"></i> By Username
             </button>
         </div>
@@ -54,16 +37,12 @@
                 @Html.AntiForgeryToken()
                 <div class="form-group">
                     <label class="form-label">Phone Number</label>
-                    <input type="tel"
-                           name="phoneNumber"
-                           class="form-control"
-                           placeholder="+961 XX XXX XXX"
-                           autofocus />
-                    <div style="font-size:12px;color:var(--text-3);margin-top:6px">
+                    <input type="tel" name="phoneNumber" class="form-control" placeholder="+961 XX XXX XXX" autofocus />
+                    <div class="chat-form-hint">
                         Enter the phone number registered on CedarPay
                     </div>
                 </div>
-                <button type="submit" class="btn-tp-primary" style="width:100%">
+                <button type="submit" class="btn-tp-primary chat-submit-btn">
                     <i class="bi bi-search"></i> Find & Start Chat
                 </button>
             </form>
@@ -74,29 +53,15 @@
                 @Html.AntiForgeryToken()
                 <div class="form-group">
                     <label class="form-label">Username</label>
-                    <div style="position:relative;display:flex;align-items:center;
-                                border:1px solid var(--border);border-radius:var(--r-md);
-                                background:var(--surface);overflow:hidden;
-                                transition:border-color .15s"
-                         onfocusin="this.style.borderColor='var(--teal)'"
-                         onfocusout="this.style.borderColor='var(--border)'">
-                        <span style="padding:0 6px 0 14px;color:var(--text-3);
-                                     font-size:15px;flex-shrink:0;
-                                     border-right:1px solid var(--border);
-                                     line-height:42px">&#64;</span>
-                        <input type="text"
-                               name="username"
-                               class="form-control"
-                               placeholder="username"
-                               style="border:none;border-radius:0;
-                                      box-shadow:none;padding-left:10px;
-                                      background:transparent" />
+                    <div class="chat-username-wrapper">
+                        <span class="chat-username-prefix">&#64;</span>
+                        <input type="text" name="username" class="form-control chat-username-input" placeholder="username" />
                     </div>
-                    <div style="font-size:12px;color:var(--text-3);margin-top:6px">
+                    <div class="chat-form-hint">
                         Enter their CedarPay username (without the &#64;)
                     </div>
                 </div>
-                <button type="submit" class="btn-tp-primary" style="width:100%">
+                <button type="submit" class="btn-tp-primary chat-submit-btn">
                     <i class="bi bi-search"></i> Find & Start Chat
                 </button>
             </form>
@@ -109,12 +74,23 @@
     <script>
         function switchTab(tab) {
             const isPhone = tab === 'phone';
-            document.getElementById('panelPhone').style.display = isPhone ? '' : 'none';
-            document.getElementById('panelUsername').style.display = isPhone ? 'none' : '';
-            document.getElementById('tabPhone').style.background = isPhone ? 'var(--teal)' : 'var(--surface-2)';
-            document.getElementById('tabPhone').style.color = isPhone ? '#fff' : 'var(--text-2)';
-            document.getElementById('tabUsername').style.background = isPhone ? 'var(--surface-2)' : 'var(--teal)';
-            document.getElementById('tabUsername').style.color = isPhone ? 'var(--text-2)' : '#fff';
+            document.getElementById('panelPhone').style.display = isPhone ? 'block' : 'none';
+            document.getElementById('panelUsername').style.display = isPhone ? 'none' : 'block';
+
+            const phoneBtn = document.getElementById('tabPhone');
+            const usernameBtn = document.getElementById('tabUsername');
+
+            if (isPhone) {
+                phoneBtn.classList.add('active');
+                phoneBtn.classList.remove('inactive');
+                usernameBtn.classList.add('inactive');
+                usernameBtn.classList.remove('active');
+            } else {
+                usernameBtn.classList.add('active');
+                usernameBtn.classList.remove('inactive');
+                phoneBtn.classList.add('inactive');
+                phoneBtn.classList.remove('active');
+            }
         }
 
         @if (ViewBag.ActiveTab == "username")

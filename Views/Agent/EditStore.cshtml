@@ -1,6 +1,7 @@
 ﻿@model MoneyTransfer.Models.Agent
 @{
     ViewData["Title"] = "Edit Store";
+    ViewBag.PageClass = "page-agent";
 }
 
 <div class="row justify-content-center">
@@ -10,14 +11,12 @@
                 <h2>Edit Store</h2>
                 <p>@Model.StoreName</p>
             </div>
-            <a asp-action="Dashboard"
-               class="btn-tp-secondary">
+            <a asp-action="Dashboard" class="btn-tp-secondary">
                 <i class="bi bi-arrow-left"></i> Back
             </a>
         </div>
         <div class="tp-card">
-            <form asp-action="EditStore" method="post"
-                  class="tp-form">
+            <form asp-action="EditStore" method="post" class="tp-form">
                 @Html.AntiForgeryToken()
                 <input type="hidden" asp-for="Id" />
                 <input type="hidden" asp-for="UserId" />
@@ -27,91 +26,64 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">
-                                Store Name
-                            </label>
-                            <input asp-for="StoreName"
-                                   class="form-control" />
+                            <label class="form-label">Store Name</label>
+                            <input asp-for="StoreName" class="form-control" />
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">
-                                Agent Name
-                            </label>
-                            <input asp-for="AgentName"
-                                   class="form-control" />
+                            <label class="form-label">Agent Name</label>
+                            <input asp-for="AgentName" class="form-control" />
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">
-                                Phone
-                            </label>
-                            <input asp-for="PhoneNumber"
-                                   class="form-control" />
+                            <label class="form-label">Phone</label>
+                            <input asp-for="PhoneNumber" class="form-control" />
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
                             <label class="form-label">Email</label>
-                            <input asp-for="Email"
-                                   class="form-control" />
+                            <input asp-for="Email" class="form-control" />
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
                             <label class="form-label">City</label>
-                            <input asp-for="City"
-                                   class="form-control" />
+                            <input asp-for="City" class="form-control" />
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">
-                                Country
-                            </label>
-                            <input asp-for="Country"
-                                   class="form-control" />
+                            <label class="form-label">Country</label>
+                            <input asp-for="Country" class="form-control" />
                         </div>
                     </div>
                     <div class="col-md-8">
                         <div class="form-group">
-                            <label class="form-label">
-                                Street
-                            </label>
-                            <input asp-for="Street"
-                                   class="form-control" />
+                            <label class="form-label">Street</label>
+                            <input asp-for="Street" class="form-control" />
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label class="form-label">
-                                Working Hours
-                            </label>
-                            <input asp-for="WorkingHours"
-                                   class="form-control" />
+                            <label class="form-label">Working Hours</label>
+                            <input asp-for="WorkingHours" class="form-control" />
                         </div>
                     </div>
                     <div class="col-12">
                         <div class="form-group">
-                            <label class="form-label">
-                                Description
-                            </label>
-                            <textarea asp-for="Description"
-                                      class="form-control"
-                                      rows="2"></textarea>
+                            <label class="form-label">Description</label>
+                            <textarea asp-for="Description" class="form-control" rows="2"></textarea>
                         </div>
                     </div>
                 </div>
                 <div class="d-flex gap-2 mt-2">
-                    <button type="submit"
-                            class="btn-tp-primary">
-                        <i class="bi bi-check-lg"></i>
-                        Save Changes
+                    <button type="submit" class="btn-tp-primary">
+                        <i class="bi bi-check-lg"></i> Save Changes
                     </button>
-                    <a asp-action="Dashboard"
-                       class="btn-tp-secondary">Cancel</a>
+                    <a asp-action="Dashboard" class="btn-tp-secondary">Cancel</a>
                 </div>
             </form>
         </div>

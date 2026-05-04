@@ -1,16 +1,12 @@
 ﻿@{
     ViewData["Title"] = "Admin Control Center";
+    ViewBag.PageClass = "page-admin";
 }
 
-<div style="margin-bottom:24px">
-    <h2 style="font-size:22px;font-weight:800;
-                color:var(--text-1);letter-spacing:-0.4px">
-        Admin Control Center
-    </h2>
-    <p style="color:var(--text-3);font-size:13px;
-              margin-top:4px">
-        Full platform access — manage users, agents,
-        transactions, and settings
+<div class="admin-welcome">
+    <h2 class="admin-title">Admin Control Center</h2>
+    <p class="admin-subtitle">
+        Full platform access — manage users, agents, transactions, and settings
     </p>
 </div>
 
@@ -65,78 +61,14 @@
     @{
         var adminCards = new[]
         {
-        (
-        "Users",
-        "Manage Users",
-        "View, sort, disable accounts",
-        "bi-people-fill",
-        "beneficiaries",
-        (int)(ViewBag.TotalUsers ?? 0),
-        "info"
-        ),
-        (
-        "AgentApplications",
-        "Agent Applications",
-        "Approve or reject requests",
-        "bi-person-check-fill",
-        "sent",
-        (int)(ViewBag.PendingAgents ?? 0),
-        "warning"
-        ),
-        (
-        "KYCReview",
-        "KYC Review",
-        "Verify identity documents",
-        "bi-shield-check",
-        "received",
-        0,
-        ""
-        ),
-        (
-        "WalletRequests",
-        "Wallet Approvals",
-        "Approve wallet creation",
-        "bi-wallet2",
-        "sent",
-        (int)(ViewBag.PendingWallets ?? 0),
-        "warning"
-        ),
-        (
-        "AllTransactions",
-        "All Transactions",
-        "Platform-wide log",
-        "bi-list-check",
-        "beneficiaries",
-        0,
-        ""
-        ),
-        (
-        "EarningsReport",
-        "Earnings Report",
-        "Fees collected & agent commissions",
-        "bi-graph-up-arrow",
-        "received",
-        0,
-        ""
-        ),
-        (
-        "FeeSettings",
-        "Fee Settings",
-        "Configure transfer fees",
-        "bi-percent",
-        "received",
-        0,
-        ""
-        ),
-        (
-        "ExchangeRates",
-        "Exchange Rates",
-        "View live currency rates",
-        "bi-currency-exchange",
-        "received",
-        0,
-        ""
-        ),
+        ("Users", "Manage Users", "View, sort, disable accounts", "bi-people-fill", "beneficiaries", (int)(ViewBag.TotalUsers ?? 0), "info"),
+        ("AgentApplications", "Agent Applications", "Approve or reject requests", "bi-person-check-fill", "sent", (int)(ViewBag.PendingAgents ?? 0), "warning"),
+        ("KYCReview", "KYC Review", "Verify identity documents", "bi-shield-check", "received", 0, ""),
+        ("WalletRequests", "Wallet Approvals", "Approve wallet creation", "bi-wallet2", "sent", (int)(ViewBag.PendingWallets ?? 0), "warning"),
+        ("AllTransactions", "All Transactions", "Platform-wide log", "bi-list-check", "beneficiaries", 0, ""),
+        ("EarningsReport", "Earnings Report", "Fees collected & agent commissions", "bi-graph-up-arrow", "received", 0, ""),
+        ("FeeSettings", "Fee Settings", "Configure transfer fees", "bi-percent", "received", 0, ""),
+        ("ExchangeRates", "Exchange Rates", "View live currency rates", "bi-currency-exchange", "received", 0, ""),
         };
     }
 
@@ -145,35 +77,22 @@
         <div class="col-md-4">
             <a asp-controller="Admin"
                asp-action="@card.Item1"
-               class="tp-card d-block text-decoration-none"
-               style="transition:var(--transition)">
-                <div style="display:flex;
-                                    align-items:center;gap:12px">
-                    <div class="stat-icon @card.Item5"
-                         style="margin-bottom:0;
-                                        flex-shrink:0">
+               class="tp-card admin-card-link">
+                <div class="admin-card-content">
+                    <div class="stat-icon @card.Item5 admin-card-icon">
                         <i class="bi @card.Item4"></i>
                     </div>
-                    <div style="flex:1">
-                        <div class="tp-card-title">
-                            @card.Item2
-                        </div>
-                        <div style="font-size:12px;
-                                            color:var(--text-3);
-                                            margin-top:2px">
-                            @card.Item3
-                        </div>
+                    <div class="admin-card-info">
+                        <div class="tp-card-title">@card.Item2</div>
+                        <div class="admin-card-description">@card.Item3</div>
                     </div>
                     @if (card.Item6 > 0)
                     {
-                        <span class="badge-tp @card.Item7">
-                            @card.Item6
-                        </span>
+                        <span class="badge-tp @card.Item7">@card.Item6</span>
                     }
                     else
                     {
-                        <i class="bi bi-chevron-right"
-                           style="color:var(--text-3)"></i>
+                        <i class="bi bi-chevron-right admin-card-chevron"></i>
                     }
                 </div>
             </a>

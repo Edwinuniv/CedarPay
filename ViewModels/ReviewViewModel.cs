@@ -14,7 +14,7 @@ namespace MoneyTransfer.ViewModels
         public int? AgentId { get; set; }
         public int? TransactionId { get; set; }
         public DateTime CreatedAt { get; set; }
-
+        public string? UserPictureUrl { get; set; }
         public string UserName { get; set; }
         public double AverageRating { get; set; }
     }

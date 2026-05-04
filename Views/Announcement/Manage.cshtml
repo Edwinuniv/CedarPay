@@ -1,0 +1,118 @@
+﻿@model List<MoneyTransfer.Models.Announcement>
+@{
+    ViewData["Title"] = "Manage Announcements";
+    ViewBag.PageClass = "page-admin";
+    int online = ViewBag.OnlineUsers ?? 0;
+    int total = ViewBag.TotalUsers ?? 0;
+}
+
+<div class="page-header">
+    <div>
+        <h2><i class="bi bi-megaphone-fill announcement-header-icon"></i>Manage Announcements</h2>
+        <p>Control what users see platform-wide</p>
+    </div>
+    <a asp-action="Create" class="btn-tp-primary"><i class="bi bi-plus-lg"></i> New Announcement</a>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon received"><i class="bi bi-people-fill"></i></div>
+            <div class="stat-value">@total</div>
+            <div class="stat-label">Total Users</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon beneficiaries"><i class="bi bi-megaphone-fill"></i></div>
+            <div class="stat-value">@Model.Count(a => a.IsActive)</div>
+            <div class="stat-label">Active</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon sent"><i class="bi bi-archive-fill"></i></div>
+            <div class="stat-value">@Model.Count</div>
+            <div class="stat-label">Total</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon gold"><i class="bi bi-clock-history"></i></div>
+            <div class="stat-value">@online</div>
+            <div class="stat-label">Online Now</div>
+        </div>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert-tp success mb-3"><i class="bi bi-check-circle-fill"></i> @TempData["Success"]</div>
+}
+
+@if (!Model.Any())
+{
+    <div class="tp-card">
+        <div class="empty-state">
+            <i class="bi bi-megaphone"></i>
+            <p>No announcements yet.</p>
+            <a asp-action="Create" class="btn-tp-primary">Create First Announcement</a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="announcements-manage-container">
+        @foreach (var a in Model)
+        {
+            string borderColor = a.Type switch
+            {
+                MoneyTransfer.Models.AnnouncementType.Warning => "#f59e0b",
+                MoneyTransfer.Models.AnnouncementType.Success => "var(--teal)",
+                MoneyTransfer.Models.AnnouncementType.Maintenance => "#ef4444",
+                _ => "#6366f1"
+            };
+            <div class="announcement-manage-item @(!a.IsActive ? "inactive" : "")">
+                <div class="announcement-manage-main">
+                    <div class="announcement-manage-info">
+                        <div class="announcement-manage-badges">
+                            <span class="badge-tp @(a.IsActive ? "success" : "default")">@(a.IsActive ? "Active" : "Inactive")</span>
+                            <span class="announcement-manage-type-badge" style="background: @borderColor; color: #fff">@a.Type</span>
+                        </div>
+                        <h3 class="announcement-manage-title">@a.Title</h3>
+                        <p class="announcement-manage-content">@a.Content</p>
+                        <div class="announcement-manage-footer">
+                            <span><i class="bi bi-person"></i> @a.CreatedBy?.FirstName @a.CreatedBy?.LastName</span>
+                            <span><i class="bi bi-calendar3"></i> @a.CreatedAt.ToString("MMM dd, yyyy HH:mm")</span>
+                            @if (a.ExpiresAt.HasValue)
+                            {
+                                <span><i class="bi bi-calendar-x"></i> Expires @a.ExpiresAt.Value.ToString("MMM dd")</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="announcement-manage-actions">
+                        <a asp-action="Details" asp-route-id="@a.Id" class="btn-tp-secondary" title="View Details">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a asp-action="Edit" asp-route-id="@a.Id" class="btn-tp-primary" title="Edit">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form asp-action="Toggle" asp-route-id="@a.Id" method="post" style="display:inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn-tp-warning" title="@(a.IsActive ? "Deactivate" : "Activate")">
+                                <i class="bi bi-@(a.IsActive ? "pause-circle" : "play-circle")"></i>
+                            </button>
+                        </form>
+                        <form asp-action="Delete" asp-route-id="@a.Id" method="post" style="display:inline" onsubmit="return confirm('Delete this announcement?')">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn-tp-danger" title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

@@ -2,343 +2,60 @@
 @model MoneyTransfer.Models.Conversation
 @{
     ViewData["Title"] = "Chat";
+    ViewBag.PageClass = "page-chat";
     string currentUserId = ViewBag.CurrentUserId ?? "";
-    var other = Model.Participants
-        .FirstOrDefault(p => p.UserId != currentUserId);
+    var other = Model.Participants.FirstOrDefault(p => p.UserId != currentUserId);
     bool isBotChat = ViewBag.IsBot == true;
 }
 
-<style>
-    .chat-shell {
-        display: flex; flex-direction: column;
-        height: calc(100vh - 140px);
-        max-width: 800px; margin: 0 auto;
-        border-radius: var(--r-lg); overflow: hidden;
-        border: 1px solid var(--border);
-        box-shadow: 0 4px 24px rgba(0,0,0,.06);
+@functions {
+    string FormatBotMessage(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return "";
+
+        text = System.Net.WebUtility.HtmlEncode(text);
+        text = System.Text.RegularExpressions.Regex.Replace(
+            text, @"\*\*(.+?)\*\*", "<strong>$1</strong>");
+
+        var lines = text.Split('\n');
+        var result = new System.Text.StringBuilder();
+        bool inList = false;
+
+        foreach (var line in lines)
+        {
+            var trimmed = line.Trim();
+            bool isBullet = trimmed.StartsWith("•") ||
+                            trimmed.StartsWith("-") ||
+                            trimmed.StartsWith("*");
+
+            if (isBullet)
+            {
+                if (!inList)
+                {
+                    result.Append("<ul class='bot-msg-list'>");
+                    inList = true;
+                }
+                var content = trimmed.TrimStart('•', '-', '*', ' ');
+                result.Append($"<li class='bot-msg-list-item'><span class='bot-msg-bullet'>›</span><span>{content}</span></li>");
+            }
+            else
+            {
+                if (inList)
+                {
+                    result.Append("</ul>");
+                    inList = false;
+                }
+                if (!string.IsNullOrWhiteSpace(trimmed))
+                    result.Append($"<p class='bot-msg-paragraph'>{trimmed}</p>");
+                else
+                    result.Append("<br/>");
+            }
+        }
+
+        if (inList) result.Append("</ul>");
+        return result.ToString();
     }
-    .chat-header {
-        display: flex; align-items: center; gap: 12px;
-        padding: 14px 20px;
-        background: var(--surface);
-        border-bottom: 1px solid var(--border);
-        flex-shrink: 0;
-    }
-    .chat-back {
-        color: var(--text-2); text-decoration: none;
-        flex-shrink: 0; font-size: 16px;
-    }
-    .chat-profile-btn {
-        display: flex; align-items: center; gap: 12px;
-        flex: 1; cursor: pointer; border: none;
-        background: none; text-align: left;
-        padding: 4px 6px; margin: -4px -6px;
-        border-radius: var(--r-md);
-        transition: background .15s;
-    }
-    .chat-profile-btn:hover { background: var(--surface-2); }
-    .chat-avatar {
-        width: 40px; height: 40px; border-radius: 50%;
-        background: linear-gradient(135deg,var(--teal),var(--teal-mid));
-        display: flex; align-items: center; justify-content: center;
-        font-size: 15px; font-weight: 700; color: #fff;
-        flex-shrink: 0; object-fit: cover;
-    }
-    .chat-messages {
-        flex: 1; overflow-y: auto;
-        background: var(--surface-2);
-        padding: 16px;
-        display: flex; flex-direction: column; gap: 6px;
-        border-left: 1px solid var(--border);
-        border-right: 1px solid var(--border);
-    }
-    .date-sep { text-align: center; margin: 8px 0; }
-    .date-sep span {
-        font-size: 11px; color: var(--text-3);
-        background: var(--surface-2);
-        padding: 3px 10px; border-radius: 10px;
-        border: 1px solid var(--border);
-    }
-    .msg-wrapper {
-        display: flex; align-items: flex-end;
-        gap: 6px; position: relative;
-    }
-    .msg-wrapper.mine   { justify-content: flex-end; }
-    .msg-wrapper.theirs { justify-content: flex-start; }
-    .msg-avatar-img {
-        width: 28px; height: 28px; border-radius: 50%;
-        object-fit: cover; flex-shrink: 0; margin-bottom: 2px;
-    }
-    .msg-avatar-init {
-        width: 28px; height: 28px; border-radius: 50%;
-        background: var(--teal-light);
-        display: flex; align-items: center; justify-content: center;
-        font-size: 11px; font-weight: 700; color: var(--teal);
-        flex-shrink: 0; margin-bottom: 2px;
-    }
-    .msg-bubble { max-width: 68%; position: relative; }
-    .msg-actions {
-        position: absolute; top: 0; z-index: 10;
-        display: flex; gap: 3px;
-        opacity: 0; pointer-events: none;
-        transition: opacity .15s;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 20px; padding: 3px 6px;
-        box-shadow: 0 2px 8px rgba(0,0,0,.12);
-    }
-    .msg-wrapper.mine   .msg-actions { right: 100%; margin-right: 8px; }
-    .msg-wrapper.theirs .msg-actions { left: 100%; margin-left: 8px; }
-    .msg-wrapper:hover .msg-actions {
-        opacity: 1; pointer-events: auto;
-    }
-    .msg-action-btn {
-        width: 28px; height: 28px; border-radius: 50%;
-        background: transparent; border: none;
-        display: flex; align-items: center; justify-content: center;
-        cursor: pointer; font-size: 13px; color: var(--text-2);
-        transition: var(--transition);
-    }
-    .msg-action-btn:hover        { background: var(--teal-light); color: var(--teal); }
-    .msg-action-btn.danger:hover { background: var(--red-light); color: var(--red); }
-    .emoji-picker-popup {
-        position: absolute; z-index: 999;
-        background: var(--surface); border: 1px solid var(--border);
-        border-radius: var(--r-md);
-        box-shadow: 0 8px 24px rgba(0,0,0,.15);
-        padding: 8px 10px; display: none; gap: 4px;
-        bottom: 100%; margin-bottom: 5px;
-    }
-    .emoji-picker-popup.mine   { right: 0; }
-    .emoji-picker-popup.theirs { left: 0; }
-    .emoji-picker-popup.open   { display: flex; }
-    .ep-btn {
-        font-size: 20px; cursor: pointer; padding: 4px;
-        border-radius: 8px; border: none;
-        background: transparent; line-height: 1;
-        transition: transform .1s;
-    }
-    .ep-btn:hover { transform: scale(1.25); }
-    .reply-preview {
-        background: var(--teal-light);
-        border-left: 3px solid var(--teal);
-        border-radius: 6px; padding: 5px 9px;
-        margin-bottom: 5px; font-size: 12px; color: var(--text-2);
-    }
-    .reply-preview.mine-reply {
-        background: rgba(255,255,255,.18);
-        border-left-color: #fff;
-    }
-    .reply-preview strong {
-        color: var(--teal); display: block;
-        font-size: 11px; margin-bottom: 2px;
-    }
-    .reply-preview.mine-reply strong { color: #fff; }
-    .bubble-inner {
-        padding: 9px 13px; word-break: break-word;
-        overflow: hidden;
-    }
-    .bubble-inner.media-pad { padding: 6px; }
-    .bubble-mine {
-        background: var(--teal); color: #fff;
-        border-radius: 16px 16px 4px 16px;
-        border: none;
-    }
-    .bubble-theirs {
-        background: var(--surface); color: var(--text-1);
-        border-radius: 16px 16px 16px 4px;
-        border: 1px solid var(--border);
-    }
-    .msg-time {
-        font-size: 10px; color: var(--text-3);
-        margin-top: 2px; padding: 0 4px;
-    }
-    .msg-time.mine  { text-align: right; }
-    .msg-time.theirs { text-align: left; }
-    .edited-badge { font-size: 10px; opacity: .6; margin-left: 4px; }
-    .read-tick { margin-left: 3px; }
-    .reactions-strip {
-        display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;
-    }
-    .reaction-pill {
-        display: inline-flex; align-items: center; gap: 3px;
-        background: var(--surface); border: 1px solid var(--border);
-        border-radius: 12px; padding: 2px 7px;
-        font-size: 13px; cursor: pointer;
-        transition: var(--transition); user-select: none;
-    }
-    .reaction-pill:hover, .reaction-pill.mine-react {
-        border-color: var(--teal); background: var(--teal-light);
-    }
-    .reaction-pill .cnt {
-        font-size: 11px; color: var(--text-2); font-weight: 600;
-    }
-    .deleted-msg { font-style: italic; opacity: .6; font-size: 13px; }
-    .media-img {
-        max-width: 100%; border-radius: 10px;
-        cursor: pointer; display: block; max-height: 260px;
-        object-fit: cover;
-    }
-    .media-video {
-        max-width: 100%; border-radius: 10px;
-        max-height: 260px; display: block;
-    }
-    .file-card {
-        display: flex; align-items: center; gap: 10px;
-        padding: 10px 12px;
-        background: rgba(0,0,0,.06); border-radius: 10px;
-        text-decoration: none; color: inherit;
-        transition: background .15s;
-    }
-    .file-card:hover { background: rgba(0,0,0,.12); }
-    .file-icon { font-size: 24px; flex-shrink: 0; }
-    .file-info { flex: 1; min-width: 0; }
-    .file-info .fname {
-        font-size: 13px; font-weight: 600;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .file-info .fsize { font-size: 11px; opacity: .7; }
-    audio { max-width: 100%; border-radius: 10px; }
-    .attach-bar, .reply-bar {
-        background: var(--surface-2);
-        border-top: 1px solid var(--border);
-        padding: 8px 16px;
-        display: none; align-items: center; gap: 10px;
-        font-size: 13px;
-    }
-    .attach-bar.open, .reply-bar.open { display: flex; }
-    .bar-clear {
-        background: none; border: none; cursor: pointer;
-        color: var(--text-3); font-size: 18px;
-        padding: 0 4px; line-height: 1;
-    }
-    .chat-input-bar {
-        background: var(--surface);
-        border-top: none;
-        border: 1px solid var(--border);
-        border-top: none;
-        border-radius: 0 0 var(--r-lg) var(--r-lg);
-        padding: 12px 16px; flex-shrink: 0;
-    }
-    .chat-input-row {
-        display: flex; gap: 8px; align-items: center;
-    }
-    .input-tool-btn {
-        width: 38px; height: 38px; border-radius: 50%;
-        background: var(--surface-2);
-        border: 1px solid var(--border);
-        display: flex; align-items: center; justify-content: center;
-        cursor: pointer; font-size: 16px;
-        color: var(--text-2); flex-shrink: 0;
-        transition: var(--transition);
-    }
-    .input-tool-btn:hover {
-        background: var(--teal-light);
-        border-color: var(--teal); color: var(--teal);
-    }
-    .emoji-input-wrap { position: relative; flex-shrink: 0; }
-    .input-emoji-picker {
-        display: none; position: absolute;
-        bottom: 46px; left: 0;
-        background: var(--surface); border: 1px solid var(--border);
-        border-radius: var(--r-md);
-        box-shadow: 0 8px 24px rgba(0,0,0,.15);
-        padding: 10px; z-index: 100; white-space: nowrap;
-    }
-    .input-emoji-picker.open { display: block; }
-    .emoji-grid {
-        display: grid; grid-template-columns: repeat(8,1fr); gap: 4px;
-    }
-    #msgInput {
-        flex: 1; border-radius: 22px; padding: 10px 16px;
-        border: 1px solid var(--border);
-        background: var(--surface-2); color: var(--text-1);
-        font-size: 14px; outline: none;
-        transition: border-color .15s;
-    }
-    #msgInput:focus { border-color: var(--teal); }
-    .send-btn {
-        width: 42px; height: 42px; border-radius: 50%;
-        background: var(--teal); border: none; color: #fff;
-        font-size: 16px;
-        display: flex; align-items: center; justify-content: center;
-        cursor: pointer; flex-shrink: 0;
-        transition: var(--transition);
-    }
-    .send-btn:hover    { background: var(--teal-dark); }
-    .send-btn:disabled { opacity: .5; cursor: not-allowed; }
-    .chat-empty {
-        text-align: center; margin: auto;
-        color: var(--text-3); font-size: 13px;
-    }
-    .chat-empty i {
-        font-size: 32px; display: block;
-        margin-bottom: 8px; opacity: .4;
-    }
-    #lightbox {
-        display: none; position: fixed; inset: 0;
-        background: rgba(0,0,0,.88); z-index: 99999;
-        align-items: center; justify-content: center;
-    }
-    #lightbox.open { display: flex; }
-    #lightbox img {
-        max-width: 92vw; max-height: 92vh;
-        border-radius: 10px;
-    }
-    #lightbox .lb-close {
-        position: absolute; top: 20px; right: 24px;
-        font-size: 28px; color: #fff; cursor: pointer;
-        background: none; border: none; line-height: 1;
-    }
-    .ctx-menu {
-        position: fixed;
-        background: var(--surface); border: 1px solid var(--border);
-        border-radius: var(--r-md);
-        box-shadow: 0 8px 24px rgba(0,0,0,.15);
-        z-index: 9999; min-width: 170px; padding: 4px 0; display: none;
-    }
-    .ctx-menu.open { display: block; }
-    .ctx-item {
-        padding: 9px 16px; font-size: 13px; cursor: pointer;
-        color: var(--text-1);
-        display: flex; align-items: center; gap: 9px;
-        transition: background .12s;
-    }
-    .ctx-item:hover        { background: var(--surface-2); }
-    .ctx-item.danger       { color: var(--red); }
-    .ctx-item.danger:hover { background: var(--red-light); }
-    .edit-overlay {
-        position: fixed; inset: 0;
-        background: rgba(0,0,0,.4); z-index: 9998;
-        display: none; align-items: center; justify-content: center;
-    }
-    .edit-overlay.open { display: flex; }
-    .edit-modal {
-        background: var(--surface); border-radius: var(--r-lg);
-        padding: 24px; min-width: 320px; max-width: 500px;
-        width: 90%; border: 1px solid var(--border);
-    }
-    .profile-overlay {
-        display: none; position: fixed; inset: 0;
-        background: rgba(0,0,0,.4); z-index: 10000;
-    }
-    .profile-panel {
-        position: fixed; top: 0; right: -420px;
-        width: 380px; max-width: 95vw; height: 100vh;
-        background: var(--surface);
-        border-left: 1px solid var(--border);
-        z-index: 10001; overflow-y: auto;
-        transition: right .3s cubic-bezier(.4,0,.2,1);
-        display: flex; flex-direction: column;
-    }
-    .bot-msg-content p:last-child { margin-bottom: 0; }
-    .bot-msg-content ul:last-child { margin-bottom: 0; }
-    .bot-msg-content strong { font-weight: 700; }
-    .msg-deleting {
-        opacity: 0;
-        transition: opacity 0.2s ease;
-    }
-</style>
+}
 
 <div class="chat-shell">
 
@@ -346,34 +63,19 @@
         <a asp-controller="Chat" asp-action="Index" class="chat-back">
             <i class="bi bi-arrow-left"></i>
         </a>
-        
+
         @if (isBotChat)
         {
             <div class="chat-avatar bot-avatar">🤖</div>
-            <div style="flex:1">
-                <div style="font-weight:700;font-size:15px;color:var(--text-1)">
-                    Cedar Bot
-                </div>
-                <div style="font-size:12px;color:var(--text-3);
-                            display:flex;align-items:center;gap:6px">
+            <div class="chat-header-info">
+                <div class="chat-header-name">Cedar Bot</div>
+                <div class="chat-header-status">
                     @{
                         var apiKey = ViewBag.GeminiApiKey as string;
                         bool isAiMode = !string.IsNullOrWhiteSpace(apiKey);
                     }
-                    @if (isAiMode)
-                    {
-                        <span style="width:7px;height:7px;border-radius:50%;
-                                     background:#00b894;display:inline-block">
-                        </span>
-                        @:AI Powered · Always online
-                    }
-                    else
-                    {
-                        <span style="width:7px;height:7px;border-radius:50%;
-                                     background:var(--text-3);
-                                     display:inline-block"></span>
-                        @:Basic Mode · Always online
-                    }
+                    <span class="status-dot @(isAiMode ? "ai" : "basic")"></span>
+                    @(isAiMode ? "AI Powered · Always online" : "Basic Mode · Always online")
                 </div>
             </div>
         }
@@ -382,32 +84,25 @@
             <button type="button" class="chat-profile-btn" onclick="openProfile()">
                 @if (!string.IsNullOrEmpty(other?.User?.ProfilePictureUrl))
                 {
-                    <img src="@other.User.ProfilePictureUrl"
-                         class="chat-avatar" style="object-fit:cover" />
+                    <img src="@other.User.ProfilePictureUrl" class="chat-avatar chat-avatar-img" />
                 }
                 else
                 {
-                    <div class="chat-avatar">
-                        @(other?.User?.FirstName?.Substring(0,1) ?? "?")
+                    <div class="chat-avatar chat-avatar-initials">
+                        @(other?.User?.FirstName?.Substring(0, 1) ?? "?")
                     </div>
                 }
-                <div style="flex:1;min-width:0;text-align:left">
-                    <div style="font-weight:700;font-size:15px;
-                                color:var(--text-1);
-                                display:flex;align-items:center;gap:6px">
+                <div class="chat-profile-info">
+                    <div class="chat-profile-name">
                         @other?.User?.FirstName @other?.User?.LastName
                         @if (other?.User?.IsVerified == true)
                         {
-                            <span style="color:var(--teal);font-size:13px"
-                                  title="Verified">✓</span>
+                            <span class="verified-badge" title="Verified">✓</span>
                         }
                     </div>
-                    <div style="font-size:12px;color:var(--text-3)">
+                    <div class="chat-profile-phone">
                         @other?.User?.PhoneNumber
-                        <span style="margin-left:6px;color:var(--teal);
-                                     font-size:11px">
-                            tap to view profile
-                        </span>
+                        <span class="tap-to-view">tap to view profile</span>
                     </div>
                 </div>
             </button>
@@ -434,29 +129,26 @@
             }
 
             var rxGroups = msg.Reactions
-                .GroupBy(r => r.Emoji)
-                .Select(g => new {
-                    Emoji   = g.Key,
-                    Count   = g.Count(),
-                    IsMine  = g.Any(r => r.UserId == currentUserId)
-                }).ToList();
+            .GroupBy(r => r.Emoji)
+            .Select(g => new
+            {
+                Emoji = g.Key,
+                Count = g.Count(),
+                IsMine = g.Any(r => r.UserId == currentUserId)
+            }).ToList();
 
-            <div id="msg-@msg.Id"
-                 class="msg-wrapper @(isMine ? "mine" : "theirs")">
+            <div id="msg-@msg.Id" class="msg-wrapper @(isMine ? "mine" : "theirs")">
 
                 @if (!isMine && !isBotChat)
                 {
                     if (!string.IsNullOrEmpty(msg.Sender?.ProfilePictureUrl))
                     {
-                        <img src="@msg.Sender.ProfilePictureUrl"
-                             class="msg-avatar-img" />
+                        <img src="@msg.Sender.ProfilePictureUrl" class="msg-avatar-img" />
                     }
                     else
                     {
                         <div class="msg-avatar-init">
-                            @(msg.Sender?.FirstName?.Substring(0,1)
-                              ?? other?.User?.FirstName?.Substring(0,1)
-                              ?? "?")
+                            @(msg.Sender?.FirstName?.Substring(0, 1) ?? other?.User?.FirstName?.Substring(0, 1) ?? "?")
                         </div>
                     }
                 }
@@ -468,121 +160,86 @@
                 <div class="msg-bubble">
                     @if (!msg.IsDeletedForEveryone && !isBotChat)
                     {
-                        <div class="emoji-picker-popup @(isMine ? "mine" : "theirs")"
-                             id="ep-@msg.Id">
-                            @foreach (var em in new[]{"👍","❤️","😂","😮","😢","🙏"})
+                        <div class="emoji-picker-popup @(isMine ? "mine" : "theirs")" id="ep-@msg.Id">
+                            @foreach (var em in new[] { "👍", "❤️", "😂", "😮", "😢", "🙏" })
                             {
-                                <button class="ep-btn"
-                                        onclick="reactTo(@msg.Id,'@em',event)"
-                                        title="@em">@em</button>
+                                <button class="ep-btn" onclick="reactTo(@msg.Id,'@em',event)" title="@em">@em</button>
                             }
                         </div>
                     }
 
-                    @if (msg.ReplyTo != null &&
-                         !msg.ReplyTo.IsDeletedForEveryone)
+                    @if (msg.ReplyTo != null && !msg.ReplyTo.IsDeletedForEveryone)
                     {
                         <div class="reply-preview @(isMine ? "mine-reply" : "")">
-                            <strong>
-                                @(msg.ReplyTo.Sender?.FirstName ?? "User")
-                            </strong>
+                            <strong>@(msg.ReplyTo.Sender?.FirstName ?? "User")</strong>
                             @{
-                                var rp = msg.ReplyTo.MessageType !=
-                                    MoneyTransfer.Models.MessageType.Text
-                                    ? "📎 " + msg.ReplyTo.MediaFileName
-                                    : msg.ReplyTo.Content;
+                                var rp = msg.ReplyTo.MessageType != MoneyTransfer.Models.MessageType.Text
+                                ? "📎 " + msg.ReplyTo.MediaFileName
+                                : msg.ReplyTo.Content;
                             }
-                            @(rp?.Length > 60
-                                ? rp.Substring(0,60)+"…" : rp)
+                            @(rp?.Length > 60 ? rp.Substring(0, 60) + "…" : rp)
                         </div>
                     }
 
-                    <div style="position:relative">
+                    <div class="bubble-wrapper">
                         @if (!msg.IsDeletedForEveryone && !isBotChat)
                         {
                             <div class="msg-actions">
-                                <button class="msg-action-btn"
-                                        title="React"
-                                        onclick="toggleEmojiPicker(event,@msg.Id)">
+                                <button class="msg-action-btn" title="React" onclick="toggleEmojiPicker(event,@msg.Id)">
                                     <i class="bi bi-emoji-smile"></i>
                                 </button>
-                                <button class="msg-action-btn"
-                                        title="Reply"
-                                        onclick="setReply(@msg.Id,
-                                            '@Html.Raw((msg.Sender?.FirstName ?? other?.User?.FirstName ?? "User").Replace("'","\\'"))',
-                                            '@Html.Raw(((msg.MessageType == MoneyTransfer.Models.MessageType.Text ? msg.Content : "📎 " + msg.MediaFileName) ?? "").Length > 40 ? ((msg.MessageType == MoneyTransfer.Models.MessageType.Text ? msg.Content : "📎 " + msg.MediaFileName) ?? "").Substring(0,40) + "…" : ((msg.MessageType == MoneyTransfer.Models.MessageType.Text ? msg.Content : "📎 " + msg.MediaFileName) ?? "").Replace("'","\\'"))')">
+                                <button class="msg-action-btn" title="Reply" onclick="setReply(@msg.Id,
+                                            '@Html.Raw((msg.Sender?.FirstName ?? other?.User?.FirstName ?? "User").Replace("'", "\\'"))',
+                                            '@Html.Raw(((msg.MessageType == MoneyTransfer.Models.MessageType.Text ? msg.Content : "📎 " + msg.MediaFileName) ?? "").Length > 40 ? ((msg.MessageType == MoneyTransfer.Models.MessageType.Text ? msg.Content : "📎 " + msg.MediaFileName) ?? "").Substring(0, 40) + "…" : ((msg.MessageType == MoneyTransfer.Models.MessageType.Text ? msg.Content : "📎 " + msg.MediaFileName) ?? "").Replace("'", "\\'"))')">
                                     <i class="bi bi-reply-fill"></i>
                                 </button>
-                                @if (isMine &&
-                                    msg.MessageType ==
-                                    MoneyTransfer.Models.MessageType.Text)
+                                @if (isMine && msg.MessageType == MoneyTransfer.Models.MessageType.Text)
                                 {
-                                    <button class="msg-action-btn"
-                                            title="Edit"
-                                            onclick="openEditModal(@msg.Id,'@Html.Raw(msg.Content.Replace("'","\\'").Replace("\r","").Replace("\n","\\n"))')">
+                                    <button class="msg-action-btn" title="Edit" onclick="openEditModal(@msg.Id,'@Html.Raw(msg.Content.Replace("'", "\\'").Replace("\r", "").Replace("\n", "\\n"))')">
                                         <i class="bi bi-pencil-fill"></i>
                                     </button>
                                 }
                                 @if (isMine)
                                 {
-                                    <button class="msg-action-btn danger"
-                                            title="Delete"
-                                            onclick="openDeleteMenu(event,@msg.Id)">
+                                    <button class="msg-action-btn danger" title="Delete" onclick="openDeleteMenu(event,@msg.Id)">
                                         <i class="bi bi-trash-fill"></i>
                                     </button>
                                 }
                                 else
                                 {
-                                    <button class="msg-action-btn danger"
-                                            title="Delete for me"
-                                            onclick="deleteMsg(@msg.Id,'me')">
+                                    <button class="msg-action-btn danger" title="Delete for me" onclick="deleteMsg(@msg.Id,'me')">
                                         <i class="bi bi-eye-slash-fill"></i>
                                     </button>
                                 }
                             </div>
                         }
 
-                        <div id="bubble-@msg.Id"
-                             class="bubble-inner @(msg.MessageType != MoneyTransfer.Models.MessageType.Text ? "media-pad" : "") @(isMine ? "bubble-mine" : "bubble-theirs")">
+                        <div id="bubble-@msg.Id" class="bubble-inner @(msg.MessageType != MoneyTransfer.Models.MessageType.Text ? "media-pad" : "") @(isMine ? "bubble-mine" : "bubble-theirs")">
                             @if (msg.IsDeletedForEveryone)
                             {
-                                <span class="deleted-msg">
-                                    🚫 This message was deleted.
-                                </span>
+                                <span class="deleted-msg">🚫 This message was deleted.</span>
                             }
-                            else if (msg.MessageType ==
-                                MoneyTransfer.Models.MessageType.Image)
+                            else if (msg.MessageType == MoneyTransfer.Models.MessageType.Image)
                             {
-                                <img src="@msg.MediaUrl"
-                                     class="media-img"
-                                     onclick="openLightbox('@msg.MediaUrl')"
-                                     alt="@msg.MediaFileName" />
+                                <img src="@msg.MediaUrl" class="media-img" onclick="openLightbox('@msg.MediaUrl')" alt="@msg.MediaFileName" />
                             }
-                            else if (msg.MessageType ==
-                                MoneyTransfer.Models.MessageType.Video)
+                            else if (msg.MessageType == MoneyTransfer.Models.MessageType.Video)
                             {
-                                <video class="media-video"
-                                       controls preload="metadata">
+                                <video class="media-video" controls preload="metadata">
                                     <source src="@msg.MediaUrl" />
                                 </video>
                             }
-                            else if (msg.MessageType ==
-                                MoneyTransfer.Models.MessageType.Voice)
+                            else if (msg.MessageType == MoneyTransfer.Models.MessageType.Voice)
                             {
-                                <div style="padding:4px 8px">
-                                    <div style="font-size:11px;
-                                                opacity:.7;margin-bottom:4px">
-                                        🎤 Voice message
-                                    </div>
+                                <div class="voice-message">
+                                    <div class="voice-label">🎤 Voice message</div>
                                     <audio controls>
                                         <source src="@msg.MediaUrl" />
                                     </audio>
                                 </div>
                             }
-                            else if (msg.MessageType ==
-                                MoneyTransfer.Models.MessageType.File)
+                            else if (msg.MessageType == MoneyTransfer.Models.MessageType.File)
                             {
-                                
                                 string fileExt = string.IsNullOrEmpty(msg.MediaFileName) ? "" : System.IO.Path.GetExtension(msg.MediaFileName).ToLower();
                                 string fileIcon = "📁";
                                 if (fileExt == ".pdf") { fileIcon = "📄"; }
@@ -590,16 +247,11 @@
                                 else if (fileExt == ".xls" || fileExt == ".xlsx") { fileIcon = "📊"; }
                                 else if (fileExt == ".zip" || fileExt == ".rar") { fileIcon = "🗜️"; }
                                 else if (fileExt == ".txt") { fileIcon = "📃"; }
-                                
-                                <a href="@msg.MediaUrl"
-                                   download="@msg.MediaFileName"
-                                   class="file-card"
-                                   style="@(isMine ? "color:#fff" : "")">
+
+                                <a href="@msg.MediaUrl" download="@msg.MediaFileName" class="file-card">
                                     <div class="file-icon">@fileIcon</div>
                                     <div class="file-info">
-                                        <div class="fname">
-                                            @msg.MediaFileName
-                                        </div>
+                                        <div class="fname">@msg.MediaFileName</div>
                                         <div class="fsize">
                                             @if (msg.MediaFileSize.HasValue)
                                             {
@@ -610,17 +262,18 @@
                                                 }
                                                 else if (sz < 1048576)
                                                 {
+
                                                     @((sz / 1024.0).ToString("F1") + " KB")
                                                 }
                                                 else
                                                 {
+
                                                     @((sz / 1048576.0).ToString("F1") + " MB")
                                                 }
                                             }
                                         </div>
                                     </div>
-                                    <i class="bi bi-download"
-                                       style="font-size:16px;opacity:.7"></i>
+                                    <i class="bi bi-download download-icon"></i>
                                 </a>
                             }
                             else
@@ -638,36 +291,21 @@
 
                         <div class="msg-time @(isMine ? "mine" : "theirs")">
                             @msg.SentAt.ToString("HH:mm")
-                            @if (msg.IsEdited && !msg.IsDeletedForEveryone &&
-                                 msg.MessageType ==
-                                 MoneyTransfer.Models.MessageType.Text)
+                            @if (msg.IsEdited && !msg.IsDeletedForEveryone && msg.MessageType == MoneyTransfer.Models.MessageType.Text)
                             {
                                 <span class="edited-badge">(edited)</span>
                             }
                             @if (isMine && !isBotChat)
                             {
-                                <span class="read-tick"
-                                      style="color:@(msg.IsRead
-                                          ? "var(--teal)"
-                                          : "var(--text-3)")">
-                                    @(msg.IsRead ? "✓✓" : "✓")
-                                </span>
+                                <span class="read-tick @(msg.IsRead ? "read" : "")">@(msg.IsRead ? "✓✓" : "✓")</span>
                             }
                         </div>
 
-                        <div class="reactions-strip"
-                             id="reactions-@msg.Id"
-                             style="justify-content:
-                                @(isMine ? "flex-end" : "flex-start")">
+                        <div class="reactions-strip" id="reactions-@msg.Id">
                             @foreach (var rg in rxGroups)
                             {
-                                <button class="reaction-pill
-                                    @(rg.IsMine ? "mine-react" : "")"
-                                        onclick="reactTo(@msg.Id,
-                                            '@rg.Emoji',event)"
-                                        title="Toggle">
-                                    @rg.Emoji
-                                    <span class="cnt">@rg.Count</span>
+                                <button class="reaction-pill @(rg.IsMine ? "mine-react" : "")" onclick="reactTo(@msg.Id, '@rg.Emoji',event)" title="Toggle">
+                                    @rg.Emoji <span class="cnt">@rg.Count</span>
                                 </button>
                             }
                         </div>
@@ -693,324 +331,154 @@
         }
     </div>
 
+    <!-- Attach Bar -->
     <div class="attach-bar" id="attachBar">
-        <i class="bi bi-paperclip"
-           style="color:var(--teal)"></i>
-        <div style="flex:1;min-width:0">
-            <div id="attachName"
-                 style="font-size:13px;font-weight:600;
-                        white-space:nowrap;overflow:hidden;
-                        text-overflow:ellipsis;
-                        color:var(--text-1)"></div>
-            <div id="attachSize"
-                 style="font-size:11px;color:var(--text-3)"></div>
+        <i class="bi bi-paperclip attach-icon"></i>
+        <div class="attach-info">
+            <div id="attachName" class="attach-name"></div>
+            <div id="attachSize" class="attach-size"></div>
         </div>
-        <button onclick="clearAttach()" class="bar-clear">
-            <i class="bi bi-x-lg"></i>
-        </button>
+        <button onclick="clearAttach()" class="bar-clear"><i class="bi bi-x-lg"></i></button>
     </div>
 
+    <!-- Reply Bar -->
     <div class="reply-bar" id="replyBar">
-        <i class="bi bi-reply-fill"
-           style="color:var(--teal)"></i>
-        <div style="flex:1;min-width:0">
-            <div id="replyToName"
-                 style="font-size:11px;color:var(--teal);
-                        font-weight:600"></div>
-            <div id="replyToContent"
-                 style="font-size:12px;color:var(--text-2);
-                        white-space:nowrap;overflow:hidden;
-                        text-overflow:ellipsis"></div>
+        <i class="bi bi-reply-fill reply-icon"></i>
+        <div class="reply-info">
+            <div id="replyToName" class="reply-name"></div>
+            <div id="replyToContent" class="reply-content"></div>
         </div>
-        <button onclick="clearReply()" class="bar-clear">
-            <i class="bi bi-x-lg"></i>
-        </button>
+        <button onclick="clearReply()" class="bar-clear"><i class="bi bi-x-lg"></i></button>
     </div>
 
+    <!-- Input Bar -->
     <div class="chat-input-bar">
         <div class="chat-input-row">
             @if (!isBotChat)
             {
-                <button type="button" class="input-tool-btn"
-                        onclick="document.getElementById('fileIn').click()"
-                        title="Attach file">
+                <button type="button" class="input-tool-btn" onclick="document.getElementById('fileIn').click()" title="Attach file">
                     <i class="bi bi-paperclip"></i>
                 </button>
 
                 <div class="emoji-input-wrap">
-                    <button type="button" class="input-tool-btn"
-                            id="inputEmojiBtn"
-                            onclick="toggleInputEmoji(event)"
-                            title="Emoji"
-                            style="font-size:18px">
+                    <button type="button" class="input-tool-btn" id="inputEmojiBtn" onclick="toggleInputEmoji(event)" title="Emoji">
                         😊
                     </button>
                     <div class="input-emoji-picker" id="inputEmojiPicker">
                         <div class="emoji-grid">
                             @foreach (var e in new[]{
-                                "😀","😂","😍","🥰","😎","🤔","😢","😡",
-                                "👍","👎","❤️","🔥","🎉","🙏","💰","🌲",
-                                "✅","❌","⭐","💯","🚀","💬","📱","🏦"})
+                                                "😀","😂","😍","🥰","😎","🤔","😢","😡",
+                                                "👍","👎","❤️","🔥","🎉","🙏","💰","🌲",
+                                                "✅","❌","⭐","💯","🚀","💬","📱","🏦"})
                             {
-                                <button type="button" class="ep-btn"
-                                        onclick="insertEmoji('@e')">
-                                    @e
-                                </button>
+                                <button type="button" class="ep-btn" onclick="insertEmoji('@e')">@e</button>
                             }
                         </div>
                     </div>
                 </div>
             }
 
-            <input type="text" id="msgInput"
-                   placeholder="Type a message..."
-                   autocomplete="off" />
+            <input type="text" id="msgInput" placeholder="Type a message..." autocomplete="off" />
 
             <button class="send-btn" id="sendBtn" title="Send">
-                <i class="bi bi-send-fill"
-                   style="margin-left:2px"></i>
+                <i class="bi bi-send-fill send-icon"></i>
             </button>
         </div>
 
         @if (!isBotChat)
         {
             <input type="file" id="fileIn" style="display:none"
-                   accept="image/*,video/*,audio/*,
-                           .pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,.rar"
+                   accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,.rar"
                    onchange="onFileSelected(this)" />
 
-            <form id="fileForm" method="post"
-                  asp-controller="Chat" asp-action="SendFile"
-                  enctype="multipart/form-data" style="display:none">
+            <form id="fileForm" method="post" asp-controller="Chat" asp-action="SendFile" enctype="multipart/form-data" style="display:none">
                 @Html.AntiForgeryToken()
-                <input type="hidden" name="conversationId"
-                       value="@Model.Id" />
-                <input type="hidden" name="replyToId"
-                       id="fileReplyId" value="" />
+                <input type="hidden" name="conversationId" value="@Model.Id" />
+                <input type="hidden" name="replyToId" id="fileReplyId" value="" />
                 <input type="file" name="file" id="fileFormInput" />
             </form>
         }
     </div>
 </div>
 
-<div class="profile-overlay" id="profileOverlay"
-     onclick="closeProfile()"></div>
+<!-- Profile Panel -->
+<div class="profile-overlay" id="profileOverlay" onclick="closeProfile()"></div>
 <div class="profile-panel" id="profilePanel">
-    <div style="padding:18px 20px;border-bottom:1px solid var(--border);
-                display:flex;align-items:center;gap:12px;
-                flex-shrink:0;background:var(--surface)">
-        <button onclick="closeProfile()"
-                style="background:none;border:none;cursor:pointer;
-                       color:var(--text-2);font-size:18px;padding:0">
-            <i class="bi bi-x-lg"></i>
-        </button>
-        <span style="font-weight:700;font-size:15px;
-                     color:var(--text-1)">Contact Info</span>
+    <div class="profile-panel-header">
+        <button onclick="closeProfile()" class="profile-close-btn"><i class="bi bi-x-lg"></i></button>
+        <span class="profile-panel-title">Contact Info</span>
     </div>
-    <div id="profileLoading"
-         style="flex:1;display:flex;align-items:center;
-                justify-content:center;color:var(--text-3)">
-        <div style="text-align:center">
-            <div style="font-size:24px;margin-bottom:8px">⏳</div>
-            Loading...
-        </div>
+    <div id="profileLoading" class="profile-loading">
+        <div class="loading-spinner">⏳</div>
+        <div>Loading...</div>
     </div>
-    <div id="profileContent" style="display:none;flex:1">
-        <div style="padding:28px 20px 20px;text-align:center;
-                    border-bottom:1px solid var(--border)">
-            <div id="panelAvatar"
-                 style="width:90px;height:90px;border-radius:50%;
-                        background:linear-gradient(135deg,
-                            var(--teal),var(--teal-mid));
-                        display:flex;align-items:center;
-                        justify-content:center;
-                        font-size:32px;font-weight:700;color:#fff;
-                        margin:0 auto 14px;overflow:hidden"></div>
-            <div id="panelName"
-                 style="font-size:20px;font-weight:800;
-                        color:var(--text-1);margin-bottom:4px"></div>
-            <div id="panelUsername"
-                 style="font-size:13px;color:var(--text-3);
-                        margin-bottom:8px"></div>
-            <div id="panelVerified" style="display:none">
-                <span style="background:var(--teal-light);
-                             color:var(--teal);font-size:12px;
-                             font-weight:600;padding:3px 10px;
-                             border-radius:12px;
-                             border:1px solid var(--teal)">
-                    ✓ Verified
-                </span>
+    <div id="profileContent" class="profile-content" style="display:none">
+        <div class="profile-avatar-section">
+            <div id="panelAvatar" class="profile-avatar"></div>
+            <div id="panelName" class="profile-name"></div>
+            <div id="panelUsername" class="profile-username"></div>
+            <div id="panelVerified" class="profile-verified"></div>
+        </div>
+        <div class="profile-info-section">
+            <div class="profile-section-title">About</div>
+            <div id="panelBio" class="profile-bio"></div>
+            <div class="profile-info-row" id="panelPhoneRow">
+                <i class="bi bi-telephone-fill"></i>
+                <span id="panelPhone"></span>
+            </div>
+            <div class="profile-info-row" id="panelLocRow" style="display:none">
+                <i class="bi bi-geo-alt-fill"></i>
+                <span id="panelLoc"></span>
+            </div>
+            <div class="profile-info-row">
+                <i class="bi bi-calendar3"></i>
+                <span id="panelSince"></span>
             </div>
         </div>
-        <div style="padding:16px 20px;
-                    border-bottom:1px solid var(--border)">
-            <div style="font-size:12px;font-weight:700;
-                        color:var(--text-3);text-transform:uppercase;
-                        letter-spacing:.5px;margin-bottom:12px">
-                About
-            </div>
-            <div id="panelBio"
-                 style="font-size:14px;color:var(--text-1);
-                        margin-bottom:14px;line-height:1.5;
-                        display:none"></div>
-            <div style="display:flex;align-items:center;
-                        gap:10px;margin-bottom:10px">
-                <i class="bi bi-telephone-fill"
-                   style="color:var(--teal);width:18px"></i>
-                <span id="panelPhone"
-                      style="font-size:13px;color:var(--text-1)">
-                </span>
-            </div>
-            <div id="panelLocRow"
-                 style="display:none;align-items:center;
-                        gap:10px;margin-bottom:10px">
-                <i class="bi bi-geo-alt-fill"
-                   style="color:var(--teal);width:18px"></i>
-                <span id="panelLoc"
-                      style="font-size:13px;color:var(--text-1)">
-                </span>
-            </div>
-            <div style="display:flex;align-items:center;gap:10px">
-                <i class="bi bi-calendar3"
-                   style="color:var(--teal);width:18px"></i>
-                <span id="panelSince"
-                      style="font-size:13px;color:var(--text-1)">
-                </span>
-            </div>
+        <div class="profile-media-section">
+            <div class="profile-section-title">Shared Media</div>
+            <div id="panelImages" class="profile-images-grid"></div>
+            <div id="panelNoMedia" class="profile-no-media">No shared media yet</div>
         </div>
-        <div style="padding:16px 20px;
-                    border-bottom:1px solid var(--border)">
-            <div style="font-size:12px;font-weight:700;
-                        color:var(--text-3);text-transform:uppercase;
-                        letter-spacing:.5px;margin-bottom:12px">
-                Shared Media
-            </div>
-            <div id="panelImages"
-                 style="display:grid;
-                        grid-template-columns:repeat(3,1fr);
-                        gap:4px;margin-bottom:8px"></div>
-            <div id="panelNoMedia"
-                 style="font-size:13px;color:var(--text-3);
-                        text-align:center;padding:12px 0;
-                        display:none">
-                No shared media yet
-            </div>
-        </div>
-        <div id="panelFilesSection"
-             style="padding:16px 20px;display:none">
-            <div style="font-size:12px;font-weight:700;
-                        color:var(--text-3);text-transform:uppercase;
-                        letter-spacing:.5px;margin-bottom:12px">
-                Shared Files
-            </div>
-            <div id="panelFiles"
-                 style="display:flex;flex-direction:column;
-                        gap:8px"></div>
+        <div id="panelFilesSection" class="profile-files-section" style="display:none">
+            <div class="profile-section-title">Shared Files</div>
+            <div id="panelFiles" class="profile-files-list"></div>
         </div>
     </div>
 </div>
 
-<div id="lightbox">
-    <button class="lb-close" onclick="closeLightbox()">
-        <i class="bi bi-x-lg"></i>
-    </button>
+<!-- Lightbox -->
+<div id="lightbox" class="lightbox">
+    <button class="lb-close" onclick="closeLightbox()"><i class="bi bi-x-lg"></i></button>
     <img id="lbImg" src="" alt="" />
 </div>
 
+<!-- Context Menu -->
 <div id="ctxMenu" class="ctx-menu">
-    <div class="ctx-item danger"
-         onclick="deleteMsg(ctxId,'me')">
+    <div class="ctx-item danger" onclick="deleteMsg(ctxId,'me')">
         <i class="bi bi-eye-slash-fill"></i> Delete for Me
     </div>
-    <div class="ctx-item danger"
-         onclick="deleteMsg(ctxId,'everyone')">
+    <div class="ctx-item danger" onclick="deleteMsg(ctxId,'everyone')">
         <i class="bi bi-trash-fill"></i> Delete for Everyone
     </div>
 </div>
 
+<!-- Edit Modal -->
 <div id="editOverlay" class="edit-overlay">
     <div class="edit-modal">
-        <div style="font-weight:700;font-size:15px;
-                    color:var(--text-1);margin-bottom:14px">
-            <i class="bi bi-pencil-fill"
-               style="color:var(--teal);margin-right:6px"></i>
-            Edit Message
+        <div class="edit-modal-header">
+            <i class="bi bi-pencil-fill"></i> Edit Message
         </div>
-        <textarea id="editContent" rows="3"
-                  class="form-control"
-                  style="resize:none;border-radius:var(--r-md);
-                         margin-bottom:14px;font-size:14px">
-        </textarea>
-        <div style="display:flex;gap:10px;
-                    justify-content:flex-end">
-            <button onclick="closeEdit()"
-                    class="btn-tp-secondary"
-                    style="font-size:13px">Cancel</button>
-            <button onclick="submitEdit()"
-                    class="btn-tp-primary"
-                    style="font-size:13px">
-                <i class="bi bi-check-lg"></i> Save
-            </button>
+        <textarea id="editContent" rows="3" class="form-control edit-textarea"></textarea>
+        <div class="edit-modal-actions">
+            <button onclick="closeEdit()" class="btn-tp-secondary">Cancel</button>
+            <button onclick="submitEdit()" class="btn-tp-primary"><i class="bi bi-check-lg"></i> Save</button>
         </div>
     </div>
 </div>
 
-@functions {
-    string FormatBotMessage(string text)
-    {
-        if (string.IsNullOrEmpty(text)) return "";
-
-        text = System.Net.WebUtility.HtmlEncode(text);
-        text = System.Text.RegularExpressions.Regex.Replace(
-            text, @"\*\*(.+?)\*\*", "<strong>$1</strong>");
-
-        var lines = text.Split('\n');
-        var result = new System.Text.StringBuilder();
-        bool inList = false;
-
-        foreach (var line in lines)
-        {
-            var trimmed = line.Trim();
-            bool isBullet = trimmed.StartsWith("•") ||
-                            trimmed.StartsWith("-") ||
-                            trimmed.StartsWith("*");
-
-            if (isBullet)
-            {
-                if (!inList)
-                {
-                    result.Append("<ul style='margin:6px 0 6px 16px;padding:0;list-style:none'>");
-                    inList = true;
-                }
-                var content = trimmed.TrimStart('•', '-', '*', ' ');
-                result.Append($"<li style='margin-bottom:3px;display:flex;gap:6px'>" +
-                              $"<span style='color:var(--teal);flex-shrink:0'>›</span>" +
-                              $"<span>{content}</span></li>");
-            }
-            else
-            {
-                if (inList)
-                {
-                    result.Append("</ul>");
-                    inList = false;
-                }
-                if (!string.IsNullOrWhiteSpace(trimmed))
-                    result.Append(
-                        $"<p style='margin:0 0 6px'>{trimmed}</p>");
-                else
-                    result.Append("<br/>");
-            }
-        }
-
-        if (inList) result.Append("</ul>");
-        return result.ToString();
-    }
-}
-
 @section Scripts {
-    <form id="csrfForm" style="display:none">
-        @Html.AntiForgeryToken()
-    </form>
+    <form id="csrfForm" style="display:none">@Html.AntiForgeryToken()</form>
     <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.0/dist/browser/signalr.min.js"></script>
     <script>
         const convId = @Model.Id;
@@ -1209,7 +677,7 @@
             }
         }
 
-                async function sendText(content, replyToId) {
+        async function sendText(content, replyToId) {
             const inp = document.getElementById('msgInput');
             const btn = document.getElementById('sendBtn');
             inp.disabled = true;
@@ -1224,9 +692,9 @@
                 fd.append('__RequestVerificationToken', token);
 
                 const res = await fetch('/Chat/Send', {
-                    method:  'POST',
+                    method: 'POST',
                     headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                    body:    fd
+                    body: fd
                 });
 
                 if (res.ok) {
@@ -1242,8 +710,8 @@
             } catch (err) {
                 console.error('Send error:', err);
             } finally {
-                inp.disabled    = false;
-                btn.disabled    = false;
+                inp.disabled = false;
+                btn.disabled = false;
                 btn.style.opacity = '1';
                 inp.focus();
             }
@@ -1256,20 +724,13 @@
 
             row.innerHTML = `
                 <div class="msg-bubble">
-                    <div style="position:relative">
-                        <div id="bubble-${msgId || Date.now()}"
-                             class="bubble-inner bubble-mine"
-                             style="word-break:break-word">
-                            ${escHtml(content)}
-                        </div>
+                    <div class="bubble-wrapper">
+                        <div id="bubble-${msgId || Date.now()}" class="bubble-inner bubble-mine">${escHtml(content)}</div>
                         <div class="msg-time mine">
                             ${sentAt || new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}
-                            <span class="read-tick"
-                                  style="color:var(--text-3)">✓</span>
+                            <span class="read-tick">✓</span>
                         </div>
-                        <div class="reactions-strip"
-                             id="reactions-${msgId || Date.now()}"
-                             style="justify-content:flex-end"></div>
+                        <div class="reactions-strip" id="reactions-${msgId || Date.now()}"></div>
                     </div>
                 </div>`;
 
@@ -1279,7 +740,6 @@
 
         const sendBtn = document.getElementById('sendBtn');
         const msgInput = document.getElementById('msgInput');
-        const msgForm = document.getElementById('csrfForm');
 
         if (sendBtn) {
             sendBtn.addEventListener('click', function(e) {
@@ -1353,16 +813,16 @@
                 } else if (mt === 'video') {
                     content = '<video class="media-video" controls preload="metadata"><source src="' + escHtml(data.mediaUrl) + '" /></video>';
                 } else if (mt === 'voice') {
-                    content = '<div style="padding:4px 8px"><div style="font-size:11px;opacity:.7;margin-bottom:4px">🎤 Voice message</div><audio controls><source src="' + escHtml(data.mediaUrl) + '" /></audio></div>';
+                    content = '<div class="voice-message"><div class="voice-label">🎤 Voice message</div><audio controls><source src="' + escHtml(data.mediaUrl) + '" /></audio></div>';
                 } else if (mt === 'file') {
-                    content = '<a href="' + escHtml(data.mediaUrl) + '" download="' + escHtml(data.mediaFileName) + '" class="file-card"><div class="file-icon">📁</div><div class="file-info"><div class="fname">' + escHtml(data.mediaFileName) + '</div></div><i class="bi bi-download" style="font-size:16px;opacity:.7"></i></a>';
+                    content = '<a href="' + escHtml(data.mediaUrl) + '" download="' + escHtml(data.mediaFileName) + '" class="file-card"><div class="file-icon">📁</div><div class="file-info"><div class="fname">' + escHtml(data.mediaFileName) + '</div></div><i class="bi bi-download download-icon"></i></a>';
                 } else {
                     content = escHtml(data.content);
                 }
 
                 const bub = document.createElement('div');
                 bub.className = 'msg-bubble';
-                bub.innerHTML = replyHtml + '<div style="position:relative"><div id="bubble-' + data.messageId + '" class="' + pad + ' bubble-theirs">' + content + '</div><div class="msg-time theirs">' + data.sentAt + '</div><div class="reactions-strip" id="reactions-' + data.messageId + '" style="justify-content:flex-start"></div></div>';
+                bub.innerHTML = replyHtml + '<div class="bubble-wrapper"><div id="bubble-' + data.messageId + '" class="' + pad + ' bubble-theirs">' + content + '</div><div class="msg-time theirs">' + data.sentAt + '</div><div class="reactions-strip" id="reactions-' + data.messageId + '"></div></div>';
 
                 row.appendChild(av);
                 row.appendChild(bub);
@@ -1407,6 +867,13 @@
                     av.innerHTML = '<img src="' + escHtml(d.profilePicture) + '" style="width:90px;height:90px;object-fit:cover" />';
                 } else {
                     av.textContent = (d.firstName || '?').charAt(0).toUpperCase();
+                    av.style.background = 'linear-gradient(135deg, var(--teal), var(--teal-mid))';
+                    av.style.display = 'flex';
+                    av.style.alignItems = 'center';
+                    av.style.justifyContent = 'center';
+                    av.style.fontSize = '32px';
+                    av.style.fontWeight = '700';
+                    av.style.color = '#fff';
                 }
 
                 document.getElementById('panelName').textContent = (d.firstName || '') + ' ' + (d.lastName || '');
@@ -1439,9 +906,9 @@
                 if (imgs.length) {
                     imgs.forEach(function(img) {
                         const div = document.createElement('div');
-                        div.style.cssText = 'aspect-ratio:1;border-radius:6px;overflow:hidden;cursor:pointer';
+                        div.className = 'profile-media-item';
                         div.onclick = function() { openLightbox(img.mediaUrl); };
-                        div.innerHTML = '<img src="' + escHtml(img.mediaUrl) + '" style="width:100%;height:100%;object-fit:cover" />';
+                        div.innerHTML = '<img src="' + escHtml(img.mediaUrl) + '" class="profile-media-thumb" />';
                         grid.appendChild(div);
                     });
                     document.getElementById('panelNoMedia').style.display = 'none';
@@ -1474,7 +941,15 @@
                             }
                         }
 
-                        fc.innerHTML += '<a href="' + escHtml(f.mediaUrl) + '" download="' + escHtml(f.mediaFileName) + '" class="file-card" style="text-decoration:none;color:inherit"><div class="file-icon">' + ic + '</div><div class="file-info"><div class="fname">' + escHtml(f.mediaFileName || 'File') + '</div><div class="fsize">' + sz + '</div></div><i class="bi bi-download" style="font-size:15px;opacity:.6"></i></a>';
+                        fc.innerHTML += `
+                            <a href="${escHtml(f.mediaUrl)}" download="${escHtml(f.mediaFileName)}" class="file-card">
+                                <div class="file-icon">${ic}</div>
+                                <div class="file-info">
+                                    <div class="fname">${escHtml(f.mediaFileName || 'File')}</div>
+                                    <div class="fsize">${sz}</div>
+                                </div>
+                                <i class="bi bi-download download-icon"></i>
+                            </a>`;
                     });
                     document.getElementById('panelFilesSection').style.display = 'block';
                 }
@@ -1483,7 +958,7 @@
                 document.getElementById('profileContent').style.display = 'block';
             } catch (err) {
                 console.error(err);
-                document.getElementById('profileLoading').innerHTML = '<div style="color:var(--red)">Failed to load profile</div>';
+                document.getElementById('profileLoading').innerHTML = '<div class="error-message">Failed to load profile</div>';
             }
         }
 
