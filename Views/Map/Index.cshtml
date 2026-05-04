@@ -1,6 +1,7 @@
 ﻿@model List<MoneyTransfer.Models.Agent>
 @{
     ViewData["Title"] = "Agent Map";
+    ViewBag.PageClass = "page-map";
     var userAgents = ViewBag.UserAgents as
         List<MoneyTransfer.Models.Agent>
         ?? new List<MoneyTransfer.Models.Agent>();
@@ -29,35 +30,35 @@
 @if (isAgentOrAdmin)
 {
     <div class="tp-card mb-3">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
-            <div>
-                <i class="bi bi-shop" style="color:var(--teal);font-size:20px"></i>
-                <span style="font-weight:600">Your Stores</span>
+        <div class="agent-stores-header">
+            <div class="agent-stores-title">
+                <i class="bi bi-shop agent-stores-icon"></i>
+                <span class="agent-stores-title-text">Your Stores</span>
             </div>
-            <a asp-controller="AgentApplication" asp-action="Apply" class="btn-tp-primary" style="padding:6px 12px">
+            <a asp-controller="AgentApplication" asp-action="Apply" class="btn-tp-primary agent-register-btn">
                 <i class="bi bi-plus"></i> Register New Store
             </a>
         </div>
         
         @if (userAgents.Any())
         {
-            <div style="display:flex;flex-direction:column;gap:8px">
+            <div class="agent-stores-list">
                 @foreach (var store in userAgents)
                 {
-                    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--surface-2);border-radius:var(--r-sm)">
-                        <div>
-                            <div style="font-weight:600">@store.StoreName</div>
-                            <div style="font-size:12px;color:var(--text-3)">@store.City, @store.Country</div>
+                    <div class="agent-store-item">
+                        <div class="agent-store-info">
+                            <div class="agent-store-name">@store.StoreName</div>
+                            <div class="agent-store-location">@store.City, @store.Country</div>
                             @if (store.Latitude != 0 && store.Longitude != 0)
                             {
-                                <span class="badge-tp success" style="font-size:10px">Location Set ✓</span>
+                                <span class="badge-tp success agent-store-badge">Location Set ✓</span>
                             }
                             else
                             {
-                                <span class="badge-tp warning" style="font-size:10px">Location Not Set</span>
+                                <span class="badge-tp warning agent-store-badge">Location Not Set</span>
                             }
                         </div>
-                        <a asp-controller="Agent" asp-action="SetLocation" asp-route-id="@store.Id" class="btn-tp-secondary" style="padding:4px 10px;font-size:12px">
+                        <a asp-controller="Agent" asp-action="SetLocation" asp-route-id="@store.Id" class="btn-tp-secondary agent-store-set-location">
                             <i class="bi bi-geo-alt-fill"></i> Set Location
                         </a>
                     </div>
@@ -66,8 +67,8 @@
         }
         else
         {
-            <div style="text-align:center;padding:20px;color:var(--text-3)">
-                <i class="bi bi-shop" style="font-size:32px;display:block;margin-bottom:8px"></i>
+            <div class="agent-stores-empty">
+                <i class="bi bi-shop agent-stores-empty-icon"></i>
                 <p>You don't have any stores yet.</p>
                 <a asp-controller="AgentApplication" asp-action="Apply" class="btn-tp-primary">Register Your First Store</a>
             </div>
@@ -76,14 +77,13 @@
 }
 
 <div class="tp-card mb-3">
-    <div style="display:flex;gap:12px;align-items:center">
+    <div class="agent-map-search">
         <input type="text"
                id="searchInput"
                class="form-control"
                placeholder="Type a city or agent name to filter..."
                oninput="filterAgents(this.value)" />
-        <div style="font-size:13px;color:var(--text-3);
-                    flex-shrink:0">
+        <div class="agent-map-count">
             <span id="agentCount">@Model.Count</span>
             agent@(Model.Count != 1 ? "s" : "")
         </div>
@@ -92,22 +92,15 @@
 
 <div class="row g-3">
     <div class="col-lg-8">
-        <div class="tp-card" style="padding:0;overflow:hidden">
-            <div id="map"
-                 style="height:500px;border-radius:var(--r-lg)">
-            </div>
+        <div class="tp-card agent-map-container">
+            <div id="map" class="agent-map-frame"></div>
         </div>
     </div>
 
     <div class="col-lg-4">
-        <div class="tp-card"
-             style="height:500px;overflow-y:auto;padding:16px">
-            <div style="font-size:13px;font-weight:700;
-                        color:var(--text-1);margin-bottom:12px">
-                All Agents
-            </div>
-            <div id="agentList"
-                 style="display:flex;flex-direction:column;gap:8px">
+        <div class="tp-card agent-list-sidebar">
+            <div class="agent-list-header">All Agents</div>
+            <div id="agentList" class="agent-list-items">
                 @foreach (var agent in Model)
                 {
                     <div class="agent-card-item"
@@ -115,33 +108,22 @@
                          data-city="@(agent.City?.ToLower() ?? "")"
                          data-lat="@agent.Latitude"
                          data-lng="@agent.Longitude"
-                         onclick="flyTo(@agent.Latitude, @agent.Longitude, '@(agent.StoreName?.Replace("'", "\\'") ?? "")')"
-                         style="padding:12px;border-radius:var(--r-sm);
-                                background:var(--surface-2);
-                                border:1px solid var(--border);
-                                cursor:pointer;transition:var(--transition);
-                                margin-bottom:6px">
-                        <div style="font-size:13px;font-weight:600;
-                                    color:var(--text-1)">
-                            @agent.StoreName
-                        </div>
-                        <div style="font-size:11px;color:var(--text-3);
-                                    margin-top:2px">
+                         onclick="flyTo(@agent.Latitude, @agent.Longitude, '@(agent.StoreName?.Replace("'", "\\'") ?? "")')">
+                        <div class="agent-card-name">@agent.StoreName</div>
+                        <div class="agent-card-location">
                             <i class="bi bi-geo-alt"></i>
                             @agent.City, @agent.Country
                         </div>
                         @if (!string.IsNullOrEmpty(agent.WorkingHours))
                         {
-                            <div style="font-size:11px;color:var(--teal);
-                                        margin-top:2px">
+                            <div class="agent-card-hours">
                                 <i class="bi bi-clock"></i>
                                 @agent.WorkingHours
                             </div>
                         }
                         @if (agent.Latitude == 0 && agent.Longitude == 0)
                         {
-                            <div style="font-size:10px;color:var(--yellow);
-                                        margin-top:3px">
+                            <div class="agent-card-warning">
                                 <i class="bi bi-exclamation-triangle"></i>
                                 Location not set
                             </div>
@@ -159,8 +141,7 @@
 }
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js">
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
     <script>
         const map = L.map('map').setView([33.8547, 35.8623], 9);
 
@@ -170,14 +151,7 @@
         }).addTo(map);
 
         const tealIcon = L.divIcon({
-            html: `<div style="
-                width:32px;height:32px;
-                background:var(--teal);
-                border-radius:50% 50% 50% 0;
-                transform:rotate(-45deg);
-                border:3px solid #fff;
-                box-shadow:0 2px 8px rgba(0,0,0,.25)">
-            </div>`,
+            html: `<div class="leaflet-custom-icon"></div>`,
             className: '',
             iconSize: [32, 32],
             iconAnchor: [16, 32],
@@ -205,16 +179,10 @@
             const marker = L.marker([a.lat, a.lng], { icon: tealIcon })
                 .bindPopup(`
                     <div style="font-family:sans-serif;min-width:160px">
-                        <div style="font-weight:700;font-size:14px;
-                                    margin-bottom:4px">${escapeHtml(a.name)}</div>
-                        <div style="font-size:12px;color:#666">
-                            ${escapeHtml(a.city)}, ${escapeHtml(a.country)}
-                        </div>
-                        ${a.phone ? `<div style="font-size:12px;
-                            margin-top:4px">📞 ${escapeHtml(a.phone)}</div>` : ''}
-                        ${a.hours ? `<div style="font-size:12px;
-                            color:#00b894;margin-top:2px">
-                            🕐 ${escapeHtml(a.hours)}</div>` : ''}
+                        <div class="custom-popup-name">${escapeHtml(a.name)}</div>
+                        <div class="custom-popup-location">${escapeHtml(a.city)}, ${escapeHtml(a.country)}</div>
+                        ${a.phone ? `<div class="custom-popup-phone">📞 ${escapeHtml(a.phone)}</div>` : ''}
+                        ${a.hours ? `<div class="custom-popup-hours">🕐 ${escapeHtml(a.hours)}</div>` : ''}
                     </div>
                 `)
                 .addTo(map);
@@ -227,23 +195,11 @@
         }
 
         function escapeHtml(str) {
-            if (!str) 
-            {
-                return '';
-            }
+            if (!str) return '';
             return str.replace(/[&<>]/g, function(m) {
-                if (m === '&') 
-                {
-                    return '&amp;';
-                }
-                if (m === '<') 
-                {
-                    return '&lt;';
-                }
-                if (m === '>') 
-                {
-                    return '&gt;';
-                }
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
                 return m;
             });
         }
@@ -271,7 +227,7 @@
             items.forEach(item => {
                 const name = (item.dataset.name || '').toLowerCase();
                 const city = (item.dataset.city || '').toLowerCase();
-                const show = q === '' ||  name.includes(q) || city.includes(q);
+                const show = q === '' || name.includes(q) || city.includes(q);
 
                 item.style.display = show ? 'block' : 'none';
 
@@ -296,7 +252,7 @@
         }
 
         document.getElementById('searchInput').addEventListener('input', function() {
-                filterAgents(this.value);
-            });
+            filterAgents(this.value);
+        });
     </script>
 }

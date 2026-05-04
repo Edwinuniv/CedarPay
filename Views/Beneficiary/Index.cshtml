@@ -1,6 +1,7 @@
 ﻿@model List<MoneyTransfer.ViewModels.BeneficiaryViewModel>
 @{
     ViewData["Title"] = "Beneficiaries";
+    ViewBag.PageClass = "page-beneficiary";
 }
 
 <div class="page-header">
@@ -44,15 +45,13 @@ else
                 {
                     <tr>
                         <td>
-                            <div style="display:flex;align-items:center;gap:10px">
-                                <div class="ben-avatar" style="width:36px;height:36px;font-size:12px">
+                            <div class="beneficiary-user-info">
+                                <div class="ben-avatar beneficiary-avatar-small">
                                     @b.Nickname.Substring(0, 1).ToUpper()
                                 </div>
-                                <div>
-                                    <div style="font-weight:600">@b.Nickname</div>
-                                    <div style="font-size:12px;color:var(--text-3)">
-                                        @b.ReceiverName
-                                    </div>
+                                <div class="beneficiary-details">
+                                    <div class="beneficiary-nickname">@b.Nickname</div>
+                                    <div class="beneficiary-name">@b.ReceiverName</div>
                                 </div>
                             </div>
                         </td>
@@ -61,28 +60,23 @@ else
                                 @b.TransferType
                             </span>
                         </td>
-                        <td style="font-size:12px;font-family:var(--font-mono);color:var(--text-2)">
+                        <td class="beneficiary-identifier">
                             @(b.ReceiverWalletSerial ?? b.ReceiverPhoneNumber ?? "—")
                         </td>
-                        <td style="font-size:13px;color:var(--text-2)">
+                        <td class="beneficiary-country">
                             @(b.ReceiverCountry ?? "—")
                         </td>
-                        <td style="font-size:12px;color:var(--text-3)">
+                        <td class="beneficiary-date">
                             @b.CreatedAt.ToString("MMM dd, yyyy")
                         </td>
                         <td>
-                            <div style="display:flex;gap:6px">
-                                <a asp-controller="Transfer" asp-action="Create"
-                                   class="ben-action">Send</a>
-                                <a asp-action="Edit" asp-route-id="@b.Id"
-                                   class="btn-tp-secondary"
-                                   style="padding:6px 12px;font-size:12px">
+                            <div class="beneficiary-actions">
+                                <a asp-controller="Transfer" asp-action="Create" class="ben-action">Send</a>
+                                <a asp-action="Edit" asp-route-id="@b.Id" class="btn-tp-secondary beneficiary-edit-btn">
                                     Edit
                                 </a>
-                                <form asp-action="Delete" asp-route-id="@b.Id"
-                                      method="post" style="display:inline">
-                                    <button type="submit" class="btn-tp-danger"
-                                            style="padding:6px 10px;font-size:12px"
+                                <form asp-action="Delete" asp-route-id="@b.Id" method="post" style="display:inline">
+                                    <button type="submit" class="btn-tp-danger beneficiary-delete-btn"
                                             onclick="return confirm('Remove this beneficiary?')">
                                         <i class="bi bi-trash"></i>
                                     </button>

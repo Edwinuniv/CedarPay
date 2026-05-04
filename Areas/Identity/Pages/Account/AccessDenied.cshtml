@@ -1,10 +1,45 @@
 ﻿@page
 @model AccessDeniedModel
 @{
-    ViewData["Title"] = "Access denied";
+    ViewData["Title"] = "Access Denied";
+    Layout = "/Views/Shared/_Layout.cshtml";
+    ViewBag.PageClass = "page-dashboard";
 }
 
-<header>
-    <h1 class="text-danger">@ViewData["Title"]</h1>
-    <p class="text-danger">You do not have access to this resource.</p>
-</header>
+<div class="access-denied-container">
+    <div class="access-denied-card">
+        <div class="access-denied-icon">🚫</div>
+        <div class="access-denied-code">403</div>
+        <h1 class="access-denied-title">Access Denied</h1>
+        <p class="access-denied-message">You do not have permission to access this resource.</p>
+
+        <div class="access-denied-reasons">
+            <div class="access-denied-reason">
+                <i class="bi bi-shield-exclamation"></i>
+                <span>You may need to <strong>login</strong> with a different account</span>
+            </div>
+            <div class="access-denied-reason">
+                <i class="bi bi-person-badge"></i>
+                <span>Your account role does not have the required <strong>permissions</strong></span>
+            </div>
+            <div class="access-denied-reason">
+                <i class="bi bi-envelope-paper"></i>
+                <span>Contact an <strong>administrator</strong> if you believe this is an error</span>
+            </div>
+        </div>
+
+        <div class="access-denied-actions">
+            <a href="/" class="btn-tp-primary">
+                <i class="bi bi-house-fill"></i> Go to Home
+            </a>
+            <a href="javascript:history.back()" class="btn-tp-secondary">
+                <i class="bi bi-arrow-left"></i> Go Back
+            </a>
+        </div>
+
+        <div class="access-denied-footer">
+            <i class="bi bi-tree-fill"></i>
+            <span>CedarPay — Protecting your account</span>
+        </div>
+    </div>
+</div>

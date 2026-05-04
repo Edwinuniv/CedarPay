@@ -19,42 +19,36 @@ namespace MoneyTransfer.Services.Implementations
 
         public async Task SendAsync(string toEmail, string toName, string subject, string htmlBody)
         {
-            try
+            var host = _config["Email:SmtpHost"] ?? "";
+            var port = int.Parse(_config["Email:SmtpPort"] ?? "587");
+            var username = _config["Email:Username"] ?? "";
+            var password = _config["Email:Password"] ?? "";
+            var fromName = _config["Email:FromName"] ?? "CedarPay";
+            var fromEmail = _config["Email:FromEmail"] ?? username;
+
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
             {
-                var host = _config["Email:SmtpHost"] ?? "";
-                var port = int.Parse(_config["Email:SmtpPort"] ?? "587");
-                var username = _config["Email:Username"] ?? "";
-                var password = _config["Email:Password"] ?? "";
-                var fromName = _config["Email:FromName"] ?? "CedarPay";
-                var fromEmail = _config["Email:FromEmail"] ?? username;
-
-                if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
-                {
-                    _logger.LogWarning("Email not configured. " + "Skipping email to {Email}", toEmail);
-                    return;
-                }
-
-                var message = new MimeMessage();
-                message.From.Add(new MailboxAddress(fromName, fromEmail));
-                message.To.Add(new MailboxAddress(toName, toEmail));
-                message.Subject = subject;
-
-                var bodyBuilder = new BodyBuilder
-                {
-                    HtmlBody = GetEmailTemplate(subject, htmlBody)
-                };
-                message.Body = bodyBuilder.ToMessageBody();
-
-                using var client = new SmtpClient();
-                await client.ConnectAsync(host, port, SecureSocketOptions.StartTls);
-                await client.AuthenticateAsync(username, password);
-                await client.SendAsync(message);
-                await client.DisconnectAsync(true);
+                throw new InvalidOperationException("Email credentials not configured");
             }
-            catch (Exception ex)
+
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(fromName, fromEmail));
+            message.To.Add(new MailboxAddress(toName, toEmail));
+            message.Subject = subject;
+
+            var bodyBuilder = new BodyBuilder
             {
-                _logger.LogError(ex, "Failed to send email to {Email}", toEmail);
-            }
+                HtmlBody = GetEmailTemplate(subject, htmlBody)
+            };
+            message.Body = bodyBuilder.ToMessageBody();
+
+            using var client = new SmtpClient();
+
+            // REMOVED the try-catch or make it rethrow
+            await client.ConnectAsync(host, port, SecureSocketOptions.StartTls);
+            await client.AuthenticateAsync(username, password);
+            await client.SendAsync(message);
+            await client.DisconnectAsync(true);
         }
 
         public async Task SendNotificationAsync(string toEmail, string toName, string title, string message)

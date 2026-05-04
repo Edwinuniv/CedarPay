@@ -449,6 +449,33 @@ namespace MoneyTransfer.Controllers
             return RedirectToAction("Dashboard");
         }
 
+
+        // Update store name, phone, working hours from SetLocation page
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateStoreInfo(int id, string storeName, string phoneNumber, string workingHours)
+        {
+            var userId = _userManager.GetUserId(User);
+            var agents = (await _agentRepository.GetByUserIdAsync(userId)).ToList();
+            var agent = agents.FirstOrDefault(a => a.Id == id);
+
+            if (agent == null)
+            {
+                TempData["Error"] = "Store not found.";
+                return RedirectToAction("Dashboard");
+            }
+
+            if (!string.IsNullOrWhiteSpace(storeName))
+                agent.StoreName = storeName.Trim();
+            if (!string.IsNullOrWhiteSpace(phoneNumber))
+                agent.PhoneNumber = phoneNumber.Trim();
+            agent.WorkingHours = workingHours?.Trim();
+
+            await _agentRepository.UpdateAsync(agent);
+            TempData["Success"] = $"Store '{agent.StoreName}' info updated!";
+            return RedirectToAction("SetLocation", new { id });
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult SelectStore(int agentId)

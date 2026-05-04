@@ -1,6 +1,7 @@
 ﻿@model IEnumerable<MoneyTransfer.Models.Agent>
 @{
     ViewData["Title"] = "Pending Agents";
+    ViewBag.PageClass = "page-admin";
 }
 
 <div class="page-header">
@@ -40,29 +41,23 @@ else
                 {
                     <tr>
                         <td>
-                            <div style="font-weight:600">@a.AgentName</div>
-                            <div style="font-size:12px;color:var(--text-3)">@a.Email</div>
+                            <div class="agent-name-cell">@a.AgentName</div>
+                            <div class="agent-email-cell">@a.Email</div>
                         </td>
                         <td>@a.StoreName</td>
-                        <td style="font-size:13px;color:var(--text-2)">
-                            @a.City, @a.Country
-                        </td>
-                        <td style="font-size:12px;color:var(--text-3)">
+                        <td class="agent-location-cell">@a.City, @a.Country</td>
+                        <td class="agent-registered-cell">
                             @a.RegisteredAt.ToString("MMM dd, yyyy")
                         </td>
                         <td>
-                            <div style="display:flex;gap:6px">
-                                <form asp-action="ApproveAgent"
-                                      asp-route-id="@a.Id" method="post">
-                                    <button type="submit" class="btn-tp-success"
-                                            style="padding:7px 14px;font-size:12px">
+                            <div class="agent-actions">
+                                <form asp-action="ApproveAgent" asp-route-id="@a.Id" method="post">
+                                    <button type="submit" class="btn-tp-success agent-approve-btn">
                                         <i class="bi bi-check-lg"></i> Approve
                                     </button>
                                 </form>
-                                <form asp-action="RejectAgent"
-                                      asp-route-id="@a.Id" method="post">
-                                    <button type="submit" class="btn-tp-danger"
-                                            style="padding:7px 14px;font-size:12px"
+                                <form asp-action="RejectAgent" asp-route-id="@a.Id" method="post">
+                                    <button type="submit" class="btn-tp-danger agent-reject-btn"
                                             onclick="return confirm('Reject this agent?')">
                                         <i class="bi bi-x-lg"></i> Reject
                                     </button>

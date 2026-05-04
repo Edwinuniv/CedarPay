@@ -1,6 +1,7 @@
 ﻿@model List<MoneyTransfer.Models.KYCDocument>
 @{
     ViewData["Title"] = "KYC Review";
+    ViewBag.PageClass = "page-admin";
 }
 
 <div class="page-header">
@@ -24,73 +25,53 @@
 }
 else
 {
-    <div class="d-flex flex-column gap-3">
+    <div class="kyc-container-list">
         @foreach (var kyc in Model)
         {
             <div class="tp-card">
-                <div style="display:flex;align-items:flex-start;
-                                    gap:16px;margin-bottom:14px">
-                    <div class="ben-avatar"
-                         style="width:44px;height:44px;font-size:14px">
+                <div class="kyc-card-header">
+                    <div class="ben-avatar kyc-user-avatar">
                         @kyc.User?.FirstName?.Substring(0, 1)
                     </div>
-                    <div style="flex:1">
-                        <div style="font-weight:700;font-size:15px">
+                    <div class="kyc-user-info">
+                        <div class="kyc-user-name">
                             @kyc.User?.FirstName @kyc.User?.LastName
                         </div>
-                        <div style="font-size:13px;color:var(--text-2)">
+                        <div class="kyc-user-document">
                             @kyc.DocumentType · @kyc.DocumentNumber
                         </div>
-                        <div style="font-size:11px;color:var(--text-3)">
+                        <div class="kyc-user-date">
                             Submitted @kyc.SubmittedAt.ToString("MMM dd, yyyy HH:mm")
                         </div>
                     </div>
                 </div>
 
                 <!-- Document Images -->
-                <div style="display:flex;gap:12px;margin-bottom:14px">
+                <div class="kyc-images">
                     @if (!string.IsNullOrEmpty(kyc.FrontImageUrl))
                     {
                         <div>
-                            <div style="font-size:11px;color:var(--text-3);
-                                                    margin-bottom:4px">
-                                Front
-                            </div>
+                            <div class="kyc-image-label">Front</div>
                             <img src="@kyc.FrontImageUrl"
-                                 style="height:100px;
-                                                    border-radius:var(--r-sm);
-                                                    object-fit:cover;
-                                                    border:1px solid var(--border);
-                                                    cursor:pointer"
+                                 class="kyc-image"
                                  onclick="window.open('@kyc.FrontImageUrl')" />
                         </div>
                     }
                     @if (!string.IsNullOrEmpty(kyc.BackImageUrl))
                     {
                         <div>
-                            <div style="font-size:11px;color:var(--text-3);
-                                                    margin-bottom:4px">
-                                Back
-                            </div>
+                            <div class="kyc-image-label">Back</div>
                             <img src="@kyc.BackImageUrl"
-                                 style="height:100px;
-                                                    border-radius:var(--r-sm);
-                                                    object-fit:cover;
-                                                    border:1px solid var(--border);
-                                                    cursor:pointer"
+                                 class="kyc-image"
                                  onclick="window.open('@kyc.BackImageUrl')" />
                         </div>
                     }
                 </div>
 
                 <!-- Actions -->
-                <div style="display:flex;gap:10px;
-                                    padding-top:14px;
-                                    border-top:1px solid var(--border)">
-                    <form asp-action="ApproveKYC"
-                          asp-route-id="@kyc.Id" method="post">
-                        <button type="submit" class="btn-tp-success"
-                                style="padding:8px 18px;font-size:13px">
+                <div class="kyc-actions">
+                    <form asp-action="ApproveKYC" asp-route-id="@kyc.Id" method="post">
+                        <button type="submit" class="btn-tp-success kyc-approve-btn">
                             <i class="bi bi-check-lg"></i> Approve
                         </button>
                     </form>
@@ -98,14 +79,12 @@ else
                     <form asp-action="RejectKYC"
                           asp-route-id="@kyc.Id"
                           method="post"
-                          style="display:flex;gap:8px;flex:1"
+                          class="kyc-reject-form"
                           onsubmit="return confirm('Reject this KYC?')">
                         <input type="text" name="reason"
-                               class="form-control"
-                               placeholder="Rejection reason"
-                               style="flex:1;font-size:13px" />
-                        <button type="submit" class="btn-tp-danger"
-                                style="padding:8px 16px;font-size:13px">
+                               class="form-control kyc-reject-input"
+                               placeholder="Rejection reason" />
+                        <button type="submit" class="btn-tp-danger kyc-reject-btn">
                             <i class="bi bi-x-lg"></i> Reject
                         </button>
                     </form>

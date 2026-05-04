@@ -10,21 +10,21 @@ namespace MoneyTransfer.Data
         {
             var userManager = serviceProvider.GetRequiredService<UserManager<User>>();
             await CreateUserWithRole(userManager,
-                "admin@ceederpay.com",
+                "admin@cederpay.com",
                 "Admin@123",
                 "Admin",
                 "User",
                 Roles.Admin);
 
             await CreateUserWithRole(userManager,
-                "user@ceederpay.com",
+                "user@cederpay.com",
                 "User@123",
                 "Regular",
                 "User",
                 Roles.User);
 
             await CreateUserWithRole(userManager,
-                "agent@ceederpay.com",
+                "agent@cederpay.com",
                 "Agent@123",
                 "Agent",
                 "User",

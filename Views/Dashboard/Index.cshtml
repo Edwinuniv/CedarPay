@@ -1,405 +1,83 @@
 ﻿@model MoneyTransfer.ViewModels.DashboardViewModel
 @{
     ViewData["Title"] = "Dashboard";
+    ViewBag.PageClass = "page-dashboard";
     bool isAdmin = User.IsInRole("Admin");
     bool isAgent = User.IsInRole("Agent");
-    var agentStore = ViewBag.AgentStore as MoneyTransfer.Models.Agent;
-    var agentStores = ViewBag.AgentStores as List<MoneyTransfer.Models.Agent> ?? new List<MoneyTransfer.Models.Agent>();
 }
 
-<div style="margin-bottom:24px">
-    <h2 style="font-size:22px;font-weight:800;color:var(--text-1);letter-spacing:-0.4px">
+<div class="welcome-section">
+    <h2 class="welcome-title">
         Good @(DateTime.Now.Hour < 12 ? "Morning" : DateTime.Now.Hour < 17 ? "Afternoon" : "Evening"),
         @Model.FullName.Split(' ')[0] 👋
     </h2>
-    <p style="font-size:13px;color:var(--text-3);margin-top:3px">
-        @if (isAdmin && isAgent)
-        {
-            <text>Welcome Admin & Agent. Here's your platform overview and personal account.</text>
-        }
-        else if (isAdmin)
-        {
-            <text>Welcome to your admin dashboard. Here's your personal account overview and platform statistics.</text>
-        }
-        else if (isAgent)
-        {
-            <text>Welcome to your agent dashboard. Manage your store and track your commissions.</text>
-        }
-        else
-        {
-            <text>Here's what's happening with your account today.</text>
-        }
+    <p class="welcome-subtitle">
+        Here's what's happening with your account today.
     </p>
 </div>
 
-<!-- Agent Store Selector - For all agents with multiple stores -->
-@if (isAgent && agentStores.Count > 1)
+<!-- ── PANEL NAVIGATION (only shown for admin/agent) ── -->
+@if (isAdmin || isAgent)
 {
-    <div class="tp-card mb-3">
-        <div style="font-size:13px;color:var(--text-2);
-                    margin-bottom:6px;font-weight:600">
-            <i class="bi bi-shop"
-               style="color:var(--teal);margin-right:6px"></i>
-            You manage <strong>@agentStores.Count stores</strong>.
-            Your dashboard shows stats for:
-        </div>
-        <form asp-controller="Agent"
-              asp-action="SelectStore"
-              method="post"
-              style="display:flex;gap:8px">
-            @Html.AntiForgeryToken()
-            <select name="agentId" class="form-select"
-                    style="flex:1">
-                @foreach (var s in agentStores)
-                {
-                    <option value="@s.Id"
-                            @@(agentStore?.Id == s.Id ? "selected" : "")>
-                        @s.StoreName (@s.City)
-                    </option>
-                }
-            </select>
-            <button type="submit"
-                    class="btn-tp-primary"
-                    style="padding:10px 18px;
-                           font-size:13px">
-                Switch Store
-            </button>
-        </form>
-    </div>
-}
-
-<!-- Admin Section (only for admins) -->
-@if (isAdmin)
-{
-    <div style="margin-bottom:24px">
-        <h3 style="font-size:16px;font-weight:700;color:var(--text-1);margin-bottom:14px">
-            <i class="bi bi-graph-up" style="color:var(--teal);margin-right:8px"></i>
-            Platform Overview
-        </h3>
-    </div>
-
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="stat-card">
-                <div class="stat-icon beneficiaries">
-                    <i class="bi bi-people-fill"></i>
-                </div>
-                <div class="stat-value">
-                    @(ViewBag.TotalUsers ?? 0)
-                </div>
-                <div class="stat-label">Total Users</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stat-card">
-                <div class="stat-icon received">
-                    <i class="bi bi-shop"></i>
-                </div>
-                <div class="stat-value">
-                    @(ViewBag.TotalAgents ?? 0)
-                </div>
-                <div class="stat-label">Active Agents</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stat-card">
-                <div class="stat-icon sent">
-                    <i class="bi bi-hourglass-split"></i>
-                </div>
-                <div class="stat-value">
-                    @(ViewBag.PendingAgents ?? 0)
-                </div>
-                <div class="stat-label">Pending Apps</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stat-card">
-                <div class="stat-icon beneficiaries">
-                    <i class="bi bi-currency-exchange"></i>
-                </div>
-                <div class="stat-value">
-                    @(ViewBag.TotalTransactions ?? 0)
-                </div>
-                <div class="stat-label">Transactions</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row g-3 mb-4">
-        <div class="col-12">
-            <h3 style="font-size:16px;font-weight:700;color:var(--text-1);margin-bottom:14px">
-                <i class="bi bi-shield-lock" style="color:var(--teal);margin-right:8px"></i>
-                Admin Quick Actions
-            </h3>
-        </div>
-
-        @{
-            var adminCards = new[]
-            {
-                ("Users", "Manage Users", "View, sort, disable accounts", "bi-people-fill", "beneficiaries"),
-                ("AgentApplications", "Agent Applications", "Approve or reject requests", "bi-person-check-fill", "sent"),
-                ("KYCReview", "KYC Review", "Verify identity documents", "bi-shield-check", "received"),
-                ("WalletRequests", "Wallet Approvals", "Approve wallet creation", "bi-wallet2", "sent"),
-                ("AllTransactions", "All Transactions", "Platform-wide log", "bi-list-check", "beneficiaries"),
-                ("FeeSettings", "Fee Settings", "Configure transfer fees", "bi-percent", "received"),
-            };
-        }
-
-        @foreach (var card in adminCards)
+    <div class="panel-nav">
+        @if (isAdmin)
         {
-            <div class="col-md-4 col-lg-4">
-                <a asp-controller="Admin" asp-action="@card.Item1"
-                   class="tp-card d-block text-decoration-none"
-                   style="transition:var(--transition);cursor:pointer">
-                    <div style="display:flex;align-items:center;gap:12px">
-                        <div class="stat-icon @card.Item5" style="margin-bottom:0;flex-shrink:0">
-                            <i class="bi @card.Item4"></i>
-                        </div>
-                        <div style="flex:1">
-                            <div class="tp-card-title">@card.Item2</div>
-                            <div style="font-size:12px;color:var(--text-3);margin-top:2px">@card.Item3</div>
-                        </div>
-                        <i class="bi bi-chevron-right" style="color:var(--text-3)"></i>
-                    </div>
-                </a>
-            </div>
+            <a asp-controller="Admin" asp-action="Index" class="panel-card admin">
+                <i class="bi bi-shield-fill-check"></i>
+                <div>
+                    <div class="panel-title">Admin Panel</div>
+                    <div class="panel-desc">Manage platform</div>
+                </div>
+                <i class="bi bi-arrow-right-circle-fill panel-arrow"></i>
+            </a>
+        }
+        @if (isAgent)
+        {
+            <a asp-controller="Agent" asp-action="Dashboard" class="panel-card agent">
+                <i class="bi bi-shop-window"></i>
+                <div>
+                    <div class="panel-title">Agent Panel</div>
+                    <div class="panel-desc">Manage your store</div>
+                </div>
+                <i class="bi bi-arrow-right-circle-fill panel-arrow"></i>
+            </a>
         }
     </div>
-
-    <!-- Agent Section for Admin who are also Agents -->
-    @if (isAgent)
-    {
-        <div style="border-top:1px solid var(--border);margin:20px 0 24px"></div>
-        <div style="margin-bottom:16px">
-            <h3 style="font-size:16px;font-weight:700;color:var(--text-1);margin-bottom:14px">
-                <i class="bi bi-shop" style="color:var(--teal);margin-right:8px"></i>
-                Your Agent Dashboard
-            </h3>
-        </div>
-        
-        <!-- Agent Stats for Admin-Agent -->
-        <div class="row g-3 mb-4">
-            <div class="col-md-4">
-                <div class="stat-card">
-                    <div class="stat-icon received">
-                        <i class="bi bi-cash-coin"></i>
-                    </div>
-                    <div class="stat-value">
-                        $@((ViewBag.AgentTotalCashIn as decimal? ?? 0).ToString("N2"))
-                    </div>
-                    <div class="stat-label">Total Cash In</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="stat-card">
-                    <div class="stat-icon beneficiaries">
-                        <i class="bi bi-percent"></i>
-                    </div>
-                    <div class="stat-value">
-                        $@((ViewBag.AgentTotalCommissions as decimal? ?? 0).ToString("N2"))
-                    </div>
-                    <div class="stat-label">Total Commissions</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="stat-card">
-                    <div class="stat-icon received">
-                        <i class="bi bi-geo-alt-fill"></i>
-                    </div>
-                    <div class="stat-value">
-                        @(ViewBag.AgentLocationSet == true ? "Set ✓" : "Not Set")
-                    </div>
-                    <div class="stat-label">Map Location</div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="row g-3 mb-4">
-            <div class="col-md-3">
-                <a asp-controller="Agent" asp-action="Dashboard" class="tp-card d-block text-decoration-none">
-                    <div style="display:flex;align-items:center;gap:12px">
-                        <div class="stat-icon received" style="margin-bottom:0"><i class="bi bi-speedometer2"></i></div>
-                        <div><div class="tp-card-title">Agent Panel</div><div style="font-size:12px;color:var(--text-3)">Manage your store</div></div>
-                        <i class="bi bi-chevron-right" style="color:var(--text-3);margin-left:auto"></i>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-3">
-                <a asp-controller="Agent" asp-action="CashIn" class="tp-card d-block text-decoration-none">
-                    <div style="display:flex;align-items:center;gap:12px">
-                        <div class="stat-icon received" style="margin-bottom:0"><i class="bi bi-cash-coin"></i></div>
-                        <div><div class="tp-card-title">Cash In</div><div style="font-size:12px;color:var(--text-3)">Add cash to wallet</div></div>
-                        <i class="bi bi-chevron-right" style="color:var(--text-3);margin-left:auto"></i>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-3">
-                <a asp-controller="Agent" asp-action="CashOut" class="tp-card d-block text-decoration-none">
-                    <div style="display:flex;align-items:center;gap:12px">
-                        <div class="stat-icon sent" style="margin-bottom:0"><i class="bi bi-cash-stack"></i></div>
-                        <div><div class="tp-card-title">Cash Out</div><div style="font-size:12px;color:var(--text-3)">Process withdrawal</div></div>
-                        <i class="bi bi-chevron-right" style="color:var(--text-3);margin-left:auto"></i>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-3">
-                <a asp-controller="Agent" asp-action="SetLocation" class="tp-card d-block text-decoration-none">
-                    <div style="display:flex;align-items:center;gap:12px">
-                        <div class="stat-icon beneficiaries" style="margin-bottom:0"><i class="bi bi-geo-alt-fill"></i></div>
-                        <div><div class="tp-card-title">Set Location</div><div style="font-size:12px;color:var(--text-3)">Update store location</div></div>
-                        <i class="bi bi-chevron-right" style="color:var(--text-3);margin-left:auto"></i>
-                    </div>
-                </a>
-            </div>
-        </div>
-    }
-
-    <!-- Separator before personal account -->
-    <div style="border-top:1px solid var(--border);margin:20px 0 24px"></div>
-    <div style="margin-bottom:16px">
-        <h3 style="font-size:16px;font-weight:700;color:var(--text-1);margin-bottom:14px">
-            <i class="bi bi-person-circle" style="color:var(--teal);margin-right:8px"></i>
-            Your Personal Account
-        </h3>
-    </div>
 }
 
-<!-- Agent Section (for pure agents, not admins) -->
-@if (isAgent && !isAdmin)
-{
-    <!-- Agent Stats -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="stat-card">
-                <div class="stat-icon received">
-                    <i class="bi bi-cash-coin"></i>
-                </div>
-                <div class="stat-value">
-                    $@((ViewBag.AgentTotalCashIn as decimal? ?? 0).ToString("N2"))
-                </div>
-                <div class="stat-label">Total Cash In</div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="stat-card">
-                <div class="stat-icon beneficiaries">
-                    <i class="bi bi-percent"></i>
-                </div>
-                <div class="stat-value">
-                    $@((ViewBag.AgentTotalCommissions as decimal? ?? 0).ToString("N2"))
-                </div>
-                <div class="stat-label">Total Commissions</div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="stat-card">
-                <div class="stat-icon received">
-                    <i class="bi bi-geo-alt-fill"></i>
-                </div>
-                <div class="stat-value">
-                    @(ViewBag.AgentLocationSet == true ? "Set ✓" : "Not Set")
-                </div>
-                <div class="stat-label">Map Location</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <a asp-controller="Agent" asp-action="Dashboard" class="tp-card d-block text-decoration-none">
-                <div style="display:flex;align-items:center;gap:12px">
-                    <div class="stat-icon received" style="margin-bottom:0"><i class="bi bi-speedometer2"></i></div>
-                    <div><div class="tp-card-title">Agent Dashboard</div><div style="font-size:12px;color:var(--text-3)">Manage your store</div></div>
-                    <i class="bi bi-chevron-right" style="color:var(--text-3);margin-left:auto"></i>
-                </div>
-            </a>
-        </div>
-        <div class="col-md-3">
-            <a asp-controller="Agent" asp-action="CashIn" class="tp-card d-block text-decoration-none">
-                <div style="display:flex;align-items:center;gap:12px">
-                    <div class="stat-icon received" style="margin-bottom:0"><i class="bi bi-cash-coin"></i></div>
-                    <div><div class="tp-card-title">Cash In</div><div style="font-size:12px;color:var(--text-3)">Add cash to wallet</div></div>
-                    <i class="bi bi-chevron-right" style="color:var(--text-3);margin-left:auto"></i>
-                </div>
-            </a>
-        </div>
-        <div class="col-md-3">
-            <a asp-controller="Agent" asp-action="CashOut" class="tp-card d-block text-decoration-none">
-                <div style="display:flex;align-items:center;gap:12px">
-                    <div class="stat-icon sent" style="margin-bottom:0"><i class="bi bi-cash-stack"></i></div>
-                    <div><div class="tp-card-title">Cash Out</div><div style="font-size:12px;color:var(--text-3)">Process withdrawal</div></div>
-                    <i class="bi bi-chevron-right" style="color:var(--text-3);margin-left:auto"></i>
-                </div>
-            </a>
-        </div>
-        <div class="col-md-3">
-            <a asp-controller="Agent" asp-action="SetLocation" class="tp-card d-block text-decoration-none">
-                <div style="display:flex;align-items:center;gap:12px">
-                    <div class="stat-icon beneficiaries" style="margin-bottom:0"><i class="bi bi-geo-alt-fill"></i></div>
-                    <div><div class="tp-card-title">Set Location</div><div style="font-size:12px;color:var(--text-3)">Update store location</div></div>
-                    <i class="bi bi-chevron-right" style="color:var(--text-3);margin-left:auto"></i>
-                </div>
-            </a>
-        </div>
-    </div>
-}
-
-<!-- User Account Section (Visible to ALL users - the original dashboard content) -->
+<!-- ── BALANCE + WALLETS ── -->
 <div class="row g-3 mb-3">
     <div class="col-lg-4">
         <div class="balance-card h-100">
             <div class="balance-label">Available Balance</div>
-
             @{
-                var activeWallet = Model.Wallets
-                .FirstOrDefault(w => w.IsDefault)
-                ?? Model.Wallets.FirstOrDefault();
+                var activeWallet = Model.Wallets.FirstOrDefault(w => w.IsDefault) ?? Model.Wallets.FirstOrDefault();
             }
-
             <div class="balance-amount">
                 @if (activeWallet != null)
                 {
                     var wholePart = (long)activeWallet.Balance;
-                    var decPart = (int)Math.Round(
-                    (activeWallet.Balance - wholePart) * 100);
-                    <text>
-                        @activeWallet.CurrencySymbol@wholePart.ToString("N0")<span class="decimals">.@decPart.ToString("00")</span>
-                    </text>
+                    var decPart = (int)Math.Round((activeWallet.Balance - wholePart) * 100);
+                    <text>@activeWallet.CurrencySymbol@wholePart.ToString("N0")<span class="decimals">.@decPart.ToString("00")</span></text>
                 }
                 else
                 {
                     <text>$0<span class="decimals">.00</span></text>
                 }
             </div>
-
-            <div style="font-size:11px;opacity:.75;
-                        font-family:var(--font-mono);
-                        letter-spacing:.4px;margin-top:6px">
+            <div class="balance-account">
                 Account: @Model.AccountSerial
             </div>
-            <div style="font-size:11px;opacity:.65;
-                        font-family:var(--font-mono);
-                        letter-spacing:.4px;margin-top:2px">
-                Wallet:
-                @(activeWallet?.SerialNumber ?? "—")
+            <div class="balance-wallet">
+                Wallet: @(activeWallet?.SerialNumber ?? "—")
             </div>
-
-            <div class="currency-pills" style="margin-top:14px">
+            <div class="currency-pills-container">
                 @foreach (var w in Model.Wallets)
                 {
-                    <form asp-controller="Dashboard"
-                          asp-action="SetDefaultWallet"
-                          method="post"
-                          style="display:inline;margin:0">
+                    <form asp-controller="Dashboard" asp-action="SetDefaultWallet" method="post" style="display:inline;margin:0">
                         @Html.AntiForgeryToken()
-                        <input type="hidden" name="walletId"
-                               value="@w.Id" />
-                        <button type="submit"
-                                class="currency-pill @(w.IsDefault ? "active" : "")"
-                                style="background:transparent;
-                                           border:1.5px solid rgba(255,255,255,@(w.IsDefault ? "1" : "0.45"));
-                                           cursor:pointer;font-weight:700;
-                                           color:rgba(255,255,255,@(w.IsDefault ? "1" : "0.8"))">
+                        <input type="hidden" name="walletId" value="@w.Id" />
+                        <button type="submit" class="currency-pill currency-pill-btn @(w.IsDefault ? "active" : "")">
                             @w.CurrencyCode
                         </button>
                     </form>
@@ -412,73 +90,45 @@
         <div class="row g-3">
             <div class="col-md-4">
                 <div class="stat-card">
-                    <div class="stat-icon sent">
-                        <i class="bi bi-arrow-up-right"></i>
-                    </div>
+                    <div class="stat-icon sent"><i class="bi bi-arrow-up-right"></i></div>
                     <div class="stat-value">$@Model.TotalSent.ToString("N0")</div>
                     <div class="stat-label">Total Sent</div>
-                    <div class="stat-sub">
-                        <i class="bi bi-arrow-up"></i>
-                        @Model.SentThisMonth this month
-                    </div>
+                    <div class="stat-sub"><i class="bi bi-arrow-up"></i> @Model.SentThisMonth this month</div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="stat-card">
-                    <div class="stat-icon received">
-                        <i class="bi bi-arrow-down-left"></i>
-                    </div>
+                    <div class="stat-icon received"><i class="bi bi-arrow-down-left"></i></div>
                     <div class="stat-value">$@Model.TotalReceived.ToString("N0")</div>
                     <div class="stat-label">Total Received</div>
-                    <div class="stat-sub">
-                        <i class="bi bi-arrow-up"></i>
-                        @Model.ReceivedThisMonth this month
-                    </div>
+                    <div class="stat-sub"><i class="bi bi-arrow-up"></i> @Model.ReceivedThisMonth this month</div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="stat-card">
-                    <div class="stat-icon beneficiaries">
-                        <i class="bi bi-people-fill"></i>
-                    </div>
+                    <div class="stat-icon beneficiaries"><i class="bi bi-people-fill"></i></div>
                     <div class="stat-value">@Model.ActiveBeneficiaries</div>
                     <div class="stat-label">Beneficiaries</div>
-                    <div class="stat-sub neutral">
-                        <i class="bi bi-globe"></i>
-                        @Model.BeneficiaryCountries countries
-                    </div>
+                    <div class="stat-sub neutral"><i class="bi bi-globe"></i> @Model.BeneficiaryCountries countries</div>
                 </div>
             </div>
-
             <div class="col-12">
-                <div class="tp-card" style="padding:16px 20px">
-                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
-                        <a asp-controller="Transfer" asp-action="Create"
-                           class="quick-action">
-                            <div class="qa-icon send">
-                                <i class="bi bi-send-fill"></i>
-                            </div>
+                <div class="tp-card">
+                    <div class="quick-actions-grid">
+                        <a asp-controller="Transfer" asp-action="Create" class="quick-action">
+                            <div class="qa-icon send"><i class="bi bi-send-fill"></i></div>
                             <span class="qa-label">Send Money</span>
                         </a>
-                        <a asp-controller="TopUp" asp-action="Create"
-                           class="quick-action">
-                            <div class="qa-icon topup">
-                                <i class="bi bi-plus-circle-fill"></i>
-                            </div>
+                        <a asp-controller="TopUp" asp-action="Create" class="quick-action">
+                            <div class="qa-icon topup"><i class="bi bi-plus-circle-fill"></i></div>
                             <span class="qa-label">Top Up</span>
                         </a>
-                        <a asp-controller="Wallet" asp-action="Index"
-                           class="quick-action">
-                            <div class="qa-icon wallet">
-                                <i class="bi bi-wallet2"></i>
-                            </div>
+                        <a asp-controller="Wallet" asp-action="Index" class="quick-action">
+                            <div class="qa-icon wallet"><i class="bi bi-wallet2"></i></div>
                             <span class="qa-label">My Wallets</span>
                         </a>
-                        <a asp-controller="Beneficiary" asp-action="Index"
-                           class="quick-action">
-                            <div class="qa-icon rate">
-                                <i class="bi bi-people-fill"></i>
-                            </div>
+                        <a asp-controller="Beneficiary" asp-action="Index" class="quick-action">
+                            <div class="qa-icon rate"><i class="bi bi-people-fill"></i></div>
                             <span class="qa-label">Beneficiaries</span>
                         </a>
                     </div>
@@ -488,16 +138,16 @@
     </div>
 </div>
 
+<!-- ── RECENT TRANSACTIONS + WALLETS ── -->
 <div class="row g-3">
     <div class="col-lg-8">
         <div class="tp-card">
             <div class="tp-card-header">
                 <span class="tp-card-title">
-                    <i class="bi bi-clock-history" style="color:var(--teal);margin-right:6px"></i>
+                    <i class="bi bi-clock-history"></i>
                     Recent Transactions
                 </span>
-                <a asp-controller="Transaction" asp-action="Index"
-                   class="tp-card-link">View all →</a>
+                <a asp-controller="Transaction" asp-action="Index" class="tp-card-link">View all →</a>
             </div>
 
             @if (!Model.RecentTransactions.Any())
@@ -505,8 +155,7 @@
                 <div class="empty-state">
                     <i class="bi bi-receipt"></i>
                     <p>No transactions yet. Make your first transfer!</p>
-                    <a asp-controller="Transfer" asp-action="Create"
-                       class="btn-tp-primary">
+                    <a asp-controller="Transfer" asp-action="Create" class="btn-tp-primary">
                         <i class="bi bi-send"></i> Send Money
                     </a>
                 </div>
@@ -516,12 +165,10 @@
                 @foreach (var tx in Model.RecentTransactions)
                 {
                     <div class="transaction-item">
-                        <div class="tx-avatar @(tx.IsSent ? "sent" : "received")"
-                             style="@(!string.IsNullOrEmpty(tx.ReceiverPictureUrl) ? "padding:0;overflow:hidden" : "")">
+                        <div class="tx-avatar @(tx.IsSent ? "sent" : "received")">
                             @if (!string.IsNullOrEmpty(tx.ReceiverPictureUrl))
                             {
-                                <img src="@tx.ReceiverPictureUrl"
-                                     style="width:100%;height:100%;object-fit:cover;border-radius:var(--r-sm)" />
+                                <img src="@tx.ReceiverPictureUrl" class="tx-avatar-img" />
                             }
                             else
                             {
@@ -532,20 +179,19 @@
                             <div class="tx-name">@tx.ReceiverName</div>
                             <div class="tx-date">
                                 @tx.CreatedAt.ToString("MMM dd, yyyy")
-                                <span class="tx-status @tx.Status.ToLower()">
-                                    @tx.Status
-                                </span>
+                                <span class="tx-status @tx.Status.ToLower()">@tx.Status</span>
+                                @if (tx.FeeWaived)
+                                {
+                                    <span class="badge-tp success">Free 🎉</span>
+                                }
                             </div>
                         </div>
                         <div style="text-align:right">
                             <div class="tx-amount @(tx.IsSent ? "sent" : "received")">
                                 @(tx.IsSent ? "−" : "+")@tx.CurrencySymbol@tx.Amount.ToString("N2")
                             </div>
-                            <a asp-controller="Transaction" asp-action="Details"
-                               asp-route-id="@tx.Id"
-                               style="font-size:11px;color:var(--teal);text-decoration:none">
-                                Details
-                            </a>
+                            <a asp-controller="Transaction" asp-action="Details" asp-route-id="@tx.Id"
+                               class="tx-details-link">Details</a>
                         </div>
                     </div>
                 }
@@ -557,22 +203,17 @@
         <div class="tp-card">
             <div class="tp-card-header">
                 <span class="tp-card-title">
-                    <i class="bi bi-wallet2" style="color:var(--teal);margin-right:6px"></i>
+                    <i class="bi bi-wallet2"></i>
                     My Wallets
                 </span>
-                <a asp-controller="Wallet" asp-action="Create"
-                   class="tp-card-link">+ New</a>
+                <a asp-controller="Wallet" asp-action="Create" class="tp-card-link">+ New</a>
             </div>
-
             @if (!Model.Wallets.Any())
             {
                 <div class="empty-state">
                     <i class="bi bi-wallet2"></i>
                     <p>No wallets yet</p>
-                    <a asp-controller="Wallet" asp-action="Create"
-                       class="btn-tp-primary" style="font-size:12px;padding:8px 16px">
-                        Create Wallet
-                    </a>
+                    <a asp-controller="Wallet" asp-action="Create" class="btn-tp-primary">Create Wallet</a>
                 </div>
             }
             else
@@ -585,19 +226,14 @@
                                 <div class="wallet-currency">@w.CurrencyCode</div>
                                 @if (w.IsDefault)
                                 {
-                                    <span class="badge-tp success"
-                                          style="font-size:10px">Default</span>
+                                    <span class="badge-tp success">Default</span>
                                 }
                             </div>
-                            <div class="wallet-balance">
-                                @w.CurrencySymbol@w.Balance.ToString("N2")
-                            </div>
+                            <div class="wallet-balance">@w.CurrencySymbol@w.Balance.ToString("N2")</div>
                             <div class="wallet-serial">@w.SerialNumber</div>
                         </div>
                     }
-                    <a asp-controller="TopUp" asp-action="Create"
-                       class="btn-tp-primary"
-                       style="justify-content:center;font-size:12px;padding:9px">
+                    <a asp-controller="TopUp" asp-action="Create" class="btn-tp-primary add-funds-btn">
                         <i class="bi bi-plus-circle"></i> Add Funds
                     </a>
                 </div>
@@ -605,3 +241,12 @@
         </div>
     </div>
 </div>
+
+<!-- Lebanese Culture Tip -->
+<div class="culture-tip mt-4">
+    <i class="bi bi-tree-fill"></i>
+    <strong>Did you know?</strong> The Cedar tree on the Lebanese flag represents eternity, holiness, and peace. 🌲🇱🇧
+</div>
+
+<!-- Flag Divider -->
+<div class="flag-divider mt-3 mb-2"></div>

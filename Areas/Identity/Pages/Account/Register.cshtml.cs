@@ -118,6 +118,7 @@ namespace MoneyTransfer.Areas.Identity.Pages.Account
                 user.LastName = Input.LastName;
                 user.CreatedAt = DateTime.Now;
                 user.IsActive = true;
+                user.ProfileCompleted = false;  // ← ADD THIS - Profile not completed yet
 
                 var result = await _userManager.CreateAsync(user, Input.Password);
 
@@ -129,20 +130,13 @@ namespace MoneyTransfer.Areas.Identity.Pages.Account
                     user.LastName = Input.LastName;
                     user.CreatedAt = DateTime.Now;
                     user.IsActive = true;
+                    user.ProfileCompleted = false;  
                     await _userManager.UpdateAsync(user);
 
                     await _userManager.AddToRoleAsync(user, Roles.User);
 
-                    if (_userManager.Options.SignIn.RequireConfirmedAccount)
-                    {
-                        return RedirectToPage("RegisterConfirmation",
-                            new { email = Input.Email, returnUrl = returnUrl });
-                    }
-                    else
-                    {
-                        await _signInManager.SignInAsync(user, isPersistent: false);
-                        return LocalRedirect(returnUrl ?? "/");
-                    }
+                    await _signInManager.SignInAsync(user, isPersistent: false);
+                    return LocalRedirect("/Account/SetUpChoice");
                 }
 
                 foreach (var error in result.Errors)

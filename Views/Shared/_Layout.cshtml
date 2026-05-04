@@ -21,58 +21,30 @@
         (function() {
             if (localStorage.getItem('darkMode') === '1') {
                 document.documentElement.classList.add('dark-mode');
+                document.body.classList.add('dark-mode');
             }
         })();
     </script>
 </head>
-<body class="@(User.IsInRole("admin") ? "admin-theme" : User.IsInRole("agent") ? "agent-theme" : "")">
+<body class="@(User.IsInRole("Admin") ? "admin-theme" : User.IsInRole("Agent") ? "agent-theme" : "") @(ViewBag.PageClass ?? "page-dashboard")">
 
     @{
         var ctrl = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
         var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
         bool isAuth = User.Identity?.IsAuthenticated == true;
-        bool isAdmin = User.IsInRole("admin");
-        bool isAgent = User.IsInRole("agent");
+        bool isAdmin = User.IsInRole("Admin");
+        bool isAgent = User.IsInRole("Agent");
+        var userIdHash = User.Identity?.IsAuthenticated == true ? User.Identity.Name?.GetHashCode() ?? 0 : 0;
+        var avatarColorNumber = (Math.Abs(userIdHash) % 8) + 1;
     }
 
     @if (!isAuth)
     {
         <!-- Public layout - no sidebar -->
         <nav class="public-nav">
-            <div class="sidebar-brand" style="padding:0;margin:0">
-                <div class="brand-icon" style="background:var(--teal);border-radius:12px;display:flex;align-items:center;justify-content:center;width:32px;height:32px">
-
-                    <!-- UPDATED LOGO -->
-                    <svg viewBox="0 0 34 34" width="28" height="28">
-                        <rect width="34" height="34" rx="8" fill="#00b894" />
-
-                        <path d="M17 5
-                                     L23 11
-                                     H20
-                                     L25 16
-                                     H21
-                                     L27 22
-                                     H20
-                                     V27
-                                     H14
-                                     V22
-                                     H7
-                                     L13 16
-                                     H9
-                                     L14 11
-                                     H11
-                                     Z"
-                              fill="#ffffff"
-                              opacity="0.95" />
-
-                        <text x="17" y="21"
-                              text-anchor="middle"
-                              font-size="10"
-                              font-weight="bold"
-                              fill="#00b894"
-                              font-family="Arial">$</text>
-                    </svg>
-
+            <div class="sidebar-brand public-nav-brand">
+                <div class="brand-icon">
+                    <img src="/images/cedarpay-logo.png" alt="CedarPay" style="width:28px;height:28px;object-fit:contain" />
                 </div>
                 <span class="brand-name">
                     Cedar<span class="brand-accent">Pay</span>
@@ -94,41 +66,9 @@
 
                 <!-- Brand / Toggle -->
                 <div class="sidebar-brand">
-                    <button onclick="toggleSidebar()"
-                            style="background:none;border:none;display:flex;align-items:center;gap:10px;padding:0;cursor:pointer;width:100%">
-                        <div class="brand-icon" style="flex-shrink:0;background:var(--teal);border-radius:12px;width:34px;height:34px;display:flex;align-items:center;justify-content:center">
-
-                            <!-- UPDATED LOGO -->
-                            <svg viewBox="0 0 34 34" width="28" height="28">
-                                <rect width="34" height="34" rx="8" fill="#00b894" />
-
-                                <path d="M17 5
-                                             L23 11
-                                             H20
-                                             L25 16
-                                             H21
-                                             L27 22
-                                             H20
-                                             V27
-                                             H14
-                                             V22
-                                             H7
-                                             L13 16
-                                             H9
-                                             L14 11
-                                             H11
-                                             Z"
-                                      fill="#ffffff"
-                                      opacity="0.95" />
-
-                                <text x="17" y="21"
-                                      text-anchor="middle"
-                                      font-size="10"
-                                      font-weight="bold"
-                                      fill="#00b894"
-                                      font-family="Arial">$</text>
-                            </svg>
-
+                    <button onclick="toggleSidebar()" class="sidebar-brand-btn">
+                        <div class="brand-icon">
+                            <img src="/images/cedarpay-logo.png" alt="CedarPay" style="width:28px;height:28px;object-fit:contain" />
                         </div>
                         <span class="brand-name brand-text">
                             Cedar<span class="brand-accent">Pay</span>
@@ -192,6 +132,14 @@
                         <i class="bi bi-star-fill"></i>
                         <span class="brand-text">Reviews</span>
                     </a>
+                    <!-- User-facing Announcements - shows to ALL users -->
+                    <a asp-controller="Announcement"
+                       asp-action="Index"
+                       class="nav-item @(ctrl == "Announcement" && action != "Manage" ? "active" : "")">
+                        <i class="bi bi-megaphone-fill"></i>
+                        <span class="brand-text">Announcements</span>
+                        <span id="annSidebarBadge" style="display:none;background:#ef4444;color:#fff;border-radius:20px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:auto"></span>
+                    </a>
                     <a asp-controller="Map"
                        asp-action="Index"
                        class="nav-item @(ctrl == "Map" ? "active" : "")">
@@ -231,9 +179,7 @@
                            asp-action="Dashboard"
                            class="nav-item @(ctrl == "Agent" && action == "Dashboard" ? "active" : "")">
                             <i class="bi bi-speedometer2"></i>
-                            <span class="brand-text">
-                                Agent Dashboard
-                            </span>
+                            <span class="brand-text">Agent Dashboard</span>
                         </a>
                         <a asp-controller="Agent"
                            asp-action="CashIn"
@@ -257,9 +203,7 @@
                            asp-action="SetLocation"
                            class="nav-item @(action == "SetLocation" ? "active" : "")">
                             <i class="bi bi-pin-map-fill"></i>
-                            <span class="brand-text">
-                                Set Map Location
-                            </span>
+                            <span class="brand-text">Set Map Location</span>
                         </a>
                         <a asp-controller="Agent"
                            asp-action="Register"
@@ -279,33 +223,25 @@
                            asp-action="Index"
                            class="nav-item @(ctrl == "Admin" && action == "Index" ? "active" : "")">
                             <i class="bi bi-shield-fill"></i>
-                            <span class="brand-text">
-                                Control Center
-                            </span>
+                            <span class="brand-text">Control Center</span>
                         </a>
                         <a asp-controller="Admin"
                            asp-action="Users"
                            class="nav-item @(action == "Users" || action == "UserDetails" ? "active" : "")">
                             <i class="bi bi-people-fill"></i>
-                            <span class="brand-text">
-                                Manage Users
-                            </span>
+                            <span class="brand-text">Manage Users</span>
                         </a>
                         <a asp-controller="Admin"
                            asp-action="AgentApplications"
                            class="nav-item @(action=="AgentApplications" ? "active" : "")">
                             <i class="bi bi-person-check-fill"></i>
-                            <span class="brand-text">
-                                Applications
-                            </span>
+                            <span class="brand-text">Applications</span>
                             @{
                                 var pendingCount = ViewBag.PendingAgentsCount as int? ?? 0;
                             }
                             @if (pendingCount > 0)
                             {
-                                <span class="nav-badge">
-                                    @pendingCount
-                                </span>
+                                <span class="nav-badge">@pendingCount</span>
                             }
                         </a>
                         <a asp-controller="Admin"
@@ -318,17 +254,13 @@
                            asp-action="WalletRequests"
                            class="nav-item @(action == "WalletRequests" ? "active" : "")">
                             <i class="bi bi-wallet2"></i>
-                            <span class="brand-text">
-                                Wallet Approvals
-                            </span>
+                            <span class="brand-text">Wallet Approvals</span>
                         </a>
                         <a asp-controller="Admin"
                            asp-action="AllTransactions"
                            class="nav-item @(action == "AllTransactions" ? "active" : "")">
                             <i class="bi bi-list-check"></i>
-                            <span class="brand-text">
-                                All Transactions
-                            </span>
+                            <span class="brand-text">All Transactions</span>
                         </a>
                         <a asp-controller="Admin"
                            asp-action="EarningsReport"
@@ -340,9 +272,7 @@
                            asp-action="FeeSettings"
                            class="nav-item @(action == "FeeSettings" ? "active" : "")">
                             <i class="bi bi-percent"></i>
-                            <span class="brand-text">
-                                Fee Settings
-                            </span>
+                            <span class="brand-text">Fee Settings</span>
                         </a>
                         <a asp-controller="Admin"
                            asp-action="ExchangeRates"
@@ -350,58 +280,44 @@
                             <i class="bi bi-currency-exchange"></i>
                             <span class="brand-text">Exchange Rates</span>
                         </a>
+                        <!-- ADMIN Announcements Management - only for Admin -->
+                        <a asp-controller="Announcement"
+                           asp-action="Manage"
+                           class="nav-item @(ctrl == "Announcement" && action == "Manage" ? "active" : "")">
+                            <i class="bi bi-megaphone-fill"></i>
+                            <span class="brand-text">Manage Announcements</span>
+                        </a>
+                        <a asp-controller="AdminAnalytics" asp-action="Index" class="nav-item @(ctrl == "AdminAnalytics" ? "active" : "")">
+                            <i class="bi bi-graph-up-arrow"></i>
+                            <span class="brand-text">Analytics</span>
+                        </a>
                         <a asp-controller="Admin"
                            asp-action="InstantAgent"
+                           onclick="return confirmInstantAgent()"
                            class="nav-item @(isAgent ? "active" : "")">
                             <i class="bi bi-shop"></i>
-                            <span class="brand-text">
-                                @(isAgent ? "Agent Active ✓" : "Become Agent")
-                            </span>
+                            <span class="brand-text">@(isAgent ? "Agent Active ✓" : "Become Agent")</span>
                         </a>
                     </nav>
                 }
 
                 <div class="sidebar-bottom">
-                    <div style="display:flex;align-items:center;
-                                            gap:10px;padding:10px 12px;
-                                            margin-bottom:4px">
-                        @if (!string.IsNullOrEmpty(
-                                            ViewBag.ProfilePictureUrl as string))
+                    <div class="sidebar-user">
+                        @if (!string.IsNullOrEmpty(ViewBag.ProfilePictureUrl as string))
                         {
-                            <img src="@ViewBag.ProfilePictureUrl"
-                                 style="width:32px;height:32px;
-                                                        border-radius:50%;
-                                                        object-fit:cover;
-                                                        flex-shrink:0" />
+                            <img src="@ViewBag.ProfilePictureUrl" class="sidebar-avatar-img" />
                         }
                         else
                         {
-                            <div style="width:32px;height:32px;
-                                                        border-radius:50%;
-                                                        background:linear-gradient(
-                                                            135deg,var(--teal),
-                                                            var(--teal-mid));
-                                                        display:flex;
-                                                        align-items:center;
-                                                        justify-content:center;
-                                                        font-size:11px;
-                                                        font-weight:800;
-                                                        color:#fff;flex-shrink:0">
+                            <div class="sidebar-avatar-initials avatar-color-@avatarColorNumber">
                                 @(ViewBag.UserInitials ?? "?")
                             </div>
                         }
-                        <div style="overflow:hidden"
-                             class="brand-text">
-                            <div style="font-size:13px;
-                                                font-weight:600;
-                                                color:var(--text-1);
-                                                white-space:nowrap;
-                                                overflow:hidden;
-                                                text-overflow:ellipsis">
+                        <div class="sidebar-user-info brand-text">
+                            <div class="sidebar-user-name">
                                 @(ViewBag.FullName ?? "User")
                             </div>
-                            <div style="font-size:11px;
-                                                color:var(--text-3)">
+                            <div class="sidebar-user-role">
                                 @if (isAdmin)
                                 {
                                     <span>Admin</span>
@@ -423,9 +339,7 @@
                               asp-page="/Account/Logout"
                               asp-route-returnUrl="/"
                               method="post">
-                            <button type="submit"
-                                    class="nav-item logout-btn"
-                                    style="width:100%">
+                            <button type="submit" class="nav-item logout-btn logout-btn-full">
                                 <i class="bi bi-box-arrow-left"></i>
                                 <span class="brand-text">Logout</span>
                             </button>
@@ -435,72 +349,47 @@
             </aside>
 
             <div class="main-content" id="mainContent">
-
                 <header class="topbar">
                     <div class="topbar-left">
                         <div class="page-title">
                             <h1>@(ViewData["Title"] ?? "CedarPay")</h1>
                             <div class="page-date">
-                                @DateTime.Now.ToString(
-                                "dddd, MMMM dd, yyyy")
+                                @DateTime.Now.ToString("dddd, MMMM dd, yyyy")
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="topbar-right">
-                    <a asp-controller="Chat"
-                       asp-action="Index"
-                       class="topbar-btn"
-                       style="position:relative"
-                       title="Messages">
-                        <i class="bi bi-chat-dots-fill"></i>
-                        <span id="chatBadge"
-                              style="display:none;
-                                         position:absolute;
-                                         top:-4px;right:-4px;
-                                         width:16px;height:16px;
-                                         background:var(--teal);
-                                         border-radius:50%;
-                                         font-size:9px;
-                                         font-weight:700;
-                                         color:#fff;
-                                         align-items:center;
-                                         justify-content:center;
-                                         border:2px solid var(--surface)">
-                            0
-                        </span>
-                    </a>
+                    <div class="topbar-right">
+                        <a asp-controller="Chat"
+                           asp-action="Index"
+                           class="topbar-btn"
+                           title="Messages">
+                            <i class="bi bi-chat-dots-fill"></i>
+                            <span id="chatBadge" class="chat-badge">0</span>
+                        </a>
 
-                    <a asp-controller="Notification"
-                       asp-action="Index"
-                       class="topbar-btn"
-                       style="position:relative"
-                       id="notifBtn"
-                       title="Notifications">
-                        <i class="bi bi-bell-fill"></i>
-                        <span class="notification-dot"
-                              id="notifBadge"
-                              style="display:none">0</span>
-                    </a>
+                        <a asp-controller="Notification"
+                           asp-action="Index"
+                           class="topbar-btn"
+                           id="notifBtn"
+                           title="Notifications">
+                            <i class="bi bi-bell-fill"></i>
+                            <span class="notification-dot" id="notifBadge">0</span>
+                        </a>
 
-                    <a asp-controller="Account"
-                       asp-action="Profile"
-                       class="user-avatar"
-                       title="Profile">
-                        @if (!string.IsNullOrEmpty(
-                                                ViewBag.ProfilePictureUrl
-                                                as string))
+                        <a asp-controller="Account"
+                           asp-action="Profile"
+                           class="user-avatar topbar-user-avatar"
+                           title="Profile">
+                            @if (!string.IsNullOrEmpty(ViewBag.ProfilePictureUrl as string))
                             {
-                                <img src="@ViewBag.ProfilePictureUrl"
-                                     style="width:36px;height:36px;
-                                                            border-radius:var(--r-sm);
-                                                            object-fit:cover" />
+                                <img src="@ViewBag.ProfilePictureUrl" class="user-avatar-img" />
                             }
                             else
                             {
-                                <span>
+                                <div class="avatar-initials avatar-color-@avatarColorNumber" style="width:36px;height:36px;font-size:12px;">
                                     @(ViewBag.UserInitials ?? "?")
-                                </span>
+                                </div>
                             }
                         </a>
                     </div>
@@ -525,89 +414,86 @@
                     </div>
                 }
 
+                <div id="annBannerContainer" class="ann-banner-container"></div>
                 <main class="page-content">
                     @RenderBody()
                 </main>
             </div>
-
         </div>
     }
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">
-    </script>
+    <!-- Lebanese Cedar Background SVG (embedded for reliability) -->
+    <svg class="cedar-bg-svg" style="position: fixed; bottom: 0; left: 0; width: 100%; height: 260px; z-index: 0; pointer-events: none; opacity: 0.04;">
+        <defs>
+            <g id="cedar-tree-simple">
+                <polygon points="20,50 35,15 50,50" />
+                <polygon points="22,40 35,10 48,40" />
+                <polygon points="24,30 35,5 46,30" />
+                <rect x="33" y="50" width="4" height="25" />
+            </g>
+        </defs>
+        <use href="#cedar-tree-simple" x="30" y="180" transform="scale(0.8)" />
+        <use href="#cedar-tree-simple" x="180" y="160" transform="scale(1)" />
+        <use href="#cedar-tree-simple" x="350" y="190" transform="scale(0.9)" />
+        <use href="#cedar-tree-simple" x="520" y="150" transform="scale(1.1)" />
+        <use href="#cedar-tree-simple" x="700" y="185" transform="scale(0.85)" />
+        <use href="#cedar-tree-simple" x="880" y="165" transform="scale(1)" />
+        <use href="#cedar-tree-simple" x="1050" y="195" transform="scale(0.75)" />
+        <use href="#cedar-tree-simple" x="1220" y="170" transform="scale(1.05)" />
+    </svg>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     @if (isAuth)
     {
         <script>
             function applyDarkMode(on) {
-                document.body.classList.toggle('dark-mode', on);
-                document.documentElement.classList
-                    .toggle('dark-mode', on);
+                if (on) {
+                    document.documentElement.classList.add('dark-mode');
+                    document.body.classList.add('dark-mode');
+                } else {
+                    document.documentElement.classList.remove('dark-mode');
+                    document.body.classList.remove('dark-mode');
+                }
             }
 
-            applyDarkMode(
-                localStorage.getItem('darkMode') === '1');
+            applyDarkMode(localStorage.getItem('darkMode') === '1');
 
             function toggleDarkMode(cb) {
                 const on = cb.checked;
-                localStorage.setItem('darkMode',
-                    on ? '1' : '0');
+                localStorage.setItem('darkMode', on ? '1' : '0');
                 applyDarkMode(on);
-                const knob =
-                    document.getElementById('darkKnob');
-                const slider =
-                    document.getElementById('darkSlider');
-                if (knob) knob.style.transform =
-                    on ? 'translateX(22px)' : '';
-                if (slider) slider.style.background =
-                    on ? 'var(--teal)' : '#d0d7e0';
+            }
+
+            function confirmInstantAgent() {
+                return confirm('Become an agent? This will add the Agent role to your account.');
             }
 
             function toggleSidebar() {
-                const sidebar =
-                    document.getElementById('sidebar');
-                const main =
-                    document.getElementById('mainContent');
-                const isMini =
-                    sidebar.classList.toggle('mini');
-                main.classList.toggle(
-                    'sidebar-mini', isMini);
-                localStorage.setItem(
-                    'sidebarMini', isMini ? '1' : '0');
+                const sidebar = document.getElementById('sidebar');
+                const main = document.getElementById('mainContent');
+                const isMini = sidebar.classList.toggle('mini');
+                main.classList.toggle('sidebar-mini', isMini);
+                localStorage.setItem('sidebarMini', isMini ? '1' : '0');
                 updateSidebarText(isMini);
             }
 
             function updateSidebarText(isMini) {
-                document.querySelectorAll('.brand-text')
-                    .forEach(el => {
-                        el.style.display =
-                            isMini ? 'none' : '';
-                    });
-                document.querySelectorAll(
-                    '.sidebar-section-label')
-                    .forEach(el => {
-                        el.style.display =
-                            isMini ? 'none' : '';
-                    });
+                document.querySelectorAll('.brand-text').forEach(el => {
+                    el.style.display = isMini ? 'none' : '';
+                });
+                document.querySelectorAll('.sidebar-section-label').forEach(el => {
+                    el.style.display = isMini ? 'none' : '';
+                });
             }
 
-            document.addEventListener('DOMContentLoaded',
-            () => {
-                const isMini =
-                    localStorage.getItem('sidebarMini')
-                    === '1';
+            document.addEventListener('DOMContentLoaded', () => {
+                const isMini = localStorage.getItem('sidebarMini') === '1';
                 if (isMini) {
-                    const sidebar =
-                        document.getElementById('sidebar');
-                    const main =
-                        document.getElementById(
-                            'mainContent');
-                    if (sidebar) {
-                        sidebar.classList.add('mini');
-                    }
-                    if (main) {
-                        main.classList.add('sidebar-mini');
-                    }
+                    const sidebar = document.getElementById('sidebar');
+                    const main = document.getElementById('mainContent');
+                    if (sidebar) sidebar.classList.add('mini');
+                    if (main) main.classList.add('sidebar-mini');
                     updateSidebarText(true);
                 }
             });
@@ -616,15 +502,11 @@
                 fetch('/api/NotificationApi/unread-count')
                     .then(r => r.json())
                     .then(data => {
-                        const badge = document
-                            .getElementById('notifBadge');
+                        const badge = document.getElementById('notifBadge');
                         if (badge) {
-                            const count =
-                                data.unreadCount
-                                || data.UnreadCount || 0;
+                            const count = data.unreadCount || data.UnreadCount || 0;
                             badge.textContent = count;
-                            badge.style.display =
-                                count > 0 ? 'flex' : 'none';
+                            badge.style.display = count > 0 ? 'flex' : 'none';
                         }
                     })
                     .catch(() => {});
@@ -634,29 +516,22 @@
                 fetch('/Chat/UnreadCount')
                     .then(r => r.json())
                     .then(data => {
-                        const badge = document
-                            .getElementById('chatBadge');
+                        const badge = document.getElementById('chatBadge');
                         if (badge) {
                             const count = data.count || 0;
                             badge.textContent = count;
-                            badge.style.display =
-                                count > 0 ? 'flex' : 'none';
+                            badge.style.display = count > 0 ? 'flex' : 'none';
                         }
                     })
                     .catch(() => {});
             }
 
-            if ('Notification' in window &&
-                Notification.permission === 'default')
-            {
-                setTimeout(() => {
-                    Notification.requestPermission();
-                }, 3000);
+            if ('Notification' in window && Notification.permission === 'default') {
+                setTimeout(() => Notification.requestPermission(), 3000);
             }
 
             function showPushNotification(title, body, icon) {
-                if (Notification.permission === 'granted')
-                {
+                if (Notification.permission === 'granted') {
                     const notif = new Notification(title, {
                         body: body,
                         icon: icon || '/favicon.ico',
@@ -664,12 +539,7 @@
                         tag: 'cedarpay-notif',
                         requireInteraction: false
                     });
-
-                    notif.onclick = () => {
-                        window.focus();
-                        notif.close();
-                    };
-
+                    notif.onclick = () => { window.focus(); notif.close(); };
                     setTimeout(() => notif.close(), 5000);
                 }
             }
@@ -679,39 +549,97 @@
                 fetch('/api/NotificationApi/unread-count')
                     .then(r => r.json())
                     .then(data => {
-                        const count =
-                            data.unreadCount ||
-                            data.UnreadCount || 0;
-                        if (count > lastNotifCount &&
-                            lastNotifCount > 0)
-                        {
-                            showPushNotification(
-                                'CedarPay',
-                                `You have ${count} new notification${count > 1 ? 's' : ''}`,
-                                '/cedar-icon.svg'
-                            );
+                        const count = data.unreadCount || data.UnreadCount || 0;
+                        if (count > lastNotifCount && lastNotifCount > 0) {
+                            showPushNotification('CedarPay', `You have ${count} new notification${count > 1 ? 's' : ''}`, '/cedar-icon.svg');
                         }
                         lastNotifCount = count;
-
-                        const badge =
-                            document.getElementById('notifBadge');
+                        const badge = document.getElementById('notifBadge');
                         if (badge) {
                             badge.textContent = count;
-                            badge.style.display =
-                                count > 0 ? 'flex' : 'none';
+                            badge.style.display = count > 0 ? 'flex' : 'none';
                         }
                     })
                     .catch(() => {});
             }
 
+            (function() {
+                fetch('/Announcement/Active')
+                    .then(r => r.json())
+                    .then(list => {
+                        const seen = (() => { try { return JSON.parse(localStorage.getItem('cp_seen_announcements') || '[]'); } catch { return []; } })();
+                        const unread = list.filter(a => !seen.includes(a.id)).length;
+                        const badge = document.getElementById('annSidebarBadge');
+                        if (badge) { badge.textContent = unread; badge.style.display = unread > 0 ? 'inline-flex' : 'none'; }
+                    }).catch(() => {});
+            })();
+
             loadNotificationCount();
             loadChatCount();
-            checkNewNotifications();
-            setInterval(loadNotificationCount, 30000);
+
+            function showToast(title, message, url, type) {
+                const container = document.getElementById('inAppToast');
+                if (!container) return;
+                const toast = document.createElement('div');
+                toast.className = 'toast-notif';
+                const icons = { TransactionReceived:'bi-arrow-down-circle-fill', TransactionSent:'bi-send-fill', TopUpCompleted:'bi-plus-circle-fill', KYCApproved:'bi-shield-check', KYCRejected:'bi-x-circle-fill', General:'bi-bell-fill' };
+                const icon = icons[type] || 'bi-bell-fill';
+                toast.innerHTML = `<div class="toast-icon"><i class="bi ${icon}" style="color:var(--teal)"></i></div><div class="toast-body"><div class="toast-title">${title}</div><div class="toast-msg">${message}</div></div><button class="toast-close-btn">×</button>`;
+                if (url) toast.addEventListener('click', () => { window.location.href = url; });
+                container.appendChild(toast);
+                setTimeout(() => { toast.classList.add('fade-out'); setTimeout(() => toast.remove(), 300); }, 6000);
+            }
+
+            function loadAnnouncements() {
+                fetch('/Announcement/Active')
+                    .then(r => r.json())
+                    .then(list => {
+                        const c = document.getElementById('annBannerContainer');
+                        if (!c || !list.length) return;
+                        c.innerHTML = list.map(a => `
+                            <div class="ann-banner ${a.type}" id="ann-${a.id}">
+                                <span>${a.title} — ${a.content}</span>
+                                <button class="ann-banner-close" onclick="document.getElementById('ann-${a.id}').remove()">×</button>
+                            </div>`).join('');
+                    }).catch(() => {});
+            }
+            loadAnnouncements();
+
+            let lastNotifIds = new Set();
+            function pollNotifications() {
+                fetch('/api/NotificationApi')
+                    .then(r => r.json())
+                    .then(list => {
+                        const unread = list.filter(n => !n.isRead);
+                        const badge = document.getElementById('notifBadge');
+                        if (badge) { badge.textContent = unread.length; badge.style.display = unread.length > 0 ? 'flex' : 'none'; }
+                        unread.forEach(n => {
+                            if (!lastNotifIds.has(n.id)) {
+                                if (lastNotifIds.size > 0) {
+                                    showToast(n.title, n.message, n.redirectUrl || '/Notification/Index', n.type);
+                                    if (Notification.permission === 'granted') {
+                                        const osn = new Notification('CedarPay — ' + n.title, { body: n.message, icon: '/images/cedarpay-logo.png', tag: 'cedarpay-' + n.id });
+                                        osn.onclick = () => { window.focus(); if (n.redirectUrl) window.location.href = n.redirectUrl; osn.close(); };
+                                        setTimeout(() => osn.close(), 5000);
+                                    }
+                                }
+                                lastNotifIds.add(n.id);
+                            }
+                        });
+                    }).catch(() => {});
+            }
+
+            if ('Notification' in window && Notification.permission === 'default')
+                setTimeout(() => Notification.requestPermission(), 3000);
+
+            pollNotifications();
+            loadChatCount();
+            setInterval(pollNotifications, 20000);
             setInterval(loadChatCount, 30000);
-            setInterval(checkNewNotifications, 30000);
         </script>
     }
+
+    <div id="inAppToast"></div>
 
     @await RenderSectionAsync("Scripts", required: false)
 

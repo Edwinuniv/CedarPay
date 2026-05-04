@@ -9,6 +9,7 @@
         public string? ReceiverPictureUrl { get; set; }
         public decimal Amount { get; set; }
         public string CurrencySymbol { get; set; } = "$";
+        public bool FeeWaived { get; set; }
         public string Status { get; set; } = "";
         public string Type { get; set; } = "";
         public DateTime CreatedAt { get; set; }

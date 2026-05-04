@@ -1,12 +1,15 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using MoneyTransfer.Constants;
 using MoneyTransfer.Data;
 using MoneyTransfer.Models;
 using MoneyTransfer.Repositories.Interfaces;
+using MoneyTransfer.Services.Interfaces;
 using MoneyTransfer.ViewModels;
+using System.Text;
 
 namespace MoneyTransfer.Controllers
 {
@@ -310,5 +313,528 @@ namespace MoneyTransfer.Controllers
                 TransactionType.PaymentLink => "Payment Link",
                 _ => t.ToString()
             };
+
+        // In DashboardController.cs
+        public async Task<IActionResult> TestEmail()
+        {
+            try
+            {
+                var emailService = HttpContext.RequestServices.GetRequiredService<IEmailService>();
+
+                // Try to send email
+                await emailService.SendAsync(
+                    "edwinmouawad82@gmail.com",
+                    "Test User",
+                    "Test Email from CedarPay",
+                    "<h1>✅ Working!</h1><p>If you see this, email is configured correctly.</p>"
+                );
+
+                TempData["Success"] = "Test email sent successfully! Check your inbox.";
+            }
+            catch (Exception ex)
+            {
+                // This will now catch the REAL error
+                TempData["Error"] = $"Email failed: {ex.Message}";
+
+                // Log full details
+                Console.WriteLine($"ERROR TYPE: {ex.GetType().Name}");
+                Console.WriteLine($"ERROR MESSAGE: {ex.Message}");
+
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"INNER ERROR: {ex.InnerException.Message}");
+                    TempData["Error"] += $" | Inner: {ex.InnerException.Message}";
+                }
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        public async Task<IActionResult> TestForgotPasswordEmail()
+        {
+            var results = new List<string>();
+
+            try
+            {
+                var userManager = HttpContext.RequestServices.GetRequiredService<UserManager<User>>();
+                var emailService = HttpContext.RequestServices.GetRequiredService<IEmailService>();
+
+                // Find a user (use your email)
+                var user = await userManager.FindByEmailAsync("edwinmouawad82@gmail.com");
+
+                if (user == null)
+                {
+                    results.Add("❌ User not found!");
+                    TempData["Error"] = string.Join(" | ", results);
+                    return RedirectToAction(nameof(Index));
+                }
+
+                results.Add($"✅ User found: {user.Email}");
+
+                // Generate reset token
+                var code = await userManager.GeneratePasswordResetTokenAsync(user);
+                code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+
+                var callbackUrl = Url.Page(
+                    "/Account/ResetPassword",
+                    pageHandler: null,
+                    values: new { area = "Identity", code },
+                    protocol: Request.Scheme);
+
+                results.Add($"✅ Reset link generated: {callbackUrl}");
+
+                var html = $@"
+            <h2 style='color:#00b894'>Reset Your Password</h2>
+            <p>Click the button below to reset your password:</p>
+            <a href='{callbackUrl}' style='background:#00b894;color:#fff;padding:10px 20px;text-decoration:none;border-radius:5px;'>Reset Password</a>";
+
+                // Send email
+                await emailService.SendAsync(
+                    user.Email,
+                    $"{user.FirstName} {user.LastName}",
+                    "CedarPay — Reset Your Password",
+                    html);
+
+                results.Add("✅ Email sent successfully!");
+                TempData["Success"] = string.Join(" | ", results);
+            }
+            catch (Exception ex)
+            {
+                results.Add($"❌ Error: {ex.Message}");
+                results.Add($"Stack: {ex.StackTrace}");
+                TempData["Error"] = string.Join(" | ", results);
+
+                // Log full error
+                Console.WriteLine($"ERROR: {ex.ToString()}");
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        public async Task<IActionResult> TestNewEmailAccount()
+        {
+            var results = new List<string>();
+
+            try
+            {
+                var emailService = HttpContext.RequestServices.GetRequiredService<IEmailService>();
+                var config = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
+
+                var username = config["Email:Username"];
+                var fromEmail = config["Email:FromEmail"];
+
+                results.Add($"Sending from: {fromEmail}");
+                results.Add($"Using username: {username}");
+
+                // Send to your personal email to test
+                await emailService.SendAsync(
+                    "edwinmouawad82@gmail.com",  // Your personal email
+                    "Edwin",
+                    "Test from New CedarPay Email",
+                    "<h1>✅ Success!</h1><p>This email was sent from the new CedarPay notifications account!</p>" +
+                    $"<p>From: {fromEmail}</p>" +
+                    $"<p>Time: {DateTime.Now}</p>"
+                );
+
+                results.Add("✅ Email sent successfully from new account!");
+                TempData["Success"] = string.Join(" | ", results);
+            }
+            catch (Exception ex)
+            {
+                results.Add($"❌ Error: {ex.Message}");
+                TempData["Error"] = string.Join(" | ", results);
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        public async Task<IActionResult> DebugUserLogin(string email)
+        {
+            var results = new List<string>();
+
+            // Check if email is null or empty
+            if (string.IsNullOrEmpty(email))
+            {
+                results.Add("❌ No email provided. Please add ?email=user@example.com to the URL");
+                TempData["Error"] = string.Join(" | ", results);
+                return RedirectToAction(nameof(Index));
+            }
+
+            try
+            {
+                // Decode the email in case of URL encoding
+                email = System.Web.HttpUtility.UrlDecode(email);
+
+                // Find the user
+                var user = await _userManager.FindByEmailAsync(email);
+
+                if (user == null)
+                {
+                    results.Add($"❌ User not found with email: {email}");
+                    TempData["Error"] = string.Join(" | ", results);
+                    return RedirectToAction(nameof(Index));
+                }
+
+                results.Add($"✅ User found: {user.Email}");
+                results.Add($"User ID: {user.Id}");
+                results.Add($"UserName: {user.UserName}");
+                results.Add($"Lockout Enabled: {user.LockoutEnabled}");
+                results.Add($"Lockout End: {user.LockoutEnd}");
+                results.Add($"Email Confirmed: {user.EmailConfirmed}");
+                results.Add($"Account Active: {user.IsActive}");
+                results.Add($"Access Failed Count: {user.AccessFailedCount}");
+                results.Add($"Password Hash: {(string.IsNullOrEmpty(user.PasswordHash) ? "NO PASSWORD" : "Has Password")}");
+
+                // Check if user is locked out
+                if (await _userManager.IsLockedOutAsync(user))
+                {
+                    results.Add($"⚠️ Account IS LOCKED OUT!");
+                    var lockoutEnd = await _userManager.GetLockoutEndDateAsync(user);
+                    results.Add($"Lockout ends: {lockoutEnd}");
+                }
+
+                TempData["Success"] = string.Join(" | ", results);
+            }
+            catch (Exception ex)
+            {
+                results.Add($"❌ Error: {ex.Message}");
+                TempData["Error"] = string.Join(" | ", results);
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        public async Task<IActionResult> ConfirmUserEmail(string email)
+        {
+            var results = new List<string>();
+
+            try
+            {
+                var user = await _userManager.FindByEmailAsync(email);
+
+                if (user == null)
+                {
+                    results.Add($"❌ User not found: {email}");
+                    TempData["Error"] = string.Join(" | ", results);
+                    return RedirectToAction(nameof(Index));
+                }
+
+                results.Add($"✅ User found: {user.Email}");
+                results.Add($"Current Email Confirmed: {user.EmailConfirmed}");
+
+                // Generate email confirmation token
+                var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+
+                // Confirm the email
+                var result = await _userManager.ConfirmEmailAsync(user, token);
+
+                if (result.Succeeded)
+                {
+                    results.Add($"✅ Email confirmed successfully!");
+
+                    // Also unlock the account if locked
+                    await _userManager.SetLockoutEndDateAsync(user, null);
+                    results.Add($"✅ Lockout removed");
+
+                    TempData["Success"] = string.Join(" | ", results);
+                }
+                else
+                {
+                    results.Add($"❌ Failed to confirm: {string.Join(", ", result.Errors)}");
+                    TempData["Error"] = string.Join(" | ", results);
+                }
+            }
+            catch (Exception ex)
+            {
+                results.Add($"❌ Error: {ex.Message}");
+                TempData["Error"] = string.Join(" | ", results);
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+        public async Task<IActionResult> ResetSpecificUserPassword(string email, string newPassword = "Test123!")
+        {
+            var results = new List<string>();
+
+            try
+            {
+                var user = await _userManager.FindByEmailAsync(email);
+
+                if (user == null)
+                {
+                    results.Add($"❌ User not found: {email}");
+                    TempData["Error"] = string.Join(" | ", results);
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // Remove existing password
+                var removeResult = await _userManager.RemovePasswordAsync(user);
+                if (removeResult.Succeeded)
+                {
+                    results.Add("✅ Old password removed");
+                }
+
+                // Add new password
+                var addResult = await _userManager.AddPasswordAsync(user, newPassword);
+                if (addResult.Succeeded)
+                {
+                    results.Add($"✅ New password set: {newPassword}");
+                    TempData["Success"] = string.Join(" | ", results);
+                }
+                else
+                {
+                    results.Add($"❌ Failed: {string.Join(", ", addResult.Errors)}");
+                    TempData["Error"] = string.Join(" | ", results);
+                }
+            }
+            catch (Exception ex)
+            {
+                results.Add($"❌ Error: {ex.Message}");
+                TempData["Error"] = string.Join(" | ", results);
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        public async Task<IActionResult> FullDiagnostic(string email)
+        {
+            var results = new List<string>();
+
+            try
+            {
+                var user = await _userManager.FindByEmailAsync(email);
+
+                if (user == null)
+                {
+                    results.Add($"❌ User not found: {email}");
+                    TempData["Error"] = string.Join("<br/>", results);
+                    return RedirectToAction(nameof(Index));
+                }
+
+                results.Add($"=== USER ACCOUNT STATUS ===");
+                results.Add($"Email: {user.Email}");
+                results.Add($"User ID: {user.Id}");
+                results.Add($"UserName: {user.UserName}");
+                results.Add($"Email Confirmed: {user.EmailConfirmed}");
+                results.Add($"Lockout Enabled: {user.LockoutEnabled}");
+                results.Add($"Lockout End: {user.LockoutEnd}");
+                results.Add($"Access Failed Count: {user.AccessFailedCount}");
+                results.Add($"Account Active: {user.IsActive}");
+                results.Add($"Two Factor Enabled: {user.TwoFactorEnabled}");
+                results.Add($"Has Password Hash: {(string.IsNullOrEmpty(user.PasswordHash) ? "NO" : "YES")}");
+
+                // Test if user can login with a known password
+                var testPassword = "Test123!";
+                var isValid = await _userManager.CheckPasswordAsync(user, testPassword);
+                results.Add($"Password '{testPassword}' valid: {isValid}");
+
+                // Check if user is in any roles
+                var roles = await _userManager.GetRolesAsync(user);
+                results.Add($"Roles: {(roles.Any() ? string.Join(", ", roles) : "None")}");
+
+                // Check if signin is allowed
+                var canSignIn = await _userManager.IsEmailConfirmedAsync(user) &&
+                                !await _userManager.IsLockedOutAsync(user);
+                results.Add($"Can Sign In (by rules): {canSignIn}");
+
+                TempData["Success"] = string.Join("<br/>", results);
+            }
+            catch (Exception ex)
+            {
+                results.Add($"❌ Error: {ex.Message}");
+                TempData["Error"] = string.Join("<br/>", results);
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        public async Task<IActionResult> ForceResetPassword(string email, string newPassword = "Test123!")
+        {
+            var results = new List<string>();
+
+            try
+            {
+                var user = await _userManager.FindByEmailAsync(email);
+
+                if (user == null)
+                {
+                    results.Add($"❌ User not found: {email}");
+                    TempData["Error"] = string.Join(" | ", results);
+                    return RedirectToAction(nameof(Index));
+                }
+
+                results.Add($"=== RESETTING PASSWORD FOR {user.Email} ===");
+
+                // Generate password reset token
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                results.Add($"✅ Token generated");
+
+                // Reset password using token
+                var resetResult = await _userManager.ResetPasswordAsync(user, token, newPassword);
+
+                if (resetResult.Succeeded)
+                {
+                    results.Add($"✅ Password successfully reset to: {newPassword}");
+
+                    // Verify the password works
+                    var verifyResult = await _userManager.CheckPasswordAsync(user, newPassword);
+                    results.Add($"Password verification: {(verifyResult ? "✅ SUCCESS" : "❌ FAILED")}");
+
+                    // Disable lockout
+                    user.LockoutEnabled = false;
+                    user.AccessFailedCount = 0;
+                    await _userManager.UpdateAsync(user);
+                    results.Add($"✅ Lockout disabled");
+
+                    TempData["Success"] = string.Join(" | ", results);
+                }
+                else
+                {
+                    results.Add($"❌ Reset failed: {string.Join(", ", resetResult.Errors)}");
+                    TempData["Error"] = string.Join(" | ", results);
+                }
+            }
+            catch (Exception ex)
+            {
+                results.Add($"❌ Error: {ex.Message}");
+                TempData["Error"] = string.Join(" | ", results);
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        public async Task<IActionResult> RecreateUserAccount(string email, string newPassword = "Test123!")
+        {
+            var results = new List<string>();
+
+            try
+            {
+                // Find the user
+                var user = await _userManager.FindByEmailAsync(email);
+
+                if (user == null)
+                {
+                    results.Add($"❌ User not found: {email}");
+                    TempData["Error"] = string.Join(" | ", results);
+                    return RedirectToAction(nameof(Index));
+                }
+
+                results.Add($"=== RECREATING ACCOUNT FOR {email} ===");
+
+                // Save important info
+                var userId = user.Id;
+                var userName = user.UserName;
+                var firstName = user.FirstName;
+                var lastName = user.LastName;
+
+                // Delete the user
+                var deleteResult = await _userManager.DeleteAsync(user);
+
+                if (!deleteResult.Succeeded)
+                {
+                    results.Add($"❌ Delete failed: {string.Join(", ", deleteResult.Errors)}");
+                    TempData["Error"] = string.Join(" | ", results);
+                    return RedirectToAction(nameof(Index));
+                }
+
+                results.Add($"✅ User deleted");
+
+                // Create new user with same info
+                var newUser = new User
+                {
+                    UserName = userName,
+                    Email = email,
+                    FirstName = firstName,
+                    LastName = lastName,
+                    CreatedAt = DateTime.Now,
+                    IsActive = true,
+                    EmailConfirmed = true,  // Confirm immediately
+                    LockoutEnabled = false   // Disable lockout
+                };
+
+                var createResult = await _userManager.CreateAsync(newUser, newPassword);
+
+                if (createResult.Succeeded)
+                {
+                    results.Add($"✅ New user created");
+                    results.Add($"✅ Email: {email}");
+                    results.Add($"✅ Password: {newPassword}");
+                    results.Add($"✅ Email confirmed");
+                    results.Add($"✅ Lockout disabled");
+
+                    // Add to User role
+                    await _userManager.AddToRoleAsync(newUser, "User");
+                    results.Add($"✅ Role 'User' added");
+
+                    TempData["Success"] = string.Join(" | ", results);
+                }
+                else
+                {
+                    results.Add($"❌ Create failed: {string.Join(", ", createResult.Errors)}");
+                    TempData["Error"] = string.Join(" | ", results);
+                }
+            }
+            catch (Exception ex)
+            {
+                results.Add($"❌ Error: {ex.Message}");
+                TempData["Error"] = string.Join(" | ", results);
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+        public async Task<IActionResult> CreateFreshUser()
+        {
+            var results = new List<string>();
+
+            try
+            {
+                // Create a completely new user with a unique email
+                var newEmail = $"testuser_{DateTime.Now.Ticks}@example.com";
+                var password = "Test123!";
+
+                var newUser = new User
+                {
+                    UserName = newEmail,
+                    Email = newEmail,
+                    FirstName = "Test",
+                    LastName = "User",
+                    CreatedAt = DateTime.Now,
+                    IsActive = true,
+                    EmailConfirmed = true,
+                    LockoutEnabled = false,
+                    NormalizedEmail = newEmail.ToUpper(),
+                    NormalizedUserName = newEmail.ToUpper()
+                };
+
+                var result = await _userManager.CreateAsync(newUser, password);
+
+                if (result.Succeeded)
+                {
+                    results.Add($"✅ NEW USER CREATED!");
+                    results.Add($"Email: {newEmail}");
+                    results.Add($"Password: {password}");
+                    results.Add($"---");
+                    results.Add($"PLEASE TRY LOGGING IN WITH THESE CREDENTIALS");
+
+                    // Verify the password works immediately
+                    var verified = await _userManager.CheckPasswordAsync(newUser, password);
+                    results.Add($"Password verification: {(verified ? "✅ PASSED" : "❌ FAILED")}");
+
+                    TempData["Success"] = string.Join("<br/>", results);
+                }
+                else
+                {
+                    results.Add($"❌ Failed: {string.Join(", ", result.Errors)}");
+                    TempData["Error"] = string.Join("<br/>", results);
+                }
+            }
+            catch (Exception ex)
+            {
+                results.Add($"❌ Error: {ex.Message}");
+                TempData["Error"] = string.Join("<br/>", results);
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
     }
 }

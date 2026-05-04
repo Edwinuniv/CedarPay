@@ -7,6 +7,7 @@ using MoneyTransfer.ViewModels;
 using MoneyTransfer.Services.Interfaces;
 using Stripe;
 using Stripe.Checkout;
+using System.Collections.Generic;
 
 namespace MoneyTransfer.Controllers
 {
@@ -19,14 +20,7 @@ namespace MoneyTransfer.Controllers
         private readonly IConfiguration _configuration;
         private readonly IEmailService _emailService;
 
-        public TopUpController(
-            ITopUpRepository topUpRepository,
-            IWalletRepository walletRepository,
-            INotificationRepository notificationRepository,
-            UserManager<User> userManager,
-            IUserRepository userRepository,
-            IConfiguration configuration,
-            IEmailService emailService) : base(userManager, userRepository)
+        public TopUpController(ITopUpRepository topUpRepository, IWalletRepository walletRepository, INotificationRepository notificationRepository, UserManager<User> userManager, IUserRepository userRepository, IConfiguration configuration, IEmailService emailService) : base(userManager, userRepository)
         {
             _configuration = configuration;
             _topUpRepository = topUpRepository;
@@ -38,8 +32,7 @@ namespace MoneyTransfer.Controllers
         public async Task<IActionResult> Create()
         {
             var userId = _userManager.GetUserId(User);
-            var wallets = await _walletRepository
-                .GetByUserIdAsync(userId);
+            var wallets = await _walletRepository.GetByUserIdAsync(userId);
 
             var vm = new TopUpViewModel
             {
@@ -55,29 +48,31 @@ namespace MoneyTransfer.Controllers
                     }).ToList()
             };
 
-            ViewBag.StripePublishableKey =
-                _configuration["Stripe:PublishableKey"] ?? "";
+            ViewBag.StripePublishableKey = _configuration["Stripe:PublishableKey"] ?? "";
 
             return View(vm);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Store(
-            TopUpViewModel vm,
-            string? stripeToken)
+        public async Task<IActionResult> Store(TopUpViewModel vm, string? stripeToken)
         {
             if (!ModelState.IsValid)
             {
-                ViewBag.StripePublishableKey =
-                    _configuration["Stripe:PublishableKey"] ?? "";
+                ViewBag.StripePublishableKey = _configuration["Stripe:PublishableKey"] ?? "";
                 return View("Create", vm);
             }
 
             var userId = _userManager.GetUserId(User);
-            var wallet = await _walletRepository
-                .GetByIdAsync(vm.WalletId);
+            var wallet = await _walletRepository.GetByIdAsync(vm.WalletId);
             if (wallet == null) return NotFound();
+
+            if (wallet.Currency == null)
+            {
+                var walletWithCurrency = await _walletRepository.GetBySerialNumberAsync(wallet.SerialNumber ?? "");
+                if (walletWithCurrency != null)
+                    wallet = walletWithCurrency;
+            }
 
             if (!Enum.TryParse<TopUpMethod>(vm.Method, true, out var selectedMethod))
             {
@@ -90,10 +85,15 @@ namespace MoneyTransfer.Controllers
             {
                 try
                 {
+                    var walletCurrencyCode = wallet.Currency?.Code?.ToLower() ?? "usd";
+                    var stripeSupported = new HashSet<string> { "usd", "eur", "gbp", "aed" };
+                    var chargeInCurrency = stripeSupported.Contains(walletCurrencyCode)
+                        ? walletCurrencyCode : "usd";
+
                     var chargeOptions = new Stripe.ChargeCreateOptions
                     {
                         Amount = (long)(vm.Amount * 100),
-                        Currency = "usd",
+                        Currency = chargeInCurrency,
                         Source = stripeToken,
                         Description = $"CedarPay Top-Up — {wallet.Currency?.Code} Wallet"
                     };
@@ -184,10 +184,7 @@ namespace MoneyTransfer.Controllers
             return RedirectToAction("Index", "Wallet");
         }
 
-        private async Task<IActionResult> CreateStripeCheckout(
-            TopUpViewModel vm,
-            Wallet wallet,
-            string userId)
+        private async Task<IActionResult> CreateStripeCheckout(TopUpViewModel vm, Wallet wallet, string userId)
         {
             var publishableKey = _configuration["Stripe:PublishableKey"];
 
@@ -220,8 +217,7 @@ namespace MoneyTransfer.Controllers
                         amount = vm.Amount,
                         method = selectedMethod.ToString()
                     }, Request.Scheme),
-                CancelUrl = Url.Action("Create", "TopUp",
-                    null, Request.Scheme)
+                CancelUrl = Url.Action("Create", "TopUp",  null, Request.Scheme)
             };
 
             var service = new SessionService();
@@ -230,9 +226,7 @@ namespace MoneyTransfer.Controllers
             return Redirect(session.Url);
         }
 
-        // Stripe calls this after successful payment
-        public async Task<IActionResult> StripeSuccess(
-            int walletId, decimal amount, string method)
+        public async Task<IActionResult> StripeSuccess(int walletId, decimal amount, string method)
         {
             var userId = _userManager.GetUserId(User);
 

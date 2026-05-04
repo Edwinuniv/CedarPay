@@ -1,0 +1,86 @@
+﻿@model List<MoneyTransfer.Models.Announcement>
+@{
+    ViewData["Title"] = "Announcements";
+    ViewBag.PageClass = "page-dashboard";
+}
+
+<div class="page-header">
+    <div>
+        <h2><i class="bi bi-megaphone-fill announcement-header-icon"></i>Announcements</h2>
+        <p>Latest updates and news from CedarPay</p>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="tp-card">
+        <div class="empty-state">
+            <i class="bi bi-megaphone"></i>
+            <p>No announcements at this time.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="announcements-container">
+        @foreach (var a in Model)
+        {
+            string borderColor = a.Type switch
+            {
+                MoneyTransfer.Models.AnnouncementType.Warning => "#f59e0b",
+                MoneyTransfer.Models.AnnouncementType.Success => "var(--teal)",
+                MoneyTransfer.Models.AnnouncementType.Maintenance => "#ef4444",
+                _ => "#6366f1"
+            };
+            string bgGradient = a.Type switch
+            {
+                MoneyTransfer.Models.AnnouncementType.Warning => "linear-gradient(135deg, rgba(245,158,11,0.08), rgba(245,158,11,0.03))",
+                MoneyTransfer.Models.AnnouncementType.Success => "linear-gradient(135deg, rgba(0,184,148,0.08), rgba(0,184,148,0.03))",
+                MoneyTransfer.Models.AnnouncementType.Maintenance => "linear-gradient(135deg, rgba(239,68,68,0.08), rgba(239,68,68,0.03))",
+                _ => "linear-gradient(135deg, rgba(99,102,241,0.08), rgba(99,102,241,0.03))"
+            };
+            <div class="announcement-card-modern" data-id="@a.Id" style="border-left-color: @borderColor; background: @bgGradient">
+                <div class="announcement-card-header">
+                    <div class="announcement-badge-wrapper">
+                        <span class="announcement-badge @a.Type.ToString().ToLower()">@a.Type</span>
+                        <span class="announcement-unread-dot" data-id="@a.Id"></span>
+                    </div>
+                    @if (a.ExpiresAt.HasValue)
+                    {
+                        <span class="announcement-expiry-badge">
+                            <i class="bi bi-calendar-x"></i> Expires @a.ExpiresAt.Value.ToString("MMM dd, yyyy")
+                        </span>
+                    }
+                </div>
+                <h3 class="announcement-card-title">@a.Title</h3>
+                <p class="announcement-card-content">@a.Content</p>
+                <div class="announcement-card-footer">
+                    <span class="announcement-date">
+                        <i class="bi bi-clock"></i> @a.CreatedAt.ToString("MMMM dd, yyyy · HH:mm")
+                    </span>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@section Scripts {
+    <script>
+        const SEEN_KEY = 'cp_seen_announcements';
+        function getSeenIds() { try { return JSON.parse(localStorage.getItem(SEEN_KEY) || '[]'); } catch { return []; } }
+        function markSeen(id) { const s = getSeenIds(); if (!s.includes(id)) { s.push(id); localStorage.setItem(SEEN_KEY, JSON.stringify(s)); } }
+
+        const seen = getSeenIds();
+        document.querySelectorAll('.announcement-card-modern').forEach(el => {
+            const id = parseInt(el.dataset.id);
+            const dot = el.querySelector('.announcement-unread-dot');
+            if (!seen.includes(id)) {
+                if (dot) dot.style.display = 'inline-flex';
+                const obs = new IntersectionObserver(entries => {
+                    entries.forEach(e => { if (e.isIntersecting) { setTimeout(() => { markSeen(id); if (dot) dot.style.display = 'none'; }, 2000); obs.disconnect(); } });
+                });
+                obs.observe(el);
+            }
+        });
+    </script>
+}

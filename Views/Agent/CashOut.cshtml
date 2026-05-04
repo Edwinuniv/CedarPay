@@ -1,5 +1,6 @@
 ﻿@{
     ViewData["Title"] = "Cash Out";
+    ViewBag.PageClass = "page-agent";
 }
 
 <div class="row justify-content-center">
@@ -7,38 +8,26 @@
         <div class="page-header">
             <div>
                 <h2>Cash Out</h2>
-                <p>
-                    Process a cash withdrawal for a user
-                </p>
+                <p>Process a cash withdrawal for a user</p>
             </div>
-            <a asp-action="Dashboard"
-               class="btn-tp-secondary">
+            <a asp-action="Dashboard" class="btn-tp-secondary">
                 <i class="bi bi-arrow-left"></i> Back
             </a>
         </div>
 
         <div class="tp-card">
-            <form asp-action="CashOut" method="post"
-                  class="tp-form">
+            <form asp-action="CashOut" method="post" class="tp-form">
                 @Html.AntiForgeryToken()
 
-                <div style="background:var(--red-light);
-                            border-radius:var(--r-sm);
-                            padding:12px 16px;
-                            font-size:13px;
-                            color:var(--red);
-                            margin-bottom:4px">
+                <div class="cashout-warning-alert">
                     <i class="bi bi-exclamation-triangle"></i>
                     You are <strong>withdrawing</strong>
                     from the user's wallet.
-                    Verify the user's identity before
-                    processing.
+                    Verify the user's identity before processing.
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">
-                        User's Wallet Serial *
-                    </label>
+                    <label class="form-label">User's Wallet Serial *</label>
                     <input type="text" name="walletSerial"
                            class="form-control"
                            placeholder="WAL-2026-XXXXX"
@@ -46,9 +35,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">
-                        Amount to Withdraw *
-                    </label>
+                    <label class="form-label">Amount to Withdraw *</label>
                     <input type="number" name="amount"
                            class="form-control"
                            step="0.01" min="0.01"
@@ -56,20 +43,13 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">
-                        Note (Optional)
-                    </label>
+                    <label class="form-label">Note (Optional)</label>
                     <input type="text" name="note"
                            class="form-control"
                            placeholder="Withdrawal note" />
                 </div>
 
-                <button type="submit"
-                        class="btn-tp-danger"
-                        style="width:100%;
-                               justify-content:center;
-                               padding:13px;
-                               font-size:14px">
+                <button type="submit" class="btn-tp-danger cashout-submit-btn">
                     <i class="bi bi-cash-stack"></i>
                     Confirm Cash Withdrawal
                 </button>
