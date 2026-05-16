@@ -1,0 +1,118 @@
+﻿@{
+    ViewData["Title"] = "Exchange Rates";
+    ViewBag.PageClass = "page-admin";
+    var currencies = ViewBag.Currencies as
+        List<MoneyTransfer.Models.Currency>
+        ?? new List<MoneyTransfer.Models.Currency>();
+    var rates = ViewBag.Rates as
+        Dictionary<string, Dictionary<string, decimal>>
+        ?? new Dictionary<string, Dictionary<string, decimal>>();
+}
+
+<div class="page-header">
+    <div>
+        <h2>Live Exchange Rates</h2>
+        <p>
+            Last updated:
+            @(ViewBag.LastUpdated is DateTime dt
+                        ? dt.ToString("MMM dd, yyyy HH:mm:ss")
+                        : "—")
+        </p>
+    </div>
+    <div class="rates-header-actions">
+        <a asp-action="Index" class="btn-tp-secondary">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+        <a asp-action="ExchangeRates" class="btn-tp-primary">
+            <i class="bi bi-arrow-clockwise"></i> Refresh
+        </a>
+    </div>
+</div>
+
+<div class="tp-card rates-table-container">
+    <table class="tp-table rates-table">
+        <thead>
+            <tr>
+                <th>From \ To</th>
+                @foreach (var c in currencies)
+                {
+                    <th style="text-align:center; min-width:100px">
+                        @c.Code
+                        <div class="rates-currency-header">
+                            @c.Symbol
+                        </div>
+                    </th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var fromCurr in currencies)
+            {
+                <tr>
+                    <td class="rates-from-cell">
+                        <div class="rates-from-code">@fromCurr.Code</div>
+                        <div class="rates-from-symbol">@fromCurr.Symbol</div>
+                    </td>
+                    @foreach (var toCurr in currencies)
+                    {
+                        var rate = 0m;
+                        if (rates.TryGetValue(fromCurr.Code, out var toRates) &&
+                        toRates.TryGetValue(toCurr.Code, out var r))
+                        {
+                            rate = r;
+                        }
+
+                        bool isSelf = fromCurr.Code == toCurr.Code;
+
+                        <td class="rates-rate-cell @(isSelf ? "rates-rate-cell-self" : "")">
+                            @if (isSelf)
+                            {
+                                <span class="rates-rate-self">1.0000</span>
+                            }
+                            else if (rate > 0)
+                            {
+                                <span class="rates-rate-value">@rate.ToString("N4")</span>
+                            }
+                            else
+                            {
+                                <span class="rates-rate-error">Error</span>
+                            }
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="tp-card mt-3">
+    <div class="tp-card-header">
+        <span class="tp-card-title">
+            Quick Conversion Examples
+        </span>
+    </div>
+    <div class="rates-conversion-grid">
+        @foreach (var fromC in currencies.Where(c => c.Code == "USD"))
+        {
+            @foreach (var toC in currencies.Where(c => c.Code != "USD"))
+            {
+                var r = 0m;
+                if (rates.TryGetValue(fromC.Code, out var tr) &&
+                tr.TryGetValue(toC.Code, out var rv))
+                    r = rv;
+
+                <div class="rates-conversion-card">
+                    <div class="rates-conversion-label">
+                        1 @fromC.Code →
+                    </div>
+                    <div class="rates-conversion-value">
+                        @toC.Symbol@r.ToString("N2")
+                    </div>
+                    <div class="rates-conversion-currency">
+                        @toC.Code — @toC.Name
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>

@@ -1,6 +1,126 @@
 ﻿@{
     ViewData["Title"] = "Privacy Policy";
+    ViewBag.PageClass = "page-dashboard";
+    var returnUrl = ViewBag.ReturnUrl as string;
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<style>
+    .privacy-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .privacy-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .privacy-icon {
+        font-size: 64px;
+        margin-bottom: 16px;
+    }
+
+    .privacy-title {
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--cedar-gold);
+        margin-bottom: 8px;
+    }
+
+    .privacy-subtitle {
+        color: var(--text-3);
+        font-size: 14px;
+    }
+
+    .privacy-card {
+        padding: 32px;
+    }
+
+    .privacy-section-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--cedar-gold);
+        margin-top: 24px;
+        margin-bottom: 16px;
+    }
+
+    .privacy-text {
+        color: var(--text-2);
+        line-height: 1.6;
+        margin-bottom: 16px;
+    }
+
+    .privacy-link {
+        color: var(--teal);
+        text-decoration: none;
+    }
+
+        .privacy-link:hover {
+            text-decoration: underline;
+        }
+
+    .privacy-footer {
+        margin-top: 32px;
+        padding-top: 24px;
+        border-top: 1px solid var(--border);
+        text-align: center;
+    }
+</style>
+
+<div class="privacy-container">
+    @if (!string.IsNullOrEmpty(returnUrl) && returnUrl.Contains("/Settings"))
+    {
+        <div class="mb-3">
+            <a href="@returnUrl" class="btn-tp-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Settings
+            </a>
+        </div>
+    }
+
+    <div class="privacy-header">
+        <div class="privacy-icon">🔒</div>
+        <h1 class="privacy-title">Privacy Policy</h1>
+        <p class="privacy-subtitle">Last updated: @DateTime.Now.ToString("MMMM dd, yyyy")</p>
+    </div>
+
+    <div class="tp-card privacy-card">
+        <h2 class="privacy-section-title">1. Information We Collect</h2>
+        <p class="privacy-text">
+            CedarPay collects personal information that you provide to us, including your name, email address,
+            phone number, and identity documents for KYC verification. We also collect transaction data
+            and wallet activity to provide our services.
+        </p>
+
+        <h2 class="privacy-section-title">2. How We Use Your Information</h2>
+        <p class="privacy-text">
+            We use your information to process transactions, verify your identity, prevent fraud,
+            comply with regulatory requirements, and improve our services. We never sell your personal
+            data to third parties.
+        </p>
+
+        <h2 class="privacy-section-title">3. Data Security</h2>
+        <p class="privacy-text">
+            Your data is encrypted using industry-standard protocols. We employ bank-grade security
+            measures to protect your personal and financial information.
+        </p>
+
+        <h2 class="privacy-section-title">4. Your Rights</h2>
+        <p class="privacy-text">
+            You have the right to access, correct, or delete your personal information. You may also
+            request a copy of your data or restrict certain processing activities.
+        </p>
+
+        <h2 class="privacy-section-title">5. Contact Us</h2>
+        <p class="privacy-text">
+            If you have questions about this privacy policy, please contact us at
+            <a href="mailto:cedarpay.notifications@gmail.com" class="privacy-link">cedarpay.notifications@gmail.com</a>
+        </p>
+
+        <div class="privacy-footer">
+            <a asp-controller="Home" asp-action="Index" class="btn-tp-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Home
+            </a>
+        </div>
+    </div>
+</div>

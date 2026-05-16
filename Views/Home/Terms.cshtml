@@ -1,0 +1,194 @@
+﻿@{
+    ViewData["Title"] = "Terms of Service - CedarPay";
+    Layout = null;
+    var returnUrl = ViewBag.ReturnUrl as string;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Terms of Service - CedarPay</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/transferpay.css" asp-append-version="true" />
+
+    <script>
+        (function() {
+            if (localStorage.getItem('darkMode') === '1') {
+                document.documentElement.classList.add('dark-mode');
+                if (document.body) document.body.classList.add('dark-mode');
+            }
+        })();
+    </script>
+</head>
+<body class="home-page">
+
+    <nav class="public-nav">
+        <div class="sidebar-brand" style="padding:0;margin:0">
+            <div class="brand-icon">
+                <img src="/images/cedarpay-logo.png" alt="CedarPay" style="width:28px;height:28px;object-fit:contain" />
+            </div>
+            <span class="brand-name">
+                Cedar<span class="brand-accent">Pay</span>
+            </span>
+        </div>
+        <div class="public-nav-links">
+            <a asp-controller="Home" asp-action="Index" class="btn-login">Home</a>
+            <a asp-controller="Home" asp-action="Features" class="btn-login">Features</a>
+            <a asp-controller="Home" asp-action="AboutUs" class="btn-login">About</a>
+            <a asp-controller="Home" asp-action="SecurityPolicy" class="btn-login">Security</a>
+            <a asp-controller="Home" asp-action="ContactUs" class="btn-login">Contact</a>
+            <a asp-area="Identity" asp-page="/Account/Login" class="btn-login">Login</a>
+            <a asp-area="Identity" asp-page="/Account/Register" class="btn-register">Register</a>
+        </div>
+    </nav>
+
+    <div class="home-container">
+        @if (!string.IsNullOrEmpty(returnUrl) && returnUrl.Contains("/Settings"))
+        {
+            <div class="mb-3">
+                <a href="@returnUrl" class="btn-tp-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Settings
+                </a>
+            </div>
+        }
+
+        <div class="home-hero">
+            <div class="home-hero-icon">📜</div>
+            <h1 class="home-title">Terms of <span class="home-title-accent">Service</span></h1>
+            <p class="home-subtitle">Last updated: @DateTime.Now.ToString("MMMM dd, yyyy")</p>
+        </div>
+
+        <div class="tp-card">
+            <div class="terms-content" style="max-width: 100%; overflow-x: auto;">
+
+                <h3 style="color: var(--cedar-gold); margin-top: 0;">1. Acceptance of Terms</h3>
+                <p>By accessing or using CedarPay's digital wallet services, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our services.</p>
+
+                <h3 style="color: var(--cedar-gold);">2. Eligibility</h3>
+                <p>To use CedarPay, you must:</p>
+                <ul>
+                    <li>Be at least 18 years old</li>
+                    <li>Be a legal resident of Lebanon or have a valid Lebanese identification</li>
+                    <li>Provide accurate and complete registration information</li>
+                    <li>Complete KYC (Know Your Customer) verification as required by Banque du Liban regulations</li>
+                </ul>
+
+                <h3 style="color: var(--cedar-gold);">3. Account Registration and Security</h3>
+                <p>You are responsible for maintaining the confidentiality of your account credentials. You agree to:</p>
+                <ul>
+                    <li>Not share your password with anyone</li>
+                    <li>Notify us immediately of any unauthorized access to your account</li>
+                    <li>Log out of your account after each session</li>
+                    <li>Use strong passwords and enable two-factor authentication when available</li>
+                </ul>
+
+                <h3 style="color: var(--cedar-gold);">4. Transactions and Fees</h3>
+                <p>CedarPay facilitates digital money transfers and wallet transactions. By using our services, you acknowledge that:</p>
+                <ul>
+                    <li>Transaction fees are displayed before confirmation and may vary based on amount and currency</li>
+                    <li>Exchange rates are updated in real-time and subject to market fluctuations</li>
+                    <li>Certain transactions may be subject to review and approval</li>
+                    <li>We reserve the right to refuse or cancel any transaction</li>
+                    <li>Fees are non-refundable except in cases of system errors</li>
+                </ul>
+
+                <h3 style="color: var(--cedar-gold);">5. Prohibited Activities</h3>
+                <p>You may not use CedarPay for:</p>
+                <ul>
+                    <li>Illegal gambling or betting activities</li>
+                    <li>Money laundering or terrorist financing</li>
+                    <li>Purchasing illegal goods or services</li>
+                    <li>Fraudulent activities or identity theft</li>
+                    <li>Violating Lebanese laws or international sanctions</li>
+                    <li>Any activity that compromises platform security</li>
+                </ul>
+
+                <h3 style="color: var(--cedar-gold);">6. KYC and Compliance</h3>
+                <p>To comply with Banque du Liban regulations and anti-money laundering laws:</p>
+                <ul>
+                    <li>You must complete identity verification (KYC) to access full features</li>
+                    <li>We may request additional documentation at any time</li>
+                    <li>Transaction limits apply based on your verification level</li>
+                    <li>We report suspicious activities to relevant authorities</li>
+                    <li>Account information may be shared with regulatory bodies when required by law</li>
+                </ul>
+
+                <h3 style="color: var(--cedar-gold);">7. Agent Network</h3>
+                <p>CedarPay works with authorized agents for cash-in/cash-out services:</p>
+                <ul>
+                    <li>Agents are independent service providers</li>
+                    <li>Agent fees may apply for cash transactions</li>
+                    <li>We are not responsible for agent misconduct</li>
+                    <li>Report any agent issues to our support team</li>
+                </ul>
+
+                <h3 style="color: var(--cedar-gold);">8. Limitation of Liability</h3>
+                <p>To the maximum extent permitted by law:</p>
+                <ul>
+                    <li>CedarPay is not liable for indirect or consequential damages</li>
+                    <li>Our liability is limited to the amount of fees paid in the last 3 months</li>
+                    <li>We are not responsible for delays caused by third-party systems</li>
+                    <li>We do not guarantee uninterrupted or error-free service</li>
+                </ul>
+
+                <h3 style="color: var(--cedar-gold);">9. Account Suspension and Termination</h3>
+                <p>We may suspend or terminate your account for:</p>
+                <ul>
+                    <li>Violation of these Terms of Service</li>
+                    <li>Suspected fraudulent or illegal activity</li>
+                    <li>Failure to complete KYC verification</li>
+                    <li>Extended periods of inactivity (over 12 months)</li>
+                    <li>Chargebacks or disputed transactions</li>
+                </ul>
+
+                <h3 style="color: var(--cedar-gold);">10. Privacy and Data Protection</h3>
+                <p>Your privacy is important to us. We collect and process personal data as described in our <a asp-controller="Home" asp-action="Privacy" style="color: var(--teal);">Privacy Policy</a>. By using CedarPay, you consent to such collection and processing.</p>
+
+                <h3 style="color: var(--cedar-gold);">11. Amendments to Terms</h3>
+                <p>We reserve the right to modify these terms at any time. Changes will be:</p>
+                <ul>
+                    <li>Posted on our website with an updated effective date</li>
+                    <li>Communicated via email for material changes</li>
+                    <li>Effective 30 days after notice for substantive changes</li>
+                    <li>Your continued use constitutes acceptance of modified terms</li>
+                </ul>
+
+                <h3 style="color: var(--cedar-gold);">12. Governing Law</h3>
+                <p>These Terms are governed by the laws of Lebanon. Any disputes shall be resolved in the courts of Beirut, Lebanon, in accordance with Banque du Liban regulations.</p>
+
+                <h3 style="color: var(--cedar-gold);">13. Contact Information</h3>
+                <p>For questions about these Terms of Service, please contact us:</p>
+                <ul>
+                    <li>Email: cedarpay.notifications@gmail.com</li>
+                    <li>Phone: +961 78 805 447</li>
+                    <li>Address: Beirut, Lebanon</li>
+                </ul>
+
+                <div style="margin-top: 30px; padding: 20px; background: var(--bg-2); border-radius: 12px; text-align: center;">
+                    <p style="margin-bottom: 0;">By using CedarPay, you acknowledge that you have read, understood, and agree to these Terms of Service.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="home-footer mt-4">
+            <div class="home-footer-links">
+                <a asp-controller="Home" asp-action="Index" class="home-footer-link">Home</a>
+                <span class="home-footer-separator">•</span>
+                <a asp-controller="Home" asp-action="AboutUs" class="home-footer-link">About</a>
+                <span class="home-footer-separator">•</span>
+                <a asp-controller="Home" asp-action="ContactUs" class="home-footer-link">Contact</a>
+                <span class="home-footer-separator">•</span>
+                <a asp-controller="Home" asp-action="Privacy" class="home-footer-link">Privacy Policy</a>
+                <span class="home-footer-separator">•</span>
+                <a asp-controller="Home" asp-action="Terms" class="home-footer-link">Terms of Service</a>
+            </div>
+            <p class="home-footer-copyright">© @DateTime.Now.Year CedarPay — Licensed by Banque du Liban</p>
+        </div>
+    </div>
+
+</body>
+</html>

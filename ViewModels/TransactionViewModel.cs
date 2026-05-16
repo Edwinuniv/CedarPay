@@ -12,6 +12,8 @@
         public string? Description { get; set; }
         public string Status { get; set; } = "";
         public string Type { get; set; } = "";
+        public string TransactionType { get; set; } = "";
+        public string Category { get; set; } = "General";
         public DateTime CreatedAt { get; set; }
         public DateTime? CompletedAt { get; set; }
         public bool IsSent { get; set; }

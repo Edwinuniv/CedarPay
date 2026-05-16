@@ -1,0 +1,155 @@
+﻿@{
+    ViewData["Title"] = "Platform Earnings Report";
+    ViewBag.PageClass = "page-admin";
+    var feePolicy = ViewBag.FeePolicy as MoneyTransfer.Models.FeePolicy;
+    var agentEarnings = ViewBag.AgentEarnings as dynamic;
+}
+
+<div class="page-header">
+    <div>
+        <h2>Platform Earnings Report</h2>
+        <p>Fees collected and agent commissions</p>
+    </div>
+    <div style="display: flex; gap: 8px;">
+        <button onclick="exportCommissions()" class="btn-tp-primary">
+            <i class="bi bi-file-earmark-excel"></i> Export Commissions
+        </button>
+        <a asp-action="Reports" class="btn-tp-secondary">
+            <i class="bi bi-bar-chart"></i> Reports Dashboard
+        </a>
+        <a asp-action="Index" class="btn-tp-secondary">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="tp-card mb-3 fee-policy-card">
+    <div class="tp-card-header">
+        <span class="tp-card-title">
+            Current Fee Policy
+        </span>
+        <a asp-action="FeeSettings" class="tp-card-link">Edit →</a>
+    </div>
+    <div class="fee-policy-stats">
+        <div>
+            <span class="fee-policy-label">Fee:</span>
+            <strong class="fee-policy-value">
+                @(((feePolicy?.FeePercentage ?? 0.02m) * 100).ToString("F1"))%
+                + $@((feePolicy?.FixedFee ?? 0.50m).ToString("F2"))
+            </strong>
+        </div>
+        <div>
+            <span class="fee-policy-label">Free every:</span>
+            <strong class="fee-policy-value">
+                @(feePolicy?.FreeTransactionThreshold ?? 10)
+                transactions
+            </strong>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon received">
+                <i class="bi bi-cash-coin"></i>
+            </div>
+            <div class="stat-value">
+                $@((ViewBag.TotalFees as decimal? ?? 0).ToString("N2"))
+            </div>
+            <div class="stat-label">Total Fees Collected</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon beneficiaries">
+                <i class="bi bi-gift-fill"></i>
+            </div>
+            <div class="stat-value">
+                @(ViewBag.FreeTransactions ?? 0)
+            </div>
+            <div class="stat-label">Free Transactions Given</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon sent">
+                <i class="bi bi-percent"></i>
+            </div>
+            <div class="stat-value">
+                $@{
+                decimal total = 0;
+                if (ViewBag.AgentEarnings != null)
+                {
+                    foreach (var e in ViewBag.AgentEarnings)
+                    {
+                        total += (decimal)e.TotalCommissions;
+                    }
+                }
+                @total.ToString("N2")
+                                }
+            </div>
+            <div class="stat-label">Total Agent Commissions</div>
+        </div>
+    </div>
+</div>
+
+<div class="tp-card">
+    <div class="tp-card-header">
+        <span class="tp-card-title">
+            Agent Commission Breakdown
+        </span>
+    </div>
+    <table class="tp-table">
+        <thead>
+            <tr>
+                <th>Store</th>
+                <th>Agent</th>
+                <th>City</th>
+                <th>Total Earned</th>
+                <th>Paid</th>
+                <th>Unpaid</th>
+                <th>Transactions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (ViewBag.AgentEarnings != null)
+            {
+                foreach (var e in ViewBag.AgentEarnings)
+                {
+                    <tr>
+                        <td class="agent-store-cell">
+                            @e.StoreName
+                        </td>
+                        <td class="agent-name-cell">
+                            @e.AgentName
+                        </td>
+                        <td class="agent-city-cell">
+                            @e.City
+                        </td>
+                        <td class="agent-earned-cell">
+                            $@(((decimal)e.TotalCommissions).ToString("N2"))
+                        </td>
+                        <td class="agent-paid-cell">
+                            $@(((decimal)e.PaidCommissions).ToString("N2"))
+                        </td>
+                        <td class="agent-unpaid-cell">
+                            $@(((decimal)e.UnpaidCommissions).ToString("N2"))
+                        </td>
+                        <td class="agent-count-cell">
+                            @e.CommissionCount
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        function exportCommissions() {
+            window.location.href = '/Admin/ExportCommissions';
+        }
+    </script>
+}

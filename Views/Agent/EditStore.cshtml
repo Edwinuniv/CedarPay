@@ -1,0 +1,187 @@
+﻿@model MoneyTransfer.Models.Agent
+@{
+    ViewData["Title"] = "Edit Store";
+    ViewBag.PageClass = "page-agent";
+
+    var openTime = "";
+    var closeTime = "";
+    if (!string.IsNullOrEmpty(Model.WorkingHours))
+    {
+        var dash = Model.WorkingHours.IndexOf('-');
+        if (dash > 0)
+        {
+            openTime = Model.WorkingHours.Substring(0, dash).Trim();
+            closeTime = Model.WorkingHours.Substring(dash + 1).Trim();
+        }
+    }
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="page-header">
+            <div>
+                <h2>Edit Store</h2>
+                <p>@Model.StoreName</p>
+            </div>
+            <a asp-action="Dashboard" class="btn-tp-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+        <div class="tp-card">
+            <form asp-action="EditStore" method="post" class="tp-form">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="UserId" />
+                <input type="hidden" asp-for="Status" />
+                <input type="hidden" asp-for="CommissionRate" />
+                <input type="hidden" asp-for="WorkingHours" id="workingHoursHidden" />
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Store Name</label>
+                            <input asp-for="StoreName" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Agent Name</label>
+                            <input asp-for="AgentName" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Phone</label>
+                            <input asp-for="PhoneNumber" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input asp-for="Email" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">City</label>
+                            <input asp-for="City" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Country</label>
+                            <input asp-for="Country" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            <label class="form-label">Street</label>
+                            <input asp-for="Street" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Region</label>
+                            <input asp-for="Region" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="form-group">
+                            <label class="form-label">Working Hours</label>
+                            <div style="display:flex;align-items:center;gap:12px">
+                                <div style="flex:1">
+                                    <label style="font-size:11px;color:var(--text-3);margin-bottom:4px;display:block">Opens at</label>
+                                    <input type="time" id="openTime" class="form-control" value="@openTime"
+                                           oninput="syncHours()" />
+                                </div>
+                                <span style="color:var(--text-3);margin-top:18px">—</span>
+                                <div style="flex:1">
+                                    <label style="font-size:11px;color:var(--text-3);margin-bottom:4px;display:block">Closes at</label>
+                                    <input type="time" id="closeTime" class="form-control" value="@closeTime"
+                                           oninput="syncHours()" />
+                                </div>
+                                <div style="flex-shrink:0;margin-top:18px" id="hoursPreviewWrapper">
+                                    @if (!string.IsNullOrEmpty(Model.WorkingHours))
+                                    {
+                                        var open = Model.IsOpenNow;
+                                        <span class="badge-tp @(open == true ? "success" : open == false ? "danger" : "default")" id="openBadge">
+                                            @(open == true ? "Open Now" : open == false ? "Closed Now" : "Hours Not Set")
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge-tp default" id="openBadge">Not Set</span>
+                                    }
+                                </div>
+                            </div>
+                            <div style="font-size:11px;color:var(--text-3);margin-top:6px">
+                                Stored as: <span id="hoursDisplay" style="font-family:monospace">@(Model.WorkingHours ?? "Not set")</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea asp-for="Description" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mt-2">
+                    <button type="submit" class="btn-tp-primary">
+                        <i class="bi bi-check-lg"></i> Save Changes
+                    </button>
+                    <a asp-action="Dashboard" class="btn-tp-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function syncHours() {
+            var open = document.getElementById('openTime').value;
+            var close = document.getElementById('closeTime').value;
+            var hidden = document.getElementById('workingHoursHidden');
+            var display = document.getElementById('hoursDisplay');
+            var badge = document.getElementById('openBadge');
+
+            if (open && close) {
+                var val = open + '-' + close;
+                hidden.value = val;
+                display.textContent = val;
+
+                var now = new Date();
+                var nowMin = now.getHours() * 60 + now.getMinutes();
+                var openParts = open.split(':');
+                var closeParts = close.split(':');
+                var openMin = parseInt(openParts[0]) * 60 + parseInt(openParts[1]);
+                var closeMin = parseInt(closeParts[0]) * 60 + parseInt(closeParts[1]);
+
+                var isOpen;
+                if (openMin <= closeMin) {
+                    isOpen = nowMin >= openMin && nowMin <= closeMin;
+                } else {
+                    isOpen = nowMin >= openMin || nowMin <= closeMin;
+                }
+
+                badge.textContent = isOpen ? 'Open Now' : 'Closed Now';
+                badge.className = 'badge-tp ' + (isOpen ? 'success' : 'danger');
+            } else {
+                hidden.value = '';
+                display.textContent = 'Not set';
+                badge.textContent = 'Not Set';
+                badge.className = 'badge-tp default';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var open = document.getElementById('openTime').value;
+            var close = document.getElementById('closeTime').value;
+            if (open && close) syncHours();
+        });
+    </script>
+}

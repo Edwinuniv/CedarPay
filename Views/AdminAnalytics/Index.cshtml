@@ -1,0 +1,425 @@
+﻿@model AnalyticsDashboardViewModel
+@{
+    ViewData["Title"] = "Analytics Dashboard";
+    ViewBag.PageClass = "page-admin";
+}
+
+<div class="page-header">
+    <div>
+        <h2><i class="bi bi-graph-up"></i> Analytics Dashboard</h2>
+        <p>Platform insights, ratings, and performance metrics</p>
+    </div>
+    <div style="display: flex; gap: 8px;">
+        <a asp-action="ReviewsAnalytics" class="btn-tp-primary">
+            <i class="bi bi-star-fill"></i> Review Analytics
+        </a>
+        <a asp-action="MonthlyReport" class="btn-tp-secondary">
+            <i class="bi bi-calendar3"></i> Monthly Report
+        </a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon received"><i class="bi bi-people-fill"></i></div>
+            <div class="stat-value">@Model.TotalUsers.ToString("N0")</div>
+            <div class="stat-label">Total Users</div>
+            <div class="stat-sub">+@Model.NewUsersThisMonth this month</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon sent"><i class="bi bi-arrow-repeat"></i></div>
+            <div class="stat-value">@Model.TotalTransactions.ToString("N0")</div>
+            <div class="stat-label">Total Transactions</div>
+            <div class="stat-sub">@Model.TotalTransactionsThisMonth this month</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon beneficiaries"><i class="bi bi-cash-stack"></i></div>
+            <div class="stat-value">$@Model.TotalVolumeThisMonth.ToString("N0")</div>
+            <div class="stat-label">Volume (This Month)</div>
+            <div class="stat-sub">$@Model.TotalVolumeYear.ToString("N0") this year</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon received"><i class="bi bi-star-fill"></i></div>
+            <div class="stat-value">@Model.AverageAppRating.ToString("F1")</div>
+            <div class="stat-label">App Rating</div>
+            <div class="stat-sub">@Model.TotalAppReviews reviews</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="tp-card text-center">
+            <div class="rating-icon">⭐</div>
+            <div class="rating-value">@Model.AverageAppRating.ToString("F1")</div>
+            <div class="rating-label">App Rating</div>
+            <div class="rating-count">@Model.TotalAppReviews reviews</div>
+            <div class="rating-stars mt-2">
+                @for (int i = 1; i <= 5; i++)
+                {
+                    <i class="bi bi-star-fill" style="color: @(i <= Math.Round(Model.AverageAppRating) ? "#f0a500" : "#d0d7e0")"></i>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="tp-card text-center">
+            <div class="rating-icon">🏪</div>
+            <div class="rating-value">@Model.AverageAgentRating.ToString("F1")</div>
+            <div class="rating-label">Agent Rating</div>
+            <div class="rating-count">@Model.TotalAgentReviews reviews</div>
+            <div class="rating-stars mt-2">
+                @for (int i = 1; i <= 5; i++)
+                {
+                    <i class="bi bi-star-fill" style="color: @(i <= Math.Round(Model.AverageAgentRating) ? "#f0a500" : "#d0d7e0")"></i>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="tp-card text-center">
+            <div class="rating-icon">💰</div>
+            <div class="rating-value">@Model.AverageTransactionRating.ToString("F1")</div>
+            <div class="rating-label">Transaction Rating</div>
+            <div class="rating-count">@Model.TotalTransactionReviews reviews</div>
+            <div class="rating-stars mt-2">
+                @for (int i = 1; i <= 5; i++)
+                {
+                    <i class="bi bi-star-fill" style="color: @(i <= Math.Round(Model.AverageTransactionRating) ? "#f0a500" : "#d0d7e0")"></i>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="tp-card">
+            <div class="tp-card-header">
+                <span class="tp-card-title">App Rating Distribution</span>
+            </div>
+            @for (int i = 5; i >= 1; i--)
+            {
+                var count = Model.AppRatingDistribution.ContainsKey(i) ? Model.AppRatingDistribution[i] : 0;
+                var percentage = Model.TotalAppReviews > 0 ? (count * 100.0 / Model.TotalAppReviews) : 0;
+                <div class="rating-bar-item">
+                    <div class="rating-bar-label">@i Star @(i == 1 ? "" : "s")</div>
+                    <div class="rating-bar-track">
+                        <div class="rating-bar-fill" style="width: @percentage%; background: @(i >= 4 ? "#00b894" : i == 3 ? "#f0a500" : "#ff6b6b")"></div>
+                    </div>
+                    <div class="rating-bar-count">@count (@percentage.ToString("F0")%)</div>
+                </div>
+            }
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="tp-card">
+            <div class="tp-card-header">
+                <span class="tp-card-title">Top Rated Agents</span>
+            </div>
+            @if (Model.TopRatedAgents.Any())
+            {
+                @foreach (var agent in Model.TopRatedAgents.Take(5))
+                {
+                    <div class="top-agent-item">
+                        <div class="top-agent-info">
+                            <div class="top-agent-name">@agent.StoreName</div>
+                            <div class="top-agent-agent">@agent.AgentName</div>
+                        </div>
+                        <div class="top-agent-rating">
+                            <span class="rating-stars">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="bi bi-star-fill" style="color: @(i <= Math.Round(agent.AverageRating) ? "#f0a500" : "#d0d7e0"); font-size: 12px;"></i>
+                                }
+                            </span>
+                            <span class="rating-value">@agent.AverageRating.ToString("F1")</span>
+                            <span class="rating-count">(@agent.ReviewCount)</span>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="empty-state small">No agent reviews yet</div>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="tp-card mb-4">
+    <div class="tp-card-header">
+        <span class="tp-card-title">Monthly Performance (Last 12 Months)</span>
+    </div>
+    <div class="monthly-chart">
+        <canvas id="monthlyChart" height="300"></canvas>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="tp-card">
+            <div class="tp-card-header">
+                <span class="tp-card-title">Recent Reviews</span>
+                <a asp-action="ReviewsAnalytics" class="tp-card-link">View All →</a>
+            </div>
+            @foreach (var review in Model.RecentReviews.Take(5))
+            {
+                <div class="recent-review-item">
+                    <div class="recent-review-user">@(review.User?.FirstName ?? "User") @(review.User?.LastName ?? "")</div>
+                    <div class="recent-review-rating">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            <i class="bi bi-star-fill" style="color: @(i <= review.Rating ? "#f0a500" : "#d0d7e0"); font-size: 11px;"></i>
+                        }
+                    </div>
+                    <div class="recent-review-target">
+                        @if (review.Target == ReviewTarget.App)
+                        {
+                            <span class="badge-tp info">App</span>
+                        }
+                        else if (review.Target == ReviewTarget.Agent && review.Agent != null)
+                        {
+                            <span class="badge-tp success">@review.Agent.StoreName</span>
+                        }
+                        else
+                        {
+                            <span class="badge-tp default">Transaction</span>
+                        }
+                    </div>
+                    <div class="recent-review-date">@review.CreatedAt.ToString("MMM dd")</div>
+                </div>
+            }
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="tp-card">
+            <div class="tp-card-header">
+                <span class="tp-card-title">Recent Users</span>
+                <a asp-controller="Admin" asp-action="Users" class="tp-card-link">View All →</a>
+            </div>
+            @foreach (var user in Model.RecentUsers.Take(5))
+            {
+                <div class="recent-user-item">
+                    <div class="recent-user-avatar">@(user.FirstName?.Substring(0, 1) ?? "?")@(user.LastName?.Substring(0, 1) ?? "")</div>
+                    <div class="recent-user-info">
+                        <div class="recent-user-name">@user.FirstName @user.LastName</div>
+                        <div class="recent-user-email">@user.Email</div>
+                    </div>
+                    <div class="recent-user-date">Joined @user.CreatedAt.ToString("MMM dd")</div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .rating-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .rating-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--text-1);
+        }
+
+        .rating-label {
+            font-size: 13px;
+            color: var(--text-3);
+        }
+
+        .rating-count {
+            font-size: 11px;
+            color: var(--text-3);
+            margin-top: 4px;
+        }
+
+        .rating-bar-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .rating-bar-label {
+            width: 70px;
+            font-size: 13px;
+            color: var(--text-2);
+        }
+
+        .rating-bar-track {
+            flex: 1;
+            height: 8px;
+            background: var(--surface-2);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .rating-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width .3s ease;
+        }
+
+        .rating-bar-count {
+            width: 50px;
+            font-size: 12px;
+            text-align: right;
+            color: var(--text-3);
+        }
+
+        .top-agent-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .top-agent-name {
+            font-weight: 600;
+            color: var(--text-1);
+        }
+
+        .top-agent-agent {
+            font-size: 11px;
+            color: var(--text-3);
+        }
+
+        .top-agent-rating {
+            text-align: right;
+        }
+
+        .recent-review-item, .recent-user-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .recent-review-user {
+            flex: 1;
+            font-weight: 600;
+            color: var(--text-1);
+        }
+
+        .recent-review-target {
+            flex-shrink: 0;
+        }
+
+        .recent-review-date {
+            font-size: 11px;
+            color: var(--text-3);
+            flex-shrink: 0;
+        }
+
+        .recent-user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--teal-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--teal);
+            flex-shrink: 0;
+        }
+
+        .recent-user-info {
+            flex: 1;
+        }
+
+        .recent-user-name {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-1);
+        }
+
+        .recent-user-email {
+            font-size: 11px;
+            color: var(--text-3);
+        }
+
+        .recent-user-date {
+            font-size: 11px;
+            color: var(--text-3);
+            flex-shrink: 0;
+        }
+
+        .empty-state.small {
+            padding: 20px;
+            text-align: center;
+            color: var(--text-3);
+        }
+    </style>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const monthlyData = @Html.Raw(Json.Serialize(Model.MonthlyStats));
+        const labels = monthlyData.map(m => m.month);
+        const transactions = monthlyData.map(m => m.transactions);
+        const volume = monthlyData.map(m => m.volume);
+        const newUsers = monthlyData.map(m => m.newUsers);
+        const avgRating = monthlyData.map(m => m.averageRating);
+
+        const ctx = document.getElementById('monthlyChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Transactions',
+                        data: transactions,
+                        borderColor: '#00b894',
+                        backgroundColor: 'rgba(0,184,148,0.1)',
+                        tension: 0.4,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'New Users',
+                        data: newUsers,
+                        borderColor: '#6c63ff',
+                        backgroundColor: 'rgba(108,99,255,0.1)',
+                        tension: 0.4,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Avg Rating',
+                        data: avgRating,
+                        borderColor: '#f0a500',
+                        backgroundColor: 'rgba(240,165,0,0.1)',
+                        tension: 0.4,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: { mode: 'index', intersect: false }
+                },
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: 'Count' } },
+                    y1: { beginAtZero: true, position: 'right', title: { display: true, text: 'Rating' }, max: 5 }
+                }
+            }
+        });
+    </script>
+}

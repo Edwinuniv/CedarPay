@@ -14,18 +14,12 @@ namespace MoneyTransfer.Controllers
     {
         private readonly IBeneficiaryRepository _beneficiaryRepository;
         private readonly IWalletRepository _walletRepository;
-        private readonly UserManager<User> _userManager;
         private readonly ApplicationDbContext _context;
 
-        public BeneficiaryController(IBeneficiaryRepository beneficiaryRepository,
-            IWalletRepository walletRepository,
-            UserManager<User> userManager,
-            IUserRepository userRepository,
-            ApplicationDbContext context) : base(userManager, userRepository)
+        public BeneficiaryController(IBeneficiaryRepository beneficiaryRepository, IWalletRepository walletRepository, UserManager<User> userManager, IUserRepository userRepository, ApplicationDbContext context): base(userManager, userRepository)
         {
             _beneficiaryRepository = beneficiaryRepository;
             _walletRepository = walletRepository;
-            _userManager = userManager;
             _context = context;
         }
 
@@ -45,58 +39,50 @@ namespace MoneyTransfer.Controllers
                 ReceiverCity = b.ReceiverCity,
                 ReceiverBankName = b.ReceiverBankName,
                 TransferType = b.Type.ToString(),
-                CreatedAt = b.CreatedAt
+                CreatedAt = b.CreatedAt,
+                IsFavorite = b.IsFavorite,
+                ReceiverUserId = b.ReceiverUserId,
+                ReceiverProfilePictureUrl = b.ReceiverUser?.ProfilePictureUrl
             }).ToList();
 
             return View(vm);
         }
 
-        public IActionResult Create()
-        {
-            return View(new BeneficiaryViewModel());
-        }
+        public IActionResult Create() => View(new BeneficiaryViewModel());
 
         [HttpPost]
         public async Task<IActionResult> Store(BeneficiaryViewModel vm)
         {
-            if (!ModelState.IsValid)
-                return View("Create", vm);
+            if (!ModelState.IsValid) return View("Create", vm);
 
             var userId = _userManager.GetUserId(User);
+            string? receiverUserId = null;
 
             if (!string.IsNullOrEmpty(vm.ReceiverWalletSerial))
             {
-                var receiverWallet = await _walletRepository
-                    .GetBySerialNumberAsync(vm.ReceiverWalletSerial);
+                var receiverWallet = await _walletRepository.GetBySerialNumberAsync(vm.ReceiverWalletSerial);
 
                 if (receiverWallet != null)
                 {
+                    receiverUserId = receiverWallet.UserId;
+
                     if (receiverWallet.UserId == userId)
                     {
-                        var myWallets = (await _walletRepository
-                            .GetByUserIdAsync(userId)).ToList();
-
+                        var myWallets = (await _walletRepository.GetByUserIdAsync(userId)).ToList();
                         bool hasSameCurrencyOwnWallet = false;
+
                         foreach (var w in myWallets)
                         {
-                            if (w.CurrencyId == receiverWallet.CurrencyId
-                                && w.Id != receiverWallet.Id)
+                            if (w.CurrencyId == receiverWallet.CurrencyId && w.Id != receiverWallet.Id)
                             {
                                 hasSameCurrencyOwnWallet = true;
                                 break;
                             }
                         }
 
-                        if (hasSameCurrencyOwnWallet ||
-                            receiverWallet.CurrencyId ==
-                            myWallets.FirstOrDefault(
-                                w => w.IsDefault)?.CurrencyId)
+                        if (hasSameCurrencyOwnWallet || receiverWallet.CurrencyId == myWallets.FirstOrDefault(w => w.IsDefault)?.CurrencyId)
                         {
-                            ModelState.AddModelError(
-                                "ReceiverWalletSerial",
-                                "You cannot add your own wallet " +
-                                "of the same currency as a beneficiary. " +
-                                "You can add a different currency wallet.");
+                            ModelState.AddModelError("ReceiverWalletSerial", "You cannot add your own wallet of the same currency as a beneficiary. You can add a different currency wallet.");
                             return View("Create", vm);
                         }
                     }
@@ -112,10 +98,10 @@ namespace MoneyTransfer.Controllers
                 ReceiverCountry = vm.ReceiverCountry,
                 ReceiverCity = vm.ReceiverCity,
                 ReceiverBankName = vm.ReceiverBankName,
-                Type = vm.TransferType == "WalletTransfer"
-                    ? BeneficiaryType.WalletTransfer
-                    : BeneficiaryType.MobileTransfer,
+                Type = vm.TransferType == "WalletTransfer" ? BeneficiaryType.WalletTransfer : BeneficiaryType.MobileTransfer,
                 UserId = userId,
+                ReceiverUserId = receiverUserId,
+                IsFavorite = false,
                 CreatedAt = DateTime.Now
             };
 
@@ -127,12 +113,10 @@ namespace MoneyTransfer.Controllers
         public async Task<IActionResult> Edit(int id)
         {
             var beneficiary = await _beneficiaryRepository.GetByIdAsync(id);
-            if (beneficiary == null)
-                return NotFound();
+            if (beneficiary == null) return NotFound();
 
             var userId = _userManager.GetUserId(User);
-            if (beneficiary.UserId != userId)
-                return Forbid();
+            if (beneficiary.UserId != userId) return Forbid();
 
             var vm = new BeneficiaryViewModel
             {
@@ -144,7 +128,8 @@ namespace MoneyTransfer.Controllers
                 ReceiverCountry = beneficiary.ReceiverCountry,
                 ReceiverCity = beneficiary.ReceiverCity,
                 ReceiverBankName = beneficiary.ReceiverBankName,
-                TransferType = beneficiary.Type.ToString()
+                TransferType = beneficiary.Type.ToString(),
+                IsFavorite = beneficiary.IsFavorite
             };
 
             return View(vm);
@@ -153,41 +138,44 @@ namespace MoneyTransfer.Controllers
         [HttpPost]
         public async Task<IActionResult> Update(BeneficiaryViewModel vm)
         {
-            if (!ModelState.IsValid)
-                return View("Edit", vm);
+            if (!ModelState.IsValid) return View("Edit", vm);
 
             var beneficiary = await _beneficiaryRepository.GetByIdAsync(vm.Id);
-            if (beneficiary == null)
-                return NotFound();
+            if (beneficiary == null) return NotFound();
 
             var userId = _userManager.GetUserId(User);
-            if (beneficiary.UserId != userId)
-                return Forbid();
+            if (beneficiary.UserId != userId) return Forbid();
+
+            string? receiverUserId = null;
 
             if (!string.IsNullOrEmpty(vm.ReceiverWalletSerial))
             {
-                var receiverWallet = await _walletRepository
-                    .GetBySerialNumberAsync(vm.ReceiverWalletSerial);
+                var receiverWallet = await _walletRepository.GetBySerialNumberAsync(vm.ReceiverWalletSerial);
 
-                if (receiverWallet != null && receiverWallet.UserId == userId)
+                if (receiverWallet != null)
                 {
-                    var myWallets = await _walletRepository.GetByUserIdAsync(userId);
+                    receiverUserId = receiverWallet.UserId;
 
-                    bool hasSameCurrencyWallet = false;
-                    foreach (var wallet in myWallets)
+                    if (receiverWallet.UserId == userId)
                     {
-                        if (wallet.CurrencyId == receiverWallet.CurrencyId && wallet.Id != receiverWallet.Id)
+                        var myWallets = await _walletRepository.GetByUserIdAsync(userId);
+                        bool hasSameCurrencyWallet = false;
+
+                        foreach (var wallet in myWallets)
                         {
-                            hasSameCurrencyWallet = true;
-                            break;
+                            if (wallet.CurrencyId == receiverWallet.CurrencyId && wallet.Id != receiverWallet.Id)
+                            {
+                                hasSameCurrencyWallet = true;
+                                break;
+                            }
                         }
-                    }
 
-                    if (hasSameCurrencyWallet)
-                    {
-                        ModelState.AddModelError("ReceiverWalletSerial",
-                            "You cannot add your own wallet of the same currency as a beneficiary.");
-                        return View("Edit", vm);
+                        if (hasSameCurrencyWallet)
+                        {
+                            ModelState.AddModelError("ReceiverWalletSerial",
+                                "You cannot add your own wallet of the same currency as a beneficiary.");
+                            return View("Edit", vm);
+                        }
                     }
                 }
             }
@@ -199,9 +187,8 @@ namespace MoneyTransfer.Controllers
             beneficiary.ReceiverCountry = vm.ReceiverCountry;
             beneficiary.ReceiverCity = vm.ReceiverCity;
             beneficiary.ReceiverBankName = vm.ReceiverBankName;
-            beneficiary.Type = vm.TransferType == "WalletTransfer"
-                ? BeneficiaryType.WalletTransfer
-                : BeneficiaryType.MobileTransfer;
+            beneficiary.ReceiverUserId = receiverUserId;
+            beneficiary.Type = vm.TransferType == "WalletTransfer" ? BeneficiaryType.WalletTransfer : BeneficiaryType.MobileTransfer;
 
             await _beneficiaryRepository.UpdateAsync(beneficiary);
             TempData["Success"] = "Beneficiary updated successfully!";
@@ -212,43 +199,50 @@ namespace MoneyTransfer.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var beneficiary = await _beneficiaryRepository.GetByIdAsync(id);
-            if (beneficiary == null)
-                return NotFound();
+            if (beneficiary == null) return NotFound();
 
             var userId = _userManager.GetUserId(User);
-            if (beneficiary.UserId != userId)
-                return Forbid();
+            if (beneficiary.UserId != userId) return Forbid();
 
             await _beneficiaryRepository.DeleteAsync(id);
             TempData["Success"] = "Beneficiary removed successfully!";
             return RedirectToAction("Index");
         }
 
+        [HttpPost]
+        public async Task<IActionResult> ToggleFavorite(int id)
+        {
+            var beneficiary = await _beneficiaryRepository.GetByIdAsync(id);
+            if (beneficiary == null) return NotFound();
+
+            var userId = _userManager.GetUserId(User);
+            if (beneficiary.UserId != userId) return Forbid();
+
+            beneficiary.IsFavorite = !beneficiary.IsFavorite;
+            await _beneficiaryRepository.UpdateAsync(beneficiary);
+
+            return RedirectToAction("Index");
+        }
+
         [HttpGet]
         public async Task<IActionResult> SearchUsers(string username)
         {
-            if (string.IsNullOrWhiteSpace(username))
-                return Json(new List<object>());
+            if (string.IsNullOrWhiteSpace(username)) return Json(new List<object>());
 
             var lower = username.ToLower().TrimStart('@');
             var currentUserId = _userManager.GetUserId(User);
 
             var users = await _context.Users
-                .Include(u => u.Wallets)
-                    .ThenInclude(w => w.Currency)
-                .Where(u => u.Id != currentUserId &&
-                            u.UserName != null &&
-                            u.UserName.Contains(lower))
+                .Include(u => u.Wallets).ThenInclude(w => w.Currency)
+                .Where(u => u.Id != currentUserId && u.UserName != null && u.UserName.Contains(lower))
                 .Take(5)
                 .Select(u => new
                 {
                     id = u.Id,
                     name = u.FirstName + " " + u.LastName,
                     userName = u.UserName ?? "",
-                    initials = (u.FirstName != null
-                        ? u.FirstName.Substring(0, 1) : "?") +
-                        (u.LastName != null
-                        ? u.LastName.Substring(0, 1) : "?"),
+                    initials = (u.FirstName != null ? u.FirstName.Substring(0, 1) : "?") +
+                               (u.LastName != null ? u.LastName.Substring(0, 1) : "?"),
                     walletSerial = u.Wallets
                         .Where(w => w.IsDefault && w.IsActive)
                         .Select(w => w.SerialNumber)

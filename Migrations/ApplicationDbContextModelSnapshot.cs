@@ -194,6 +194,40 @@ namespace MoneyTransfer.Migrations
                     b.ToTable("Accounts");
                 });
 
+            modelBuilder.Entity("MoneyTransfer.Models.ActivityLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Action")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Details")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("IpAddress")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserAgent")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ActivityLogs");
+                });
+
             modelBuilder.Entity("MoneyTransfer.Models.Agent", b =>
                 {
                     b.Property<int>("Id")
@@ -346,6 +380,48 @@ namespace MoneyTransfer.Migrations
                     b.ToTable("AgentApplications");
                 });
 
+            modelBuilder.Entity("MoneyTransfer.Models.Announcement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ShowToAll")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.ToTable("Announcements");
+                });
+
             modelBuilder.Entity("MoneyTransfer.Models.Beneficiary", b =>
                 {
                     b.Property<int>("Id")
@@ -356,6 +432,9 @@ namespace MoneyTransfer.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsFavorite")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Nickname")
                         .IsRequired()
@@ -585,6 +664,72 @@ namespace MoneyTransfer.Migrations
                             LastUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "UAE Dirham",
                             Symbol = "د.إ"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Code = "GBP",
+                            ExchangeRateToUSD = 1.270000m,
+                            FlagUrl = "/images/flags/gbp.png",
+                            IsActive = true,
+                            LastUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "British Pound",
+                            Symbol = "£"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Code = "SAR",
+                            ExchangeRateToUSD = 0.266000m,
+                            FlagUrl = "/images/flags/sar.png",
+                            IsActive = true,
+                            LastUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Saudi Riyal",
+                            Symbol = "﷼"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Code = "TRY",
+                            ExchangeRateToUSD = 0.031000m,
+                            FlagUrl = "/images/flags/try.png",
+                            IsActive = true,
+                            LastUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Turkish Lira",
+                            Symbol = "₺"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Code = "EGP",
+                            ExchangeRateToUSD = 0.021000m,
+                            FlagUrl = "/images/flags/egp.png",
+                            IsActive = true,
+                            LastUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Egyptian Pound",
+                            Symbol = "E£"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Code = "JOD",
+                            ExchangeRateToUSD = 1.410000m,
+                            FlagUrl = "/images/flags/jod.png",
+                            IsActive = true,
+                            LastUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Jordanian Dinar",
+                            Symbol = "JD"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Code = "KWD",
+                            ExchangeRateToUSD = 3.240000m,
+                            FlagUrl = "/images/flags/kwd.png",
+                            IsActive = true,
+                            LastUpdated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Kuwaiti Dinar",
+                            Symbol = "KD"
                         });
                 });
 
@@ -598,6 +743,10 @@ namespace MoneyTransfer.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<decimal>("DefaultCommissionRate")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("decimal(5,4)");
 
                     b.Property<decimal>("FeePercentage")
                         .HasPrecision(5, 4)
@@ -626,6 +775,7 @@ namespace MoneyTransfer.Migrations
                         {
                             Id = 1,
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DefaultCommissionRate = 0.02m,
                             FeePercentage = 0.02m,
                             FixedFee = 0.50m,
                             FreeTransactionThreshold = 10,
@@ -643,7 +793,6 @@ namespace MoneyTransfer.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("BackImageUrl")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("DocumentNumber")
@@ -658,7 +807,6 @@ namespace MoneyTransfer.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("RejectionReason")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("ReviewedAt")
@@ -697,11 +845,38 @@ namespace MoneyTransfer.Migrations
                     b.Property<int>("ConversationId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("EditedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeletedForEveryone")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeletedForSender")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsEdited")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsFromAdmin")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsRead")
                         .HasColumnType("bit");
+
+                    b.Property<string>("MediaFileName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long?>("MediaFileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("MediaUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("MessageType")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ReplyToId")
+                        .HasColumnType("int");
 
                     b.Property<string>("SenderId")
                         .HasColumnType("nvarchar(450)");
@@ -713,9 +888,41 @@ namespace MoneyTransfer.Migrations
 
                     b.HasIndex("ConversationId");
 
+                    b.HasIndex("ReplyToId");
+
                     b.HasIndex("SenderId");
 
                     b.ToTable("Messages");
+                });
+
+            modelBuilder.Entity("MoneyTransfer.Models.MessageReaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Emoji")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("MessageId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ReactedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MessageId", "UserId", "Emoji")
+                        .IsUnique();
+
+                    b.ToTable("MessageReactions");
                 });
 
             modelBuilder.Entity("MoneyTransfer.Models.Notification", b =>
@@ -757,6 +964,68 @@ namespace MoneyTransfer.Migrations
                     b.ToTable("Notifications");
                 });
 
+            modelBuilder.Entity("MoneyTransfer.Models.ReferralCode", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("UsageCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ReferralCodes");
+                });
+
+            modelBuilder.Entity("MoneyTransfer.Models.ReferralUse", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ReferralCodeId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ReferredUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("UsedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReferralCodeId");
+
+                    b.HasIndex("ReferredUserId");
+
+                    b.ToTable("ReferralUses");
+                });
+
             modelBuilder.Entity("MoneyTransfer.Models.Review", b =>
                 {
                     b.Property<int>("Id")
@@ -780,6 +1049,9 @@ namespace MoneyTransfer.Migrations
                     b.Property<int>("Target")
                         .HasColumnType("int");
 
+                    b.Property<int?>("TransactionId")
+                        .HasColumnType("int");
+
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
@@ -788,9 +1060,69 @@ namespace MoneyTransfer.Migrations
 
                     b.HasIndex("AgentId");
 
+                    b.HasIndex("TransactionId");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("Reviews");
+                });
+
+            modelBuilder.Entity("MoneyTransfer.Models.ScheduledTransfer", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ExecutionCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Frequency")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastRunAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("NextRunAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ReceiverName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ReceiverPhoneNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ReceiverWalletSerial")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("SenderWalletId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SenderWalletId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ScheduledTransfers");
                 });
 
             modelBuilder.Entity("MoneyTransfer.Models.SupportTicket", b =>
@@ -888,6 +1220,9 @@ namespace MoneyTransfer.Migrations
                     b.Property<decimal>("Amount")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
+
+                    b.Property<int>("Category")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("datetime2");
@@ -1004,6 +1339,12 @@ namespace MoneyTransfer.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<string>("EmailVerificationCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("EmailVerificationCodeExpiry")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("EmployerName")
                         .HasColumnType("nvarchar(max)");
 
@@ -1069,7 +1410,7 @@ namespace MoneyTransfer.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
@@ -1123,6 +1464,10 @@ namespace MoneyTransfer.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
+
+                    b.HasIndex("PhoneNumber")
+                        .IsUnique()
+                        .HasFilter("[PhoneNumber] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
                 });
@@ -1277,6 +1622,17 @@ namespace MoneyTransfer.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("MoneyTransfer.Models.ActivityLog", b =>
+                {
+                    b.HasOne("MoneyTransfer.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("MoneyTransfer.Models.Agent", b =>
                 {
                     b.HasOne("MoneyTransfer.Models.User", "User")
@@ -1297,6 +1653,17 @@ namespace MoneyTransfer.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("MoneyTransfer.Models.Announcement", b =>
+                {
+                    b.HasOne("MoneyTransfer.Models.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CreatedBy");
                 });
 
             modelBuilder.Entity("MoneyTransfer.Models.Beneficiary", b =>
@@ -1384,6 +1751,10 @@ namespace MoneyTransfer.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("MoneyTransfer.Models.Message", "ReplyTo")
+                        .WithMany()
+                        .HasForeignKey("ReplyToId");
+
                     b.HasOne("MoneyTransfer.Models.User", "Sender")
                         .WithMany()
                         .HasForeignKey("SenderId")
@@ -1391,7 +1762,20 @@ namespace MoneyTransfer.Migrations
 
                     b.Navigation("Conversation");
 
+                    b.Navigation("ReplyTo");
+
                     b.Navigation("Sender");
+                });
+
+            modelBuilder.Entity("MoneyTransfer.Models.MessageReaction", b =>
+                {
+                    b.HasOne("MoneyTransfer.Models.Message", "Message")
+                        .WithMany("Reactions")
+                        .HasForeignKey("MessageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Message");
                 });
 
             modelBuilder.Entity("MoneyTransfer.Models.Notification", b =>
@@ -1405,12 +1789,46 @@ namespace MoneyTransfer.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("MoneyTransfer.Models.ReferralCode", b =>
+                {
+                    b.HasOne("MoneyTransfer.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("MoneyTransfer.Models.ReferralUse", b =>
+                {
+                    b.HasOne("MoneyTransfer.Models.ReferralCode", "ReferralCode")
+                        .WithMany("Uses")
+                        .HasForeignKey("ReferralCodeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MoneyTransfer.Models.User", "ReferredUser")
+                        .WithMany()
+                        .HasForeignKey("ReferredUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ReferralCode");
+
+                    b.Navigation("ReferredUser");
+                });
+
             modelBuilder.Entity("MoneyTransfer.Models.Review", b =>
                 {
                     b.HasOne("MoneyTransfer.Models.Agent", "Agent")
                         .WithMany("Reviews")
                         .HasForeignKey("AgentId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MoneyTransfer.Models.Transaction", "Transaction")
+                        .WithMany()
+                        .HasForeignKey("TransactionId");
 
                     b.HasOne("MoneyTransfer.Models.User", "User")
                         .WithMany("Reviews")
@@ -1419,6 +1837,27 @@ namespace MoneyTransfer.Migrations
                         .IsRequired();
 
                     b.Navigation("Agent");
+
+                    b.Navigation("Transaction");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("MoneyTransfer.Models.ScheduledTransfer", b =>
+                {
+                    b.HasOne("MoneyTransfer.Models.Wallet", "SenderWallet")
+                        .WithMany()
+                        .HasForeignKey("SenderWalletId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MoneyTransfer.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SenderWallet");
 
                     b.Navigation("User");
                 });
@@ -1556,6 +1995,16 @@ namespace MoneyTransfer.Migrations
                     b.Navigation("TopUps");
 
                     b.Navigation("Wallets");
+                });
+
+            modelBuilder.Entity("MoneyTransfer.Models.Message", b =>
+                {
+                    b.Navigation("Reactions");
+                });
+
+            modelBuilder.Entity("MoneyTransfer.Models.ReferralCode", b =>
+                {
+                    b.Navigation("Uses");
                 });
 
             modelBuilder.Entity("MoneyTransfer.Models.Transaction", b =>

@@ -1,13 +1,14 @@
 ﻿@{
     ViewData["Title"] = "New Chat";
+    ViewBag.PageClass = "page-chat";
 }
 
 <div class="row justify-content-center">
-    <div class="col-md-5">
+    <div class="col-md-6">
         <div class="page-header">
             <div>
                 <h2>Start a Conversation</h2>
-                <p>Enter the person's phone number</p>
+                <p>Find someone by phone or username</p>
             </div>
             <a asp-action="Index" class="btn-tp-secondary">
                 <i class="bi bi-arrow-left"></i> Back
@@ -16,45 +17,85 @@
 
         @if (ViewBag.Error != null)
         {
-            <div style="background:var(--red-light);
-                            border:1px solid rgba(255,107,107,.25);
-                            border-radius:var(--r-md);
-                            padding:12px 16px;margin-bottom:16px;
-                            font-size:13px;color:var(--red);
-                            display:flex;align-items:center;gap:8px">
+            <div class="chat-error-alert">
                 <i class="bi bi-exclamation-circle"></i>
                 @ViewBag.Error
             </div>
         }
 
-        <div class="tp-card">
-            <form asp-action="FindAndStart" method="post"
-                  class="tp-form">
-                @Html.AntiForgeryToken()
+        <div class="chat-tab-container">
+            <button id="tabPhone" onclick="switchTab('phone')" class="chat-tab-btn active">
+                <i class="bi bi-telephone"></i> By Phone
+            </button>
+            <button id="tabUsername" onclick="switchTab('username')" class="chat-tab-btn inactive">
+                <i class="bi bi-at"></i> By Username
+            </button>
+        </div>
 
+        <div id="panelPhone" class="tp-card">
+            <form asp-action="FindAndStart" method="post" class="tp-form">
+                @Html.AntiForgeryToken()
                 <div class="form-group">
-                    <label class="form-label">
-                        Phone Number
-                    </label>
-                    <input type="tel"
-                           name="phoneNumber"
-                           class="form-control"
-                           placeholder="+961 XX XXX XXX"
-                           autofocus
-                           required />
-                    <div style="font-size:12px;
-                                color:var(--text-3);
-                                margin-top:6px">
-                        Enter the phone number registered
-                        on CedarPay
+                    <label class="form-label">Phone Number</label>
+                    <input type="tel" name="phoneNumber" class="form-control" placeholder="+961 XX XXX XXX" autofocus />
+                    <div class="chat-form-hint">
+                        Enter the phone number registered on CedarPay
                     </div>
                 </div>
-
-                <button type="submit" class="btn-tp-primary">
-                    <i class="bi bi-search"></i>
-                    Find & Start Chat
+                <button type="submit" class="btn-tp-primary chat-submit-btn">
+                    <i class="bi bi-search"></i> Find & Start Chat
                 </button>
             </form>
         </div>
+
+        <div id="panelUsername" class="tp-card" style="display:none">
+            <form asp-action="FindByUsername" method="post" class="tp-form">
+                @Html.AntiForgeryToken()
+                <div class="form-group">
+                    <label class="form-label">Username</label>
+                    <div class="chat-username-wrapper">
+                        <span class="chat-username-prefix">&#64;</span>
+                        <input type="text" name="username" class="form-control chat-username-input" placeholder="username" />
+                    </div>
+                    <div class="chat-form-hint">
+                        Enter their CedarPay username (without the &#64;)
+                    </div>
+                </div>
+                <button type="submit" class="btn-tp-primary chat-submit-btn">
+                    <i class="bi bi-search"></i> Find & Start Chat
+                </button>
+            </form>
+        </div>
+
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        function switchTab(tab) {
+            const isPhone = tab === 'phone';
+            document.getElementById('panelPhone').style.display = isPhone ? 'block' : 'none';
+            document.getElementById('panelUsername').style.display = isPhone ? 'none' : 'block';
+
+            const phoneBtn = document.getElementById('tabPhone');
+            const usernameBtn = document.getElementById('tabUsername');
+
+            if (isPhone) {
+                phoneBtn.classList.add('active');
+                phoneBtn.classList.remove('inactive');
+                usernameBtn.classList.add('inactive');
+                usernameBtn.classList.remove('active');
+            } else {
+                usernameBtn.classList.add('active');
+                usernameBtn.classList.remove('inactive');
+                phoneBtn.classList.add('inactive');
+                phoneBtn.classList.remove('active');
+            }
+        }
+
+        @if (ViewBag.ActiveTab == "username")
+        {
+                @:switchTab('username');
+        }
+    </script>
+}

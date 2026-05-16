@@ -1,0 +1,160 @@
+﻿@{
+    ViewData["Title"] = "Reports Dashboard";
+    ViewBag.PageClass = "page-admin";
+    var totalFees = ViewBag.TotalFees as decimal? ?? 0;
+    var totalCommissions = ViewBag.TotalCommissions as decimal? ?? 0;
+    var netEarnings = totalFees - totalCommissions;
+}
+
+<div class="page-header">
+    <div>
+        <h2><i class="bi bi-file-earmark-bar-graph"></i> Reports Dashboard</h2>
+        <p>Export platform data and view analytics</p>
+    </div>
+    <a asp-action="Index" class="btn-tp-secondary">
+        <i class="bi bi-arrow-left"></i> Back
+    </a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="tp-card" style="padding: 20px;">
+            <h4>Earnings vs Commissions</h4>
+            <canvas id="earningsChart" width="400" height="400"></canvas>
+            <div class="row mt-3">
+                <div class="col-6 text-center">
+                    <div style="color: #00b894; font-size: 20px; font-weight: bold;">$@totalFees.ToString("N2")</div>
+                    <div>Fees Collected</div>
+                </div>
+                <div class="col-6 text-center">
+                    <div style="color: #dc3545; font-size: 20px; font-weight: bold;">$@totalCommissions.ToString("N2")</div>
+                    <div>Commissions Paid</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="tp-card" style="padding: 20px;">
+            <h4>Platform Summary</h4>
+            <div class="row g-3">
+                <div class="col-6">
+                    <div class="stat-small">
+                        <div class="stat-small-value">@ViewBag.TotalUsers</div>
+                        <div class="stat-small-label">Total Users</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="stat-small">
+                        <div class="stat-small-value">@ViewBag.TotalAgents</div>
+                        <div class="stat-small-label">Total Agents</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="stat-small">
+                        <div class="stat-small-value">$@ViewBag.TotalVolume?.ToString("N0")</div>
+                        <div class="stat-small-label">Total Volume</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="stat-small">
+                        <div class="stat-small-value">@ViewBag.TotalTransactions</div>
+                        <div class="stat-small-label">Transactions</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="tp-card" style="padding: 20px; text-align: center;">
+            <i class="bi bi-people-fill" style="font-size: 48px; color: #6c63ff;"></i>
+            <h5 class="mt-2">Export Users</h5>
+            <button onclick="exportData('users')" class="btn-tp-primary w-100 mt-2">Export to Excel</button>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="tp-card" style="padding: 20px; text-align: center;">
+            <i class="bi bi-receipt" style="font-size: 48px; color: #f59e0b;"></i>
+            <h5 class="mt-2">Export Transactions</h5>
+            <button onclick="exportData('transactions')" class="btn-tp-primary w-100 mt-2">Export to Excel</button>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="tp-card" style="padding: 20px; text-align: center;">
+            <i class="bi bi-percent" style="font-size: 48px; color: #00b894;"></i>
+            <h5 class="mt-2">Export Commissions</h5>
+            <button onclick="exportData('commissions')" class="btn-tp-primary w-100 mt-2">Export to Excel</button>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="tp-card" style="padding: 20px; text-align: center;">
+            <i class="bi bi-graph-up" style="font-size: 48px; color: var(--cedar-gold);"></i>
+            <h5 class="mt-2">Go to Reports</h5>
+            <a asp-action="EarningsReport" class="btn-tp-secondary w-100 mt-2">View Earnings</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .stat-small {
+        background: var(--bg-2);
+        padding: 16px;
+        border-radius: 12px;
+        text-align: center;
+    }
+
+    .stat-small-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--teal);
+    }
+
+    .stat-small-label {
+        font-size: 12px;
+        color: var(--text-3);
+        margin-top: 4px;
+    }
+</style>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        const ctx = document.getElementById('earningsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Fees Collected', 'Commissions Paid'],
+                datasets: [{
+                    data: [@totalFees, @totalCommissions],
+                    backgroundColor: ['#00b894', '#dc3545'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        function exportData(type) {
+            switch(type) {
+                case 'users':
+                    window.location.href = '/Admin/ExportUsers';
+                    break;
+                case 'transactions':
+                    window.location.href = '/Admin/ExportTransactions';
+                    break;
+                case 'commissions':
+                    window.location.href = '/Admin/ExportCommissions';
+                    break;
+            }
+        }
+    </script>
+}

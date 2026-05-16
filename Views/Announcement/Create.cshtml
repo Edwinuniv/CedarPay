@@ -1,0 +1,86 @@
+﻿@model MoneyTransfer.Models.Announcement
+@{
+    bool isEdit = Model.Id > 0;
+    ViewData["Title"] = isEdit ? "Edit Announcement" : "New Announcement";
+    ViewBag.PageClass = "page-admin";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="page-header">
+            <div>
+                <h2>@(isEdit ? "Edit" : "New") Announcement</h2>
+                <p>@(isEdit ? "Update this announcement" : "Create a banner visible to all users")</p>
+            </div>
+            <a asp-action="Index" class="btn-tp-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+        </div>
+
+        <div class="tp-card">
+            <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+
+                <div asp-validation-summary="ModelOnly" class="alert-tp error mb-3"
+                     style="@(ViewData.ModelState.ErrorCount > 0 ? "" : "display:none")"></div>
+
+                <div class="row g-3">
+                    <div class="col-12">
+                        <div class="form-group">
+                            <label class="form-label">Title <span class="announcement-required">*</span></label>
+                            <input asp-for="Title" class="form-control" placeholder="e.g. Scheduled Maintenance" />
+                            <span asp-validation-for="Title" class="text-danger validation-error"></span>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-group">
+                            <label class="form-label">Content <span class="announcement-required">*</span></label>
+                            <textarea asp-for="Content" class="form-control" rows="4"
+                                      placeholder="Announcement message visible to users..."></textarea>
+                            <span asp-validation-for="Content" class="text-danger validation-error"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Type</label>
+                            <select asp-for="Type" class="form-select">
+                                <option value="Info">ℹ️ Info</option>
+                                <option value="Warning">⚠️ Warning</option>
+                                <option value="Success">✅ Success</option>
+                                <option value="Maintenance">🔧 Maintenance</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Expires At (optional)</label>
+                            <input asp-for="ExpiresAt" class="form-control" type="datetime-local" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="announcement-checkbox-label">
+                            <input asp-for="IsActive" type="checkbox" class="announcement-checkbox" />
+                            Active (show to users)
+                        </label>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="announcement-checkbox-label">
+                            <input asp-for="ShowToAll" type="checkbox" class="announcement-checkbox" />
+                            Show to all users
+                        </label>
+                    </div>
+                </div>
+
+                <div class="announcement-actions">
+                    <button type="submit" class="btn-tp-primary">
+                        <i class="bi bi-check-lg"></i> @(isEdit ? "Save Changes" : "Publish")
+                    </button>
+                    <a asp-action="Index" class="btn-tp-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -4,275 +4,384 @@
     var user = ViewBag.User as MoneyTransfer.Models.User;
     var sent = ViewBag.Sent as List<MoneyTransfer.Models.Transaction>
         ?? new List<MoneyTransfer.Models.Transaction>();
-    var received = ViewBag.Received as
-        List<MoneyTransfer.Models.Transaction>
+    var received = ViewBag.Received as List<MoneyTransfer.Models.Transaction>
         ?? new List<MoneyTransfer.Models.Transaction>();
-    var wallets = ViewBag.Wallets as
-        List<MoneyTransfer.Models.Wallet>
+    var wallets = ViewBag.Wallets as List<MoneyTransfer.Models.Wallet>
         ?? new List<MoneyTransfer.Models.Wallet>();
+    var topUps = ViewBag.TopUps as List<MoneyTransfer.Models.TopUp>
+        ?? new List<MoneyTransfer.Models.TopUp>();
 }
 <!DOCTYPE html>
-<html>
+<html lang="en" id="reportHtml">
 <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CedarPay Account Report</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            max-width: 900px;
-            margin: 30px auto;
-            padding: 0 20px;
-            color: #1a1a2e;
-            font-size: 13px;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            padding: 0 0 20px;
-            border-bottom: 3px solid #00b894;
-            margin-bottom: 24px;
-        }
-
-        .brand {
-            font-size: 28px;
-            font-weight: 800;
-        }
-
-            .brand span {
-                color: #00b894;
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+    <link rel="stylesheet" href="~/css/transferpay.css" asp-append-version="true" />
+    <script>
+        (function () {
+            if (localStorage.getItem('darkMode') === '1') {
+                document.documentElement.classList.add('dark-mode');
+                document.addEventListener('DOMContentLoaded', function () {
+                    document.body && document.body.classList.add('dark-mode');
+                });
             }
-
-        h2 {
-            font-size: 16px;
-            margin: 20px 0 10px;
-            color: #00b894;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 6px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-
-        th {
-            background: #f5f7fa;
-            padding: 8px 10px;
-            text-align: left;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: .5px;
-            color: #888;
-        }
-
-        td {
-            padding: 9px 10px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .stat-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-
-        .stat {
-            background: #f5f7fa;
-            padding: 14px;
-            border-radius: 8px;
-        }
-
-            .stat .val {
-                font-size: 20px;
-                font-weight: 800;
-                color: #1a1a2e;
-            }
-
-            .stat .lbl {
-                font-size: 11px;
-                color: #888;
-                margin-top: 2px;
-            }
-
-        .footer {
-            margin-top: 40px;
-            padding-top: 16px;
-            border-top: 1px solid #eee;
-            font-size: 11px;
-            color: #888;
-            text-align: center;
-        }
-
-        .print-btn {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #00b894;
-            color: #fff;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        @@media print {
-            .print-btn {
-                display: none;
-            }
-        }
-    </style>
+        })();
+    </script>
 </head>
-<body>
+<body class="report-body">
 
-    <button class="print-btn" onclick="window.print()">
-        🖨️ Print / Save PDF
-    </button>
+    <div class="report-action-bar">
+        <a href="/Account/ExportExcel" class="report-btn report-btn-excel">
+            📊 Export Excel
+        </a>
+        <button class="report-btn report-btn-print" onclick="window.print()">
+            🖨️ Print / PDF
+        </button>
+    </div>
 
-    <div class="header">
+    <div class="report-header">
         <div>
-            <div class="brand">Cedar<span>Pay</span></div>
-            <div style="font-size:13px;color:#888;margin-top:4px">
-                Account Activity Report
-            </div>
+            <div class="report-brand">Cedar<span>Pay</span></div>
+            <div class="report-subtitle">Full Account Report</div>
         </div>
-        <div style="text-align:right;color:#888">
-            <div>Generated: @ViewBag.GeneratedAt?.ToString("MMM dd, yyyy HH:mm")</div>
+        <div class="report-header-info">
+            <div class="report-user-name">@user?.FirstName @user?.LastName</div>
             <div>@user?.Email</div>
+            <div>Generated: @ViewBag.GeneratedAt?.ToString("MMM dd, yyyy HH:mm")</div>
+            <div class="report-mt-1">
+                @if (user?.IsVerified == true)
+                {
+                    <span class="report-badge report-badge-green">✓ KYC Verified</span>
+                }
+                else
+                {
+                    <span class="report-badge report-badge-gray">KYC Pending</span>
+                }
+            </div>
         </div>
     </div>
 
-    <h2>Account Information</h2>
-    <table>
-        <tr>
-            <td style="color:#888;width:150px">Name</td>
-            <td><strong>@user?.FirstName @user?.LastName</strong></td>
-            <td style="color:#888;width:150px">Phone</td>
-            <td>@(user?.PhoneNumber ?? "—")</td>
-        </tr>
-        <tr>
-            <td style="color:#888">Account Type</td>
-            <td>@(user?.AccountType ?? "Individual")</td>
-            <td style="color:#888">Nationality</td>
-            <td>@(user?.Nationality ?? "—")</td>
-        </tr>
-        <tr>
-            <td style="color:#888">Joined</td>
-            <td>@user?.CreatedAt.ToString("MMM dd, yyyy")</td>
-            <td style="color:#888">KYC Status</td>
-            <td>@(user?.IsVerified == true ? "Verified ✓" : "Pending")</td>
-        </tr>
+    <h2 class="report-section-title">👤 Account Information</h2>
+    <table class="report-table">
+        <tbody>
+            <tr>
+                <td class="report-label-cell">Full Name</td>
+                <td><strong>@user?.FirstName @user?.LastName</strong></td>
+                <td class="report-label-cell">Father's Name</td>
+                <td>@(user?.FatherName ?? "—")</td>
+            </tr>
+            <tr>
+                <td class="report-label-cell">Date of Birth</td>
+                <td>@(user?.DateOfBirth.Year > 1900 ? user.DateOfBirth.ToString("MMM dd, yyyy") : "—")</td>
+                <td class="report-label-cell">Place of Birth</td>
+                <td>@(user?.PlaceOfBirth ?? "—")</td>
+            </tr>
+            <tr>
+                <td class="report-label-cell">Phone</td>
+                <td>@(user?.PhoneNumber ?? "—")</td>
+                <td class="report-label-cell">Nationality</td>
+                <td>@(user?.Nationality ?? "—")</td>
+            </tr>
+            <tr>
+                <td class="report-label-cell">Account Type</td>
+                <td>@(user?.AccountType ?? "Individual")</td>
+                <td class="report-label-cell">Occupation</td>
+                <td>@(user?.Occupation ?? "—")</td>
+            </tr>
+            <tr>
+                <td class="report-label-cell">Gender</td>
+                <td>@(user?.Gender ?? "—")</td>
+                <td class="report-label-cell">Marital Status</td>
+                <td>@(user?.MaritalStatus ?? "—")</td>
+            </tr>
+            <tr>
+                <td class="report-label-cell">Address</td>
+                <td colspan="3">
+                    @(string.Join(", ", new[] { user?.Street, user?.BuildingName, user?.City, user?.Region, user?.Country }.Where(s => !string.IsNullOrEmpty(s))))
+                </td>
+            </tr>
+            <tr>
+                <td class="report-label-cell">Joined</td>
+                <td>@user?.CreatedAt.ToString("MMM dd, yyyy")</td>
+                <td class="report-label-cell">KYC Status</td>
+                <td>@(user?.IsVerified == true ? "✓ Verified" : "Pending")</td>
+            </tr>
+        </tbody>
     </table>
 
-    <h2>Summary Statistics</h2>
-    <div class="stat-grid">
-        <div class="stat">
-            <div class="val">
-                $@sent.Where(t => t.Status == MoneyTransfer.Models.TransactionStatus.Completed).Sum(t => t.Amount).ToString("N2")
-            </div>
-            <div class="lbl">Total Sent</div>
+    <h2 class="report-section-title">📊 Summary Statistics</h2>
+    @{
+        var totalSent = sent.Where(t => t.Status == MoneyTransfer.Models.TransactionStatus.Completed).Sum(t => t.Amount);
+        var totalReceived = received.Where(t => t.Status == MoneyTransfer.Models.TransactionStatus.Completed).Sum(t => t.ConvertedAmount > 0 ? t.ConvertedAmount : t.Amount);
+        var totalTopUps = topUps.Where(t => t.Status == MoneyTransfer.Models.TopUpStatus.Completed).Sum(t => t.Amount);
+        var totalFeesPaid = sent.Where(t => !t.FeeWaived).Sum(t => t.FeeAmount);
+        var totalFeesSaved = sent.Where(t => t.FeeWaived).Sum(t => t.FeeAmount);
+        var freeCount = sent.Count(t => t.FeeWaived);
+    }
+    <div class="report-stat-grid">
+        <div class="report-stat">
+            <div class="report-stat-value">$@totalSent.ToString("N2")</div>
+            <div class="report-stat-label">Total Sent</div>
+            <div class="report-stat-sub">@sent.Count(t => t.Status == MoneyTransfer.Models.TransactionStatus.Completed) transactions</div>
         </div>
-        <div class="stat">
-            <div class="val">
-                $@received.Where(t => t.Status == MoneyTransfer.Models.TransactionStatus.Completed).Sum(t => t.ConvertedAmount > 0 ? t.ConvertedAmount : t.Amount).ToString("N2")
-            </div>
-            <div class="lbl">Total Received</div>
+        <div class="report-stat">
+            <div class="report-stat-value">$@totalReceived.ToString("N2")</div>
+            <div class="report-stat-label">Total Received</div>
+            <div class="report-stat-sub">@received.Count(t => t.Status == MoneyTransfer.Models.TransactionStatus.Completed) transactions</div>
         </div>
-        <div class="stat">
-            <div class="val">@(sent.Count + received.Count)</div>
-            <div class="lbl">Total Transactions</div>
+        <div class="report-stat">
+            <div class="report-stat-value">$@totalTopUps.ToString("N2")</div>
+            <div class="report-stat-label">Total Topped Up</div>
+            <div class="report-stat-sub">@topUps.Count top-ups</div>
         </div>
-        <div class="stat">
-            <div class="val">
-                $@sent.Where(t => !t.FeeWaived).Sum(t => t.FeeAmount).ToString("N2")
-            </div>
-            <div class="lbl">Total Fees Paid</div>
+        <div class="report-stat">
+            <div class="report-stat-value">$@totalFeesPaid.ToString("N2")</div>
+            <div class="report-stat-label">Fees Paid</div>
+            <div class="report-stat-sub">$@totalFeesSaved.ToString("N2") saved (@freeCount free)</div>
         </div>
     </div>
 
-    <h2>Wallets</h2>
-    <table>
+    <h2 class="report-section-title">📅 Monthly Breakdown (Last 6 Months)</h2>
+    @{
+        var monthlyData = new List<(string Month, decimal Sent, decimal Received, decimal TopUp)>();
+        for (int mi = 5; mi >= 0; mi--)
+        {
+            var mo = DateTime.Now.AddMonths(-mi);
+            monthlyData.Add((
+            mo.ToString("MMM"),
+            sent.Where(t => t.CreatedAt.Month == mo.Month && t.CreatedAt.Year == mo.Year).Sum(t => t.Amount),
+            received.Where(t => t.CreatedAt.Month == mo.Month && t.CreatedAt.Year == mo.Year).Sum(t => t.ConvertedAmount > 0 ? t.ConvertedAmount : t.Amount),
+            topUps.Where(t => t.CreatedAt.Month == mo.Month && t.CreatedAt.Year == mo.Year).Sum(t => t.Amount)
+            ));
+        }
+        var maxBarVal = monthlyData.Max(m => Math.Max((double)m.Sent, Math.Max((double)m.Received, (double)m.TopUp)));
+        if (maxBarVal == 0) maxBarVal = 1;
+    }
+
+    <div class="report-monthly-chart">
+        @foreach (var mo in monthlyData)
+        {
+            var sh = (double)mo.Sent / maxBarVal * 70;
+            var rh = (double)mo.Received / maxBarVal * 70;
+            var th = (double)mo.TopUp / maxBarVal * 70;
+            <div class="report-monthly-bar-container">
+                <div class="report-monthly-bars">
+                    <div class="report-monthly-bar-sent" style="height:@(Math.Max(sh, 1))px" title="Sent: $@mo.Sent.ToString("N0")"></div>
+                    <div class="report-monthly-bar-received" style="height:@(Math.Max(rh, 1))px" title="Recv: $@mo.Received.ToString("N0")"></div>
+                    <div class="report-monthly-bar-topup" style="height:@(Math.Max(th, 1))px" title="TopUp: $@mo.TopUp.ToString("N0")"></div>
+                </div>
+                <div class="report-monthly-label">@mo.Month</div>
+            </div>
+        }
+    </div>
+    <div class="report-legend">
+        <span class="report-legend-item"><span class="report-legend-color report-legend-sent"></span>Sent</span>
+        <span class="report-legend-item"><span class="report-legend-color report-legend-received"></span>Received</span>
+        <span class="report-legend-item"><span class="report-legend-color report-legend-topup"></span>Top-Ups</span>
+    </div>
+
+    <table class="report-table">
         <thead>
             <tr>
-                <th>Currency</th>
-                <th>Balance</th>
-                <th>Serial</th>
-                <th>Default</th>
+                <th>Month</th>
+                <th>Sent</th>
+                <th>Received</th>
+                <th>Top-Ups</th>
+                <th>Net</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var w in wallets)
+            @foreach (var mo in monthlyData)
             {
+                var net = mo.Received + mo.TopUp - mo.Sent;
                 <tr>
-                    <td>@w.Currency?.Code — @w.Currency?.Name</td>
-                    <td><strong>@w.Currency?.Symbol@w.Balance.ToString("N2")</strong></td>
-                    <td style="font-family:monospace;font-size:11px">@w.SerialNumber</td>
-                    <td>@(w.IsDefault ? "✓" : "—")</td>
+                    <td class="report-fw-600">@mo.Month</td>
+                    <td class="report-amount-sent">-$@mo.Sent.ToString("N2")</td>
+                    <td class="report-amount-received">+$@mo.Received.ToString("N2")</td>
+                    <td class="report-amount-topup">+$@mo.TopUp.ToString("N2")</td>
+                    <td class="@(net >= 0 ? "report-net-positive" : "report-net-negative")">
+                        @(net >= 0 ? "+" : "")$@net.ToString("N2")
+                    </td>
                 </tr>
             }
         </tbody>
     </table>
 
-    <h2>Sent Transactions (@sent.Count)</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Serial</th>
-                <th>To</th>
-                <th>Amount</th>
-                <th>Fee</th>
-                <th>Status</th>
-                <th>Date</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var t in sent.Take(50))
-            {
-                <tr>
-                    <td style="font-family:monospace;font-size:11px">@t.SerialNumber</td>
-                    <td>@(t.ReceiverWallet?.User != null ? $"{t.ReceiverWallet.User.FirstName} {t.ReceiverWallet.User.LastName}" : t.ReceiverName ?? "Mobile")</td>
-                    <td>@t.SenderCurrency?.Symbol@t.Amount.ToString("N2")</td>
-                    <td>@(t.FeeWaived ? "Free" : "$" + t.FeeAmount.ToString("N2"))</td>
-                    <td>@t.Status</td>
-                    <td>@t.CreatedAt.ToString("MMM dd, yyyy")</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <h2 class="report-section-title">💳 Wallets — Individual Reports</h2>
+    @foreach (var wallet in wallets)
+    {
+        var wSent = sent.Where(t => t.SenderWalletId == wallet.Id).ToList();
+        var wReceived = received.Where(t => t.ReceiverWalletId == wallet.Id).ToList();
+        var wTopUps = topUps.Where(t => t.WalletId == wallet.Id).ToList();
+        var sym = wallet.Currency?.Symbol ?? "$";
+        var cod = wallet.Currency?.Code ?? "";
 
-    <h2>Received Transactions (@received.Count)</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Serial</th>
-                <th>From</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th>Date</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var t in received.Take(50))
-            {
-                <tr>
-                    <td style="font-family:monospace;font-size:11px">@t.SerialNumber</td>
-                    <td>@(t.SenderWallet?.User != null ? $"{t.SenderWallet.User.FirstName} {t.SenderWallet.User.LastName}" : "Unknown")</td>
-                    <td>@(t.ReceiverCurrency?.Symbol)@((t.ConvertedAmount > 0 ? t.ConvertedAmount : t.Amount).ToString("N2"))</td>
-                    <td>@t.Status</td>
-                    <td>@t.CreatedAt.ToString("MMM dd, yyyy")</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+        <div class="report-wallet-card">
+            <div class="report-wallet-header">
+                <div>
+                    <h4>@cod — @(wallet.Currency?.Name ?? "Wallet")</h4>
+                    <div class="report-wallet-balance">@sym@wallet.Balance.ToString("N2")</div>
+                    <div class="report-wallet-serial">@wallet.SerialNumber</div>
+                </div>
+                <div class="report-wallet-badges">
+                    @if (wallet.IsDefault)
+                    {
+                        <span class="report-badge report-badge-green">Default</span>
+                    }
+                    @if (wallet.IsActive)
+                    {
+                        <span class="report-badge report-badge-blue">Active</span>
+                    }
+                    else
+                    {
+                        <span class="report-badge report-badge-gray">Inactive</span>
+                    }
+                </div>
+            </div>
 
-    <div class="footer">
-        <p>CedarPay — Licensed by Banque du Liban</p>
-        <p>This report is for informational purposes only.</p>
+            <div class="report-wallet-stats">
+                <div class="report-wallet-stat-card">
+                    <div class="report-wallet-stat-sent">-@sym@wSent.Sum(t => t.Amount).ToString("N2")</div>
+                    <div class="report-wallet-stat-label">Sent (@wSent.Count tx)</div>
+                </div>
+                <div class="report-wallet-stat-card">
+                    <div class="report-wallet-stat-received">+@sym@wReceived.Sum(t => t.ConvertedAmount > 0 ? t.ConvertedAmount : t.Amount).ToString("N2")</div>
+                    <div class="report-wallet-stat-label">Received (@wReceived.Count tx)</div>
+                </div>
+                <div class="report-wallet-stat-card">
+                    <div class="report-wallet-stat-topup">+@sym@wTopUps.Sum(t => t.Amount).ToString("N2")</div>
+                    <div class="report-wallet-stat-label">Topped Up (@wTopUps.Count)</div>
+                </div>
+            </div>
+
+            @if (wTopUps.Any())
+            {
+                <h3 class="report-subsection-title">Top-Ups for @cod Wallet</h3>
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Method</th>
+                            <th>Reference</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var t in wTopUps.OrderByDescending(t => t.CreatedAt))
+                        {
+                            <tr>
+                                <td>@t.CreatedAt.ToString("MMM dd, yyyy HH:mm")</td>
+                                <td class="report-amount-topup">+@sym@t.Amount.ToString("N2")</td>
+                                <td>@t.Method</td>
+                                <td class="report-mono">@(t.PaymentReference ?? "—")</td>
+                                <td>
+                                    <span class="report-badge @(t.Status == MoneyTransfer.Models.TopUpStatus.Completed ? "report-badge-green" : "report-badge-gray")">
+                                        @t.Status
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+
+            @if (wSent.Any())
+            {
+                <h3 class="report-subsection-title">Sent from @cod Wallet</h3>
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Reference</th>
+                            <th>To</th>
+                            <th>Amount</th>
+                            <th>Fee</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var t in wSent.Take(20))
+                        {
+                            <tr>
+                                <td>@t.CreatedAt.ToString("MMM dd, yyyy")</td>
+                                <td class="report-mono">@t.SerialNumber</td>
+                                <td>@(t.ReceiverWallet?.User != null ? $"{t.ReceiverWallet.User.FirstName} {t.ReceiverWallet.User.LastName}" : t.ReceiverName ?? "Mobile")</td>
+                                <td class="report-amount-sent">-@sym@t.Amount.ToString("N2")</td>
+                                <td class="report-fs-11">@(t.FeeWaived ? "Free 🎁" : sym + t.FeeAmount.ToString("N2"))</td>
+                                <td>
+                                    <span class="report-badge @(t.Status == MoneyTransfer.Models.TransactionStatus.Completed ? "report-badge-green" : t.Status == MoneyTransfer.Models.TransactionStatus.Pending ? "report-badge-blue" : "report-badge-red")">
+                                        @t.Status
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                        @if (wSent.Count > 20)
+                        {
+                            <tr>
+                                <td colspan="6" class="report-text-center report-italic">... and @(wSent.Count - 20) more. Export to Excel for full history.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+
+            @if (wReceived.Any())
+            {
+                <h3 class="report-subsection-title">Received into @cod Wallet</h3>
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Reference</th>
+                            <th>From</th>
+                            <th>Amount</th>
+                            <th>Original</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var t in wReceived.Take(20))
+                        {
+                            <tr>
+                                <td>@t.CreatedAt.ToString("MMM dd, yyyy")</td>
+                                <td class="report-mono">@t.SerialNumber</td>
+                                <td>@(t.SenderWallet?.User != null ? $"{t.SenderWallet.User.FirstName} {t.SenderWallet.User.LastName}" : "—")</td>
+                                <td class="report-amount-received">+@sym@(t.ConvertedAmount > 0 ? t.ConvertedAmount : t.Amount).ToString("N2")</td>
+                                <td class="report-fs-11">
+                                    @(t.SenderCurrency?.Symbol)@t.Amount.ToString("N2") @t.SenderCurrency?.Code
+                                </td>
+                                <td>
+                                    <span class="report-badge @(t.Status == MoneyTransfer.Models.TransactionStatus.Completed ? "report-badge-green" : t.Status == MoneyTransfer.Models.TransactionStatus.Pending ? "report-badge-blue" : "report-badge-red")">
+                                        @t.Status
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                        @if (wReceived.Count > 20)
+                        {
+                            <tr>
+                                <td colspan="6" class="report-text-center report-italic">... and @(wReceived.Count - 20) more. Export to Excel for full history.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+
+            @if (!wSent.Any() && !wReceived.Any() && !wTopUps.Any())
+            {
+                <div class="report-empty-wallet">No activity yet for this wallet.</div>
+            }
+        </div>
+    }
+
+    <div class="report-footer">
+        <p>🌲 CedarPay — Licensed by Banque du Liban</p>
+        <p>This report is for informational purposes only and was generated on @ViewBag.GeneratedAt?.ToString("MMMM dd, yyyy") at @ViewBag.GeneratedAt?.ToString("HH:mm").</p>
+        <p>For your records — confidential</p>
     </div>
+
 </body>
 </html>

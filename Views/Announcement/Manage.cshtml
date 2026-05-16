@@ -1,0 +1,254 @@
+﻿@model List<MoneyTransfer.Models.Announcement>
+@{
+    ViewData["Title"] = "Manage Announcements";
+    ViewBag.PageClass = "page-admin";
+    int online = ViewBag.OnlineUsers ?? 0;
+    int total = ViewBag.TotalUsers ?? 0;
+}
+
+<style>
+    .stat-card {
+        background: var(--bg-1);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        transition: all 0.3s ease;
+    }
+    .stat-card:hover {
+        border-color: var(--cedar-gold);
+        transform: translateY(-2px);
+    }
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+    .stat-icon.received { background: rgba(0,184,148,0.1); color: #00b894; }
+    .stat-icon.beneficiaries { background: rgba(108,99,255,0.1); color: #6c63ff; }
+    .stat-icon.sent { background: rgba(220,53,69,0.1); color: #dc3545; }
+    .stat-icon.gold { background: rgba(245,158,11,0.1); color: #f59e0b; }
+    .stat-value { font-size: 28px; font-weight: 700; color: var(--text-1); }
+    .stat-label { font-size: 13px; color: var(--text-3); margin-top: 4px; }
+    
+    .announcement-manage-item {
+        padding: 20px;
+        background: var(--bg-1);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        margin-bottom: 16px;
+        transition: all 0.3s ease;
+    }
+    .announcement-manage-item:hover {
+        border-color: var(--cedar-gold);
+    }
+    .announcement-manage-item.inactive { opacity: 0.7; }
+    .announcement-manage-main {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+    .announcement-manage-info { flex: 1; }
+    .announcement-manage-badges {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+    }
+    .announcement-manage-type-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+        color: white;
+    }
+    .announcement-manage-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: var(--text-1);
+    }
+    .announcement-manage-content {
+        font-size: 14px;
+        color: var(--text-2);
+        margin-bottom: 12px;
+        line-height: 1.5;
+    }
+    .announcement-manage-footer {
+        display: flex;
+        gap: 16px;
+        font-size: 12px;
+        color: var(--text-3);
+        flex-wrap: wrap;
+    }
+    .announcement-manage-actions {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+    .action-btn {
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: none;
+    }
+    .action-btn-primary {
+        background: var(--teal);
+        color: white;
+    }
+    .action-btn-primary:hover {
+        background: #00a884;
+        transform: translateY(-1px);
+    }
+    .action-btn-secondary {
+        background: var(--bg-2);
+        color: var(--text-1);
+        border: 1px solid var(--border);
+    }
+    .action-btn-secondary:hover {
+        background: var(--bg-1);
+        border-color: var(--teal);
+    }
+    .action-btn-warning {
+        background: #f59e0b;
+        color: white;
+    }
+    .action-btn-warning:hover {
+        background: #e67700;
+        transform: translateY(-1px);
+    }
+    .action-btn-danger {
+        background: #dc3545;
+        color: white;
+    }
+    .action-btn-danger:hover {
+        background: #c82333;
+        transform: translateY(-1px);
+    }
+</style>
+
+<div class="page-header">
+    <div>
+        <h2><i class="bi bi-megaphone-fill" style="color: var(--teal); margin-right: 8px;"></i>Manage Announcements</h2>
+        <p>Control what users see platform-wide</p>
+    </div>
+    <a asp-action="Create" class="action-btn action-btn-primary">
+        <i class="bi bi-plus-lg"></i> New Announcement
+    </a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon received"><i class="bi bi-people-fill"></i></div>
+            <div><div class="stat-value">@total</div><div class="stat-label">Total Users</div></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon beneficiaries"><i class="bi bi-megaphone-fill"></i></div>
+            <div><div class="stat-value">@Model.Count(a => a.IsActive)</div><div class="stat-label">Active</div></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon sent"><i class="bi bi-archive-fill"></i></div>
+            <div><div class="stat-value">@Model.Count</div><div class="stat-label">Total</div></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon gold"><i class="bi bi-clock-history"></i></div>
+            <div><div class="stat-value">@online</div><div class="stat-label">Online Now</div></div>
+        </div>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert-tp success mb-3"><i class="bi bi-check-circle-fill"></i> @TempData["Success"]</div>
+}
+
+@if (!Model.Any())
+{
+    <div class="tp-card">
+        <div class="empty-state">
+            <i class="bi bi-megaphone" style="font-size: 48px; color: var(--text-3);"></i>
+            <p style="margin-top: 16px;">No announcements yet.</p>
+            <a asp-action="Create" class="action-btn action-btn-primary mt-3">Create First Announcement</a>
+        </div>
+    </div>
+}
+else
+{
+    <div>
+        @foreach (var a in Model)
+        {
+            <div class="announcement-manage-item @(!a.IsActive ? "inactive" : "")">
+                <div class="announcement-manage-main">
+                    <div class="announcement-manage-info">
+                        <div class="announcement-manage-badges">
+                            <span class="badge-tp @(a.IsActive ? "success" : "default")">
+                                @(a.IsActive ? "Active" : "Inactive")
+                            </span>
+                            <span class="announcement-manage-type-badge" style="background: @(a.Type switch { 
+                                MoneyTransfer.Models.AnnouncementType.Warning => "#f59e0b", 
+                                MoneyTransfer.Models.AnnouncementType.Success => "#00b894", 
+                                MoneyTransfer.Models.AnnouncementType.Maintenance => "#ef4444", 
+                                _ => "#6366f1" 
+                            });">
+                                @a.Type
+                            </span>
+                        </div>
+                        <h3 class="announcement-manage-title">@a.Title</h3>
+                        <p class="announcement-manage-content">@a.Content</p>
+                        <div class="announcement-manage-footer">
+                            <span><i class="bi bi-person"></i> @a.CreatedBy?.FirstName @a.CreatedBy?.LastName</span>
+                            <span><i class="bi bi-calendar3"></i> @a.CreatedAt.ToString("MMM dd, yyyy HH:mm")</span>
+                            @if (a.ExpiresAt.HasValue)
+                            {
+                                <span><i class="bi bi-calendar-x"></i> Expires @a.ExpiresAt.Value.ToString("MMM dd, yyyy")</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="announcement-manage-actions">
+                        <a asp-action="Details" asp-route-id="@a.Id" class="action-btn action-btn-secondary" title="View Details">
+                            <i class="bi bi-eye"></i> View
+                        </a>
+                        <a asp-action="Edit" asp-route-id="@a.Id" class="action-btn action-btn-primary" title="Edit">
+                            <i class="bi bi-pencil"></i> Edit
+                        </a>
+                        <form asp-action="Toggle" asp-route-id="@a.Id" method="post" style="display:inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="action-btn action-btn-warning" title="@(a.IsActive ? "Deactivate" : "Activate")">
+                                <i class="bi bi-@(a.IsActive ? "pause-circle" : "play-circle")"></i>
+                                @(a.IsActive ? "Deactivate" : "Activate")
+                            </button>
+                        </form>
+                        <form asp-action="Delete" asp-route-id="@a.Id" method="post" style="display:inline" onsubmit="return confirm('Delete this announcement permanently?')">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="action-btn action-btn-danger" title="Delete">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

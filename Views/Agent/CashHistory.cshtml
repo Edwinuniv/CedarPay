@@ -1,0 +1,207 @@
+﻿@model List<MoneyTransfer.Models.TopUp>
+@{
+    ViewData["Title"] = "Cash Transactions History";
+    ViewBag.PageClass = "page-agent";
+    var agent = ViewBag.Agent as MoneyTransfer.Models.Agent;
+}
+
+<style>
+    .stat-card {
+        background: var(--bg-1);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        transition: all 0.3s ease;
+    }
+    .stat-card:hover { border-color: var(--cedar-gold); transform: translateY(-2px); }
+    .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+    .stat-info { flex: 1; }
+    .stat-value { font-size: 28px; font-weight: 700; color: var(--text-1); }
+    .stat-label { font-size: 13px; color: var(--text-3); margin-top: 4px; }
+    .filter-bar {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+        padding: 16px;
+        background: var(--bg-2);
+        border-radius: 12px;
+        align-items: flex-end;
+    }
+    .filter-group { flex: 1; min-width: 150px; }
+    .filter-group label { font-size: 12px; color: var(--text-3); margin-bottom: 4px; display: block; }
+    .export-btn { background: #00b894; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; }
+    .export-btn:hover { background: #00a884; }
+    .text-success { color: #00b894 !important; }
+    .text-info { color: #0dcaf0 !important; }
+    .empty-state { text-align: center; padding: 60px 20px; }
+    .empty-state i { font-size: 64px; color: var(--text-3); margin-bottom: 16px; display: block; }
+</style>
+
+<div class="page-header">
+    <div>
+        <h2>Cash Transactions History</h2>
+        <p>All cash deposits processed by your stores</p>
+    </div>
+    <div>
+        <a asp-action="CashIn" class="btn-tp-primary"><i class="bi bi-cash-coin"></i> New Cash In</a>
+        <button onclick="exportToExcel()" class="btn-tp-secondary"><i class="bi bi-file-earmark-excel"></i> Export</button>
+        <a asp-action="Dashboard" class="btn-tp-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(0,184,148,0.1);color:#00b894;"><i class="bi bi-cash-coin"></i></div>
+            <div class="stat-info"><div class="stat-value">$@ViewBag.TotalCashIn?.ToString("N2")</div><div class="stat-label">Total Cash Processed</div></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(108,99,255,0.1);color:#6c63ff;"><i class="bi bi-percent"></i></div>
+            <div class="stat-info"><div class="stat-value">@ViewBag.CommissionRate%</div><div class="stat-label">Your Commission Rate</div></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(245,158,11,0.1);color:#f59e0b;"><i class="bi bi-cash-stack"></i></div>
+            <div class="stat-info"><div class="stat-value">$@ViewBag.TotalCommissions?.ToString("N2")</div><div class="stat-label">Total Commissions Earned</div></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(0,184,148,0.1);color:#00b894;"><i class="bi bi-calendar-range"></i></div>
+            <div class="stat-info"><div class="stat-value">@ViewBag.TransactionCount</div><div class="stat-label">Transactions</div></div>
+        </div>
+    </div>
+</div>
+
+<div class="filter-bar">
+    <div class="filter-group">
+        <label><i class="bi bi-calendar"></i> From Date</label>
+        <input type="date" id="fromDate" class="form-control">
+    </div>
+    <div class="filter-group">
+        <label><i class="bi bi-calendar"></i> To Date</label>
+        <input type="date" id="toDate" class="form-control">
+    </div>
+    <div class="filter-group">
+        <label><i class="bi bi-search"></i> Search</label>
+        <input type="text" id="searchInput" class="form-control" placeholder="User or reference...">
+    </div>
+    <div class="filter-group">
+        <button onclick="applyFilters()" class="btn-tp-primary"><i class="bi bi-funnel"></i> Filter</button>
+        <button onclick="resetFilters()" class="btn-tp-secondary"><i class="bi bi-arrow-repeat"></i> Reset</button>
+    </div>
+</div>
+
+<div class="tp-card">
+    <div class="tp-card-header">
+        <h3 class="tp-card-title">Cash Deposit History</h3>
+        <div class="text-muted">@ViewBag.TransactionCount transactions</div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <i class="bi bi-inbox"></i>
+            <p>No cash transactions processed yet.</p>
+            <a asp-action="CashIn" class="btn-tp-primary mt-3"><i class="bi bi-cash-coin"></i> Process Cash In</a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="tp-table" id="cashTable">
+                <thead>
+                    <tr><th>Date</th><th>User</th><th>Wallet</th><th>Amount</th><th>Commission</th><th>Reference</th></tr>
+                </thead>
+                <tbody id="cashTableBody">
+                    @foreach (var tx in Model)
+                    {
+                        <tr data-date="@tx.CreatedAt.ToString("yyyy-MM-dd")" data-search="@tx.Wallet?.User?.FirstName @tx.Wallet?.User?.LastName @tx.PaymentReference">
+                            <td>@tx.CreatedAt.ToString("MMM dd, yyyy HH:mm")</td>
+                            <td>@tx.Wallet?.User?.FirstName @tx.Wallet?.User?.LastName</td>
+                            <td><small>@tx.Wallet?.SerialNumber</small></td>
+                            <td><span class="fw-bold text-success">+ @tx.Wallet?.Currency?.Symbol@tx.Amount.ToString("N2")</span></td>
+                            <td><span class="text-info">$@((tx.Amount * (ViewBag.CommissionRate / 100)).ToString("N2"))</span></td>
+                            <td><small>@tx.PaymentReference</small></td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr style="background: var(--bg-2); font-weight: 600;">
+                        <th colspan="3">Total</th>
+                        <th class="text-success">$@ViewBag.TotalCashIn?.ToString("N2")</th>
+                        <th class="text-info">$@ViewBag.TotalCommissions?.ToString("N2")</th>
+                        <th></th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    }
+</div>
+
+<script>
+    function applyFilters() {
+        const fromDate = document.getElementById('fromDate').value;
+        const toDate = document.getElementById('toDate').value;
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const rows = document.querySelectorAll('#cashTableBody tr');
+        let totalCash = 0, totalCommission = 0;
+
+        rows.forEach(row => {
+            const rowDate = row.getAttribute('data-date');
+            const rowSearch = row.getAttribute('data-search').toLowerCase();
+            let show = true;
+
+            if (fromDate && rowDate < fromDate) show = false;
+            if (toDate && rowDate > toDate) show = false;
+            if (search && !rowSearch.includes(search)) show = false;
+
+            row.style.display = show ? '' : 'none';
+            if (show) {
+                const amount = parseFloat(row.cells[3]?.innerText?.replace(/[^0-9.-]/g, '') || 0);
+                const commission = parseFloat(row.cells[4]?.innerText?.replace(/[^0-9.-]/g, '') || 0);
+                if (!isNaN(amount)) totalCash += amount;
+                if (!isNaN(commission)) totalCommission += commission;
+            }
+        });
+
+        const footer = document.querySelector('#cashTable tfoot tr');
+        if (footer) {
+            footer.cells[3].innerHTML = '<span class="text-success">$' + totalCash.toFixed(2) + '</span>';
+            footer.cells[4].innerHTML = '<span class="text-info">$' + totalCommission.toFixed(2) + '</span>';
+        }
+    }
+
+    function resetFilters() {
+        document.getElementById('fromDate').value = '';
+        document.getElementById('toDate').value = '';
+        document.getElementById('searchInput').value = '';
+        applyFilters();
+    }
+
+    function exportToExcel() {
+        let csv = "Date,User,Wallet,Amount,Commission,Reference\n";
+        const rows = document.querySelectorAll('#cashTableBody tr:visible');
+        rows.forEach(row => {
+            const cols = row.querySelectorAll('td');
+            csv += cols[0].innerText + ",";
+            csv += cols[1].innerText + ",";
+            csv += cols[2].innerText + ",";
+            csv += cols[3].innerText + ",";
+            csv += cols[4].innerText + ",";
+            csv += cols[5].innerText + "\n";
+        });
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'CashHistory_' + new Date().toISOString().split('T')[0] + '.csv';
+        link.click();
+    }
+</script>

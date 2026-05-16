@@ -1,88 +1,74 @@
-﻿@model List<MoneyTransfer.ViewModels.ReviewViewModel>
-@{
+﻿@{
     ViewData["Title"] = "My Reviews";
+    ViewBag.PageClass = "page-reviews";
+    var appReviews = ViewBag.MyAppReviews as List<MoneyTransfer.ViewModels.ReviewViewModel>
+        ?? new List<MoneyTransfer.ViewModels.ReviewViewModel>();
+    var transactions = ViewBag.Transactions as List<MoneyTransfer.Models.Transaction>
+        ?? new List<MoneyTransfer.Models.Transaction>();
+    var txReviews = ViewBag.TransactionReviews as Dictionary<int, MoneyTransfer.Models.Review>
+        ?? new Dictionary<int, MoneyTransfer.Models.Review>();
+    var agents = ViewBag.Agents as List<MoneyTransfer.Models.Agent>
+        ?? new List<MoneyTransfer.Models.Agent>();
+    var agentReviews = ViewBag.AgentReviews as Dictionary<int, MoneyTransfer.Models.Review>
+        ?? new Dictionary<int, MoneyTransfer.Models.Review>();
 }
 
 <div class="page-header">
     <div>
         <h2>My Reviews</h2>
-        <p>Your feedback history</p>
+        <p>Your ratings and feedback</p>
     </div>
     <a asp-action="Create" class="btn-tp-primary">
-        <i class="bi bi-star"></i> Write Another
+        <i class="bi bi-star-fill"></i> Write App Review
     </a>
 </div>
 
-@if (!Model.Any())
-{
-    <div class="tp-card">
-        <div class="empty-state">
-            <i class="bi bi-star"></i>
-            <p>You haven't written any reviews yet.</p>
-            <a asp-action="Create" class="btn-tp-primary">
-                Write Your First Review
-            </a>
+<div class="reviews-tabs-container">
+    <button onclick="switchTab('app')" id="tab-app" class="reviews-tab-btn active">
+        <i class="bi bi-star-fill"></i> App (@appReviews.Count)
+    </button>
+    <button onclick="switchTab('tx')" id="tab-tx" class="reviews-tab-btn inactive">
+        <i class="bi bi-receipt"></i> Transactions (@txReviews.Count)
+    </button>
+    <button onclick="switchTab('agent')" id="tab-agent" class="reviews-tab-btn inactive">
+        <i class="bi bi-shop"></i> Agents (@agentReviews.Count)
+    </button>
+</div>
+
+<div id="panel-app">
+    @if (!appReviews.Any())
+    {
+        <div class="tp-card">
+            <div class="empty-state">
+                <i class="bi bi-star"></i>
+                <p>You haven't reviewed the app yet.</p>
+                <a asp-action="Create" class="btn-tp-primary">Write a Review</a>
+            </div>
         </div>
-    </div>
-}
-else
-{
-    <div class="d-flex flex-column gap-3">
-        @foreach (var r in Model)
+    }
+    else
+    {
+        @foreach (var r in appReviews)
         {
-            <div class="tp-card">
-                <div style="display:flex;align-items:flex-start;
-                                    justify-content:space-between;gap:12px">
-                    <div style="flex:1">
-                        <div style="color:#f0a500;font-size:22px;
-                                            margin-bottom:8px;line-height:1">
+            <div class="tp-card review-card-item">
+                <div class="review-card-content">
+                    <div class="review-card-info">
+                        <div class="review-stars-row">
                             @for (int i = 1; i <= 5; i++)
                             {
-                                <span>@(i <= r.Rating ? "★" : "☆")</span>
+                                <i class="bi @(i <= r.Rating ? "bi-star-fill" : "bi-star")"></i>
                             }
-                            <span style="font-size:13px;
-                                                 color:var(--text-3);
-                                                 margin-left:8px;
-                                                 font-weight:600;
-                                                 vertical-align:middle">
-                                @r.Rating / 5
-                            </span>
                         </div>
-
-                        @if (!string.IsNullOrEmpty(r.Comment))
-                        {
-                            <p style="font-size:14px;color:var(--text-1);
-                                                  margin:0 0 8px;line-height:1.6">
-                                "@r.Comment"
-                            </p>
-                        }
-                        else
-                        {
-                            <p style="font-size:13px;color:var(--text-3);
-                                                  margin:0 0 8px;font-style:italic">
-                                No comment written.
-                            </p>
-                        }
-
-                        <!-- Date -->
-                        <div style="font-size:11px;color:var(--text-3)">
-                            @r.CreatedAt.ToString("MMMM dd, yyyy")
-                            at @r.CreatedAt.ToString("HH:mm")
-                        </div>
+                        <div class="review-comment-text">@(r.Comment ?? "No comment")</div>
+                        <div class="review-date-text">@r.CreatedAt.ToString("MMM dd, yyyy")</div>
                     </div>
-
-                    <div style="display:flex;flex-direction:column;
-                                        align-items:flex-end;gap:8px;flex-shrink:0">
-                        <span class="badge-tp success">
-                            <i class="bi bi-check-circle"></i> Submitted
-                        </span>
-                        <form asp-action="Delete"
-                              asp-route-id="@r.Id"
-                              method="post"
-                              onsubmit="return confirm('Delete this review?')">
+                    <div class="review-actions">
+                        <a asp-action="Create" asp-route-agentId="" asp-route-transactionId="" class="review-edit-link">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form asp-action="Delete" asp-route-id="@r.Id" method="post" onsubmit="return confirm('Delete this review?')">
                             @Html.AntiForgeryToken()
-                            <button type="submit" class="btn-tp-danger"
-                                    style="padding:5px 10px;font-size:11px">
+                            <button type="submit" class="review-delete-btn">
                                 <i class="bi bi-trash"></i>
                             </button>
                         </form>
@@ -90,5 +76,133 @@ else
                 </div>
             </div>
         }
-    </div>
+    }
+</div>
+
+<div id="panel-tx" style="display:none">
+    @if (!transactions.Any())
+    {
+        <div class="tp-card">
+            <div class="empty-state">
+                <i class="bi bi-receipt"></i>
+                <p>No transactions found.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        @foreach (var tx in transactions)
+        {
+            var hasReview = txReviews.ContainsKey(tx.Id);
+            var rev = hasReview ? txReviews[tx.Id] : null;
+            <div class="tp-card review-card-item">
+                <div class="review-item-row">
+                    <div class="review-item-info">
+                        <div class="review-item-serial">@tx.SerialNumber</div>
+                        <div class="review-item-details">
+                            @tx.CreatedAt.ToString("MMM dd, yyyy") ·
+                            @tx.SenderCurrency?.Code → @tx.ReceiverCurrency?.Code ·
+                            @tx.Amount.ToString("N2")
+                        </div>
+                        @if (hasReview)
+                        {
+                            <div class="review-item-stars">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="bi @(i <= rev!.Rating ? "bi-star-fill" : "bi-star")"></i>
+                                }
+                                <span class="review-item-comment">@(rev!.Comment ?? "")</span>
+                            </div>
+                        }
+                    </div>
+                    <div class="review-item-actions">
+                        <a asp-action="Create" asp-route-transactionId="@tx.Id" class="review-item-primary-btn">
+                            <i class="bi @(hasReview ? "bi-pencil" : "bi-star")"></i>
+                            @(hasReview ? "Edit" : "Review")
+                        </a>
+                        @if (hasReview)
+                        {
+                            <form asp-action="Delete" asp-route-id="@rev!.Id" method="post" onsubmit="return confirm('Delete this review?')">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="review-item-delete-btn">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+<div id="panel-agent" style="display:none">
+    @if (!agents.Any())
+    {
+        <div class="tp-card">
+            <div class="empty-state">
+                <i class="bi bi-shop"></i>
+                <p>No agents available to review.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        @foreach (var agent in agents)
+        {
+            var hasReview = agentReviews.ContainsKey(agent.Id);
+            var rev = hasReview ? agentReviews[agent.Id] : null;
+            <div class="tp-card review-card-item">
+                <div class="review-item-row">
+                    <div class="review-item-info">
+                        <div class="review-item-serial">@agent.StoreName</div>
+                        <div class="review-item-details">@agent.AgentName · @agent.City · @(agent.WorkingHours ?? "")</div>
+                        @if (hasReview)
+                        {
+                            <div class="review-item-stars">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="bi @(i <= rev!.Rating ? "bi-star-fill" : "bi-star")"></i>
+                                }
+                                <span class="review-item-comment">@(rev!.Comment ?? "")</span>
+                            </div>
+                        }
+                    </div>
+                    <div class="review-item-actions">
+                        <a asp-action="Create" asp-route-agentId="@agent.Id" class="review-item-primary-btn">
+                            <i class="bi @(hasReview ? "bi-pencil" : "bi-star")"></i>
+                            @(hasReview ? "Edit" : "Review")
+                        </a>
+                        @if (hasReview)
+                        {
+                            <form asp-action="Delete" asp-route-id="@rev!.Id" method="post" onsubmit="return confirm('Delete this review?')">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="review-item-delete-btn">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function switchTab(name) {
+            ['app', 'tx', 'agent'].forEach(t => {
+                document.getElementById('panel-' + t).style.display = t === name ? 'block' : 'none';
+                const btn = document.getElementById('tab-' + t);
+                if (t === name) {
+                    btn.classList.add('active');
+                    btn.classList.remove('inactive');
+                } else {
+                    btn.classList.add('inactive');
+                    btn.classList.remove('active');
+                }
+            });
+        }
+    </script>
 }

@@ -8,7 +8,6 @@ namespace MoneyTransfer.Data
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
-
         }
 
         public DbSet<Account> Accounts { get; set; }
@@ -18,26 +17,38 @@ namespace MoneyTransfer.Data
         public DbSet<FeePolicy> FeePolicies { get; set; }
         public DbSet<Beneficiary> Beneficiaries { get; set; }
         public DbSet<TopUp> TopUps { get; set; }
-
         public DbSet<Agent> Agents { get; set; }
         public DbSet<Commission> Commissions { get; set; }
-
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<SupportTicket> SupportTickets { get; set; }
         public DbSet<Conversation> Conversations { get; set; }
         public DbSet<Message> Messages { get; set; }
-
         public DbSet<Review> Reviews { get; set; }
         public DbSet<KYCDocument> KYCDocuments { get; set; }
-
         public DbSet<AgentApplication> AgentApplications { get; set; }
-
         public DbSet<WalletRequest> WalletRequests { get; set; }
         public DbSet<ConversationParticipant> ConversationParticipants { get; set; }
+        public DbSet<MessageReaction> MessageReactions { get; set; }
+        public DbSet<Announcement> Announcements { get; set; }
+        public DbSet<ActivityLog> ActivityLogs { get; set; }
+        public DbSet<ScheduledTransfer> ScheduledTransfers { get; set; }
+        public DbSet<ReferralCode> ReferralCodes { get; set; }
+        public DbSet<ReferralUse> ReferralUses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Announcement>()
+                .HasOne(a => a.CreatedBy)
+                .WithMany()
+                .HasForeignKey(a => a.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.PhoneNumber)
+                .IsUnique()
+                .HasFilter("[PhoneNumber] IS NOT NULL");
 
             modelBuilder.Entity<Account>()
                 .HasOne(a => a.User)
@@ -197,53 +208,60 @@ namespace MoneyTransfer.Data
                 .HasForeignKey(cp => cp.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Wallet>()
-                .Property(w => w.Balance)
-                .HasPrecision(18, 4);
+            modelBuilder.Entity<ActivityLog>()
+                .HasOne(a => a.User)
+                .WithMany()
+                .HasForeignKey(a => a.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<Transaction>()
-                .Property(t => t.Amount)
-                .HasPrecision(18, 4);
+            modelBuilder.Entity<ScheduledTransfer>()
+                .HasOne(s => s.User)
+                .WithMany()
+                .HasForeignKey(s => s.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<Transaction>()
-                .Property(t => t.ConvertedAmount)
-                .HasPrecision(18, 4);
+            modelBuilder.Entity<ScheduledTransfer>()
+                .HasOne(s => s.SenderWallet)
+                .WithMany()
+                .HasForeignKey(s => s.SenderWalletId)
+                .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Transaction>()
-                .Property(t => t.FeeAmount)
-                .HasPrecision(18, 4);
+            modelBuilder.Entity<ReferralCode>()
+                .HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<Transaction>()
-                .Property(t => t.ExchangeRateUsed)
-                .HasPrecision(18, 6);
+            modelBuilder.Entity<ReferralCode>()
+                .HasIndex(r => r.Code)
+                .IsUnique();
 
-            modelBuilder.Entity<TopUp>()
-                .Property(t => t.Amount)
-                .HasPrecision(18, 4);
+            modelBuilder.Entity<ReferralUse>()
+                .HasOne(r => r.ReferralCode)
+                .WithMany(rc => rc.Uses)
+                .HasForeignKey(r => r.ReferralCodeId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<Commission>()
-                .Property(c => c.Amount)
-                .HasPrecision(18, 4);
+            modelBuilder.Entity<ReferralUse>()
+                .HasOne(r => r.ReferredUser)
+                .WithMany()
+                .HasForeignKey(r => r.ReferredUserId)
+                .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Currency>()
-                .Property(c => c.ExchangeRateToUSD)
-                .HasPrecision(18, 6);
-
-            modelBuilder.Entity<FeePolicy>()
-                .Property(f => f.FeePercentage)
-                .HasPrecision(5, 4);
-
-            modelBuilder.Entity<FeePolicy>()
-                .Property(f => f.FixedFee)
-                .HasPrecision(18, 4);
-
-            modelBuilder.Entity<Agent>()
-            .Property(a => a.CommissionRate)
-            .HasPrecision(5, 4);
-
-            modelBuilder.Entity<Commission>()
-                .Property(c => c.Percentage)
-                .HasPrecision(5, 4);
+            modelBuilder.Entity<Wallet>().Property(w => w.Balance).HasPrecision(18, 4);
+            modelBuilder.Entity<Transaction>().Property(t => t.Amount).HasPrecision(18, 4);
+            modelBuilder.Entity<Transaction>().Property(t => t.ConvertedAmount).HasPrecision(18, 4);
+            modelBuilder.Entity<Transaction>().Property(t => t.FeeAmount).HasPrecision(18, 4);
+            modelBuilder.Entity<Transaction>().Property(t => t.ExchangeRateUsed).HasPrecision(18, 6);
+            modelBuilder.Entity<TopUp>().Property(t => t.Amount).HasPrecision(18, 4);
+            modelBuilder.Entity<Commission>().Property(c => c.Amount).HasPrecision(18, 4);
+            modelBuilder.Entity<Currency>().Property(c => c.ExchangeRateToUSD).HasPrecision(18, 6);
+            modelBuilder.Entity<FeePolicy>().Property(f => f.FeePercentage).HasPrecision(5, 4);
+            modelBuilder.Entity<FeePolicy>().Property(f => f.FixedFee).HasPrecision(18, 4);
+            modelBuilder.Entity<FeePolicy>().Property(f => f.DefaultCommissionRate).HasPrecision(5, 4);
+            modelBuilder.Entity<Agent>().Property(a => a.CommissionRate).HasPrecision(5, 4);
+            modelBuilder.Entity<Commission>().Property(c => c.Percentage).HasPrecision(5, 4);
+            modelBuilder.Entity<ScheduledTransfer>().Property(s => s.Amount).HasPrecision(18, 4);
 
             modelBuilder.Entity<AgentApplication>()
                 .HasOne(a => a.User)
@@ -251,51 +269,21 @@ namespace MoneyTransfer.Data
                 .HasForeignKey(a => a.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<MessageReaction>()
+                .HasIndex(r => new { r.MessageId, r.UserId, r.Emoji })
+                .IsUnique();
+
             modelBuilder.Entity<Currency>().HasData(
-                new Currency
-                {
-                    Id = 1,
-                    Code = "USD",
-                    Name = "US Dollar",
-                    Symbol = "$",
-                    FlagUrl = "/images/flags/usd.png",
-                    ExchangeRateToUSD = 1.000000m,
-                    IsActive = true,
-                    LastUpdated = new DateTime(2026, 1, 1)
-                },
-                new Currency
-                {
-                    Id = 2,
-                    Code = "EUR",
-                    Name = "Euro",
-                    Symbol = "€",
-                    FlagUrl = "/images/flags/eur.png",
-                    ExchangeRateToUSD = 1.080000m,
-                    IsActive = true,
-                    LastUpdated = new DateTime(2026, 1, 1)
-                },
-                new Currency
-                {
-                    Id = 3,
-                    Code = "LBP",
-                    Name = "Lebanese Pound",
-                    Symbol = "ل.ل",
-                    FlagUrl = "/images/flags/lbp.png",
-                    ExchangeRateToUSD = 0.000011m,
-                    IsActive = true,
-                    LastUpdated = new DateTime(2026, 1, 1)
-                },
-                new Currency
-                {
-                    Id = 4,
-                    Code = "AED",
-                    Name = "UAE Dirham",
-                    Symbol = "د.إ",
-                    FlagUrl = "/images/flags/aed.png",
-                    ExchangeRateToUSD = 0.272000m,
-                    IsActive = true,
-                    LastUpdated = new DateTime(2026, 1, 1)
-                }
+                new Currency { Id = 1, Code = "USD", Name = "US Dollar", Symbol = "$", FlagUrl = "/images/flags/usd.png", ExchangeRateToUSD = 1.000000m, IsActive = true, LastUpdated = new DateTime(2026, 1, 1) },
+                new Currency { Id = 2, Code = "EUR", Name = "Euro", Symbol = "€", FlagUrl = "/images/flags/eur.png", ExchangeRateToUSD = 1.080000m, IsActive = true, LastUpdated = new DateTime(2026, 1, 1) },
+                new Currency { Id = 3, Code = "LBP", Name = "Lebanese Pound", Symbol = "ل.ل", FlagUrl = "/images/flags/lbp.png", ExchangeRateToUSD = 0.000011m, IsActive = true, LastUpdated = new DateTime(2026, 1, 1) },
+                new Currency { Id = 4, Code = "AED", Name = "UAE Dirham", Symbol = "د.إ", FlagUrl = "/images/flags/aed.png", ExchangeRateToUSD = 0.272000m, IsActive = true, LastUpdated = new DateTime(2026, 1, 1) },
+                new Currency { Id = 5, Code = "GBP", Name = "British Pound", Symbol = "£", FlagUrl = "/images/flags/gbp.png", ExchangeRateToUSD = 1.270000m, IsActive = true, LastUpdated = new DateTime(2026, 1, 1) },
+                new Currency { Id = 6, Code = "SAR", Name = "Saudi Riyal", Symbol = "﷼", FlagUrl = "/images/flags/sar.png", ExchangeRateToUSD = 0.266000m, IsActive = true, LastUpdated = new DateTime(2026, 1, 1) },
+                new Currency { Id = 7, Code = "TRY", Name = "Turkish Lira", Symbol = "₺", FlagUrl = "/images/flags/try.png", ExchangeRateToUSD = 0.031000m, IsActive = true, LastUpdated = new DateTime(2026, 1, 1) },
+                new Currency { Id = 8, Code = "EGP", Name = "Egyptian Pound", Symbol = "E£", FlagUrl = "/images/flags/egp.png", ExchangeRateToUSD = 0.021000m, IsActive = true, LastUpdated = new DateTime(2026, 1, 1) },
+                new Currency { Id = 9, Code = "JOD", Name = "Jordanian Dinar", Symbol = "JD", FlagUrl = "/images/flags/jod.png", ExchangeRateToUSD = 1.410000m, IsActive = true, LastUpdated = new DateTime(2026, 1, 1) },
+                new Currency { Id = 10, Code = "KWD", Name = "Kuwaiti Dinar", Symbol = "KD", FlagUrl = "/images/flags/kwd.png", ExchangeRateToUSD = 3.240000m, IsActive = true, LastUpdated = new DateTime(2026, 1, 1) }
             );
 
             modelBuilder.Entity<FeePolicy>().HasData(
@@ -306,6 +294,7 @@ namespace MoneyTransfer.Data
                     FeePercentage = 0.02m,
                     FixedFee = 0.50m,
                     FreeTransactionThreshold = 10,
+                    DefaultCommissionRate = 0.02m,
                     IsActive = true,
                     CreatedAt = new DateTime(2026, 1, 1)
                 }

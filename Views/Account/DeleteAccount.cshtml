@@ -1,5 +1,6 @@
 ﻿@{
     ViewData["Title"] = "Delete Account";
+    ViewBag.PageClass = "page-profile";
 }
 
 <div class="row justify-content-center">
@@ -14,22 +15,15 @@
             </a>
         </div>
 
-        <div class="tp-card"
-             style="border:1px solid rgba(255,107,107,.3)">
-            <div style="text-align:center;padding:20px 0">
-                <div style="width:60px;height:60px;border-radius:50%;
-                            background:var(--red-light);
-                            display:flex;align-items:center;
-                            justify-content:center;
-                            font-size:26px;margin:0 auto 16px">
+        <div class="tp-card delete-warning-card">
+            <div class="warning-content">
+                <div class="warning-icon">
                     ⚠️
                 </div>
-                <div style="font-size:16px;font-weight:700;
-                            color:var(--text-1);margin-bottom:8px">
+                <div class="warning-title">
                     Are you sure you want to delete your account?
                 </div>
-                <div style="font-size:13px;color:var(--text-2);
-                            margin-bottom:24px;line-height:1.6">
+                <div class="warning-message">
                     This will permanently delete your account,
                     all your wallets, transactions, and data.
                     <strong>This cannot be undone.</strong>
@@ -37,21 +31,16 @@
 
                 <form asp-action="ConfirmDeleteAccount"
                       method="post"
-                      style="display:flex;flex-direction:column;
-                             align-items:center;gap:12px">
+                      class="delete-form">
                     @Html.AntiForgeryToken()
                     <button type="submit"
-                            class="btn-tp-danger"
-                            style="padding:12px 32px;font-size:14px;
-                                   width:100%;justify-content:center"
+                            class="btn-tp-danger delete-btn"
                             onclick="return confirm('Last chance — permanently delete your account?')">
                         <i class="bi bi-trash-fill"></i>
                         Yes, Delete My Account
                     </button>
                     <a asp-action="Profile"
-                       class="btn-tp-secondary"
-                       style="width:100%;justify-content:center;
-                              text-align:center;padding:12px">
+                       class="btn-tp-secondary cancel-btn">
                         Cancel, Keep My Account
                     </a>
                 </form>

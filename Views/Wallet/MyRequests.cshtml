@@ -1,16 +1,22 @@
 ﻿@model List<MoneyTransfer.Models.WalletRequest>
 @{
     ViewData["Title"] = "My Wallet Requests";
+    ViewBag.PageClass = "page-wallet";
 }
 
 <div class="page-header">
     <div>
         <h2>Wallet Requests</h2>
-        <p>Track your wallet creation requests</p>
+        <p>Pending and history of all your wallet requests</p>
     </div>
-    <a asp-action="Create" class="btn-tp-primary">
-        <i class="bi bi-plus"></i> New Request
-    </a>
+    <div class="wallet-requests-header-actions">
+        <a asp-action="Index" class="btn-tp-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Wallets
+        </a>
+        <a asp-action="Create" class="btn-tp-primary">
+            <i class="bi bi-plus-lg"></i> New Request
+        </a>
+    </div>
 </div>
 
 @if (!Model.Any())
@@ -30,33 +36,23 @@ else
     <div class="d-flex flex-column gap-3">
         @foreach (var r in Model)
         {
-            <div class="tp-card">
-                <div style="display:flex;align-items:center;
-                                    justify-content:space-between">
-                    <div style="display:flex;
-                                        align-items:center;gap:12px">
-                        <div style="width:44px;height:44px;
-                                            border-radius:var(--r-sm);
-                                            background:var(--teal-light);
-                                            display:flex;align-items:center;
-                                            justify-content:center;
-                                            font-size:18px;font-weight:800;
-                                            color:var(--teal)">
-                            @r.Currency?.Symbol
+            <div class="tp-card wallet-request-card">
+                <div class="wallet-request-row">
+                    <div class="wallet-request-info">
+                        <div class="wallet-request-symbol-box">
+                            @(r.Currency?.Symbol ?? "?")
                         </div>
-                        <div>
-                            <div style="font-weight:700;
-                                                color:var(--text-1)">
+                        <div class="wallet-request-details">
+                            <div class="wallet-request-currency">
                                 @r.Currency?.Code — @r.Currency?.Name
                             </div>
-                            <div style="font-size:12px;
-                                                color:var(--text-3)">
-                                Requested
-                                @r.RequestedAt.ToString("MMM dd, yyyy")
+                            <div class="wallet-request-date">
+                                Requested @r.RequestedAt.ToString("MMM dd, yyyy HH:mm")
                             </div>
                         </div>
                     </div>
-                    <div style="text-align:right">
+
+                    <div class="wallet-request-right">
                         @{
                             var badgeClass = r.Status switch
                             {
@@ -71,27 +67,54 @@ else
                         </span>
                         @if (r.ReviewedAt.HasValue)
                         {
-                            <div style="font-size:11px;
-                                                    color:var(--text-3);
-                                                    margin-top:4px">
-                                Reviewed
-                                @r.ReviewedAt.Value.ToString("MMM dd")
+                            <div class="wallet-request-reviewed-date">
+                                Reviewed @r.ReviewedAt.Value.ToString("MMM dd")
                             </div>
                         }
                     </div>
                 </div>
-                @if (r.Status == WalletRequestStatus.Rejected &&
-                        !string.IsNullOrEmpty(r.RejectionReason))
+
+                @if (r.Status == WalletRequestStatus.Rejected && !string.IsNullOrEmpty(r.RejectionReason))
                 {
-                    <div style="margin-top:10px;padding:10px 14px;
-                                            background:var(--red-light);
-                                            border-radius:var(--r-sm);
-                                            font-size:13px;color:var(--red)">
+                    <div class="wallet-request-rejection">
                         <i class="bi bi-x-circle"></i>
+                        <strong>Reason:</strong>
                         @r.RejectionReason
+                        <div class="wallet-request-rejection-action">
+                            <a asp-action="Create" class="btn-tp-secondary wallet-request-rejection-btn">
+                                Request Again
+                            </a>
+                        </div>
+                    </div>
+                }
+
+                @if (r.Status == WalletRequestStatus.Pending)
+                {
+                    <div class="wallet-request-pending">
+                        <i class="bi bi-clock"></i>
+                        Your request is under review. An admin will approve it shortly.
+                    </div>
+                }
+
+                @if (r.Status == WalletRequestStatus.Approved)
+                {
+                    <div class="wallet-request-approved">
+                        <i class="bi bi-check-circle-fill"></i>
+                        Wallet created successfully!
+                        <a asp-controller="Wallet" asp-action="Index" class="wallet-request-view-link">
+                            View Wallets →
+                        </a>
                     </div>
                 }
             </div>
         }
     </div>
 }
+
+<div class="tp-card wallet-requests-footer">
+    <div class="wallet-requests-footer-content">
+        <i class="bi bi-info-circle wallet-requests-footer-icon"></i>
+        Wallet creation requires admin approval. Once approved, your wallet will appear in
+        <a asp-controller="Wallet" asp-action="Index" class="wallet-requests-footer-link">My Wallets</a>.
+    </div>
+</div>

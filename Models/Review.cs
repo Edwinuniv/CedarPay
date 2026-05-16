@@ -5,8 +5,10 @@ namespace MoneyTransfer.Models
     public enum ReviewTarget
     {
         App,
-        Agent
+        Agent,
+        Transaction  
     }
+
     public class Review
     {
         public int Id { get; set; }
@@ -16,10 +18,12 @@ namespace MoneyTransfer.Models
         public DateTime CreatedAt { get; set; }
 
         [Required]
-        public string UserId { get; set; }
+        public string UserId { get; set; } = "";
         public int? AgentId { get; set; }
+        public int? TransactionId { get; set; }
 
-        public User User { get; set; }
+        public User User { get; set; } = null!;
         public Agent? Agent { get; set; }
+        public Transaction? Transaction { get; set; }
     }
 }

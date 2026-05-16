@@ -1,0 +1,25 @@
+﻿@{
+    var tips = new List<(string Icon, string Title, string Message)>
+    {
+        ("🌲", "The Cedar Tree", "The Cedar tree on the Lebanese flag represents eternity, holiness, and peace. It has been a symbol of Lebanon for thousands of years."),
+        ("🏛️", "Baalbek", "Baalbek is home to some of the largest and best-preserved Roman ruins in the world, including the Temple of Jupiter."),
+        ("🏖️", "Mediterranean Coast", "Lebanon's Mediterranean coastline stretches 225 km, offering beautiful beaches and ancient ports like Byblos and Tyre."),
+        ("🍷", "Wine Country", "Lebanon is one of the oldest wine-producing regions in the world, with a history dating back 5,000 years."),
+        ("🎭", "Beirut Art Scene", "Beirut is known as the 'Paris of the Middle East' for its vibrant art, culture, and nightlife."),
+        ("⛪", "Religious Harmony", "Lebanon is home to 18 officially recognized religious sects, living together in one nation."),
+        ("🏔️", "Mount Sannine", "Mount Sannine is the highest peak in western Lebanon, often covered in snow, providing water to Beirut."),
+        ("🍽️", "Lebanese Cuisine", "Lebanese food is world-famous for dishes like tabbouleh, hummus, kibbeh, and baklava."),
+        ("🎨", "Phoenician Alphabet", "The Phoenicians, ancient Lebanese, created the first alphabet that spread across the Mediterranean."),
+        ("🕊️", "Cedar Revolution", "The Cedar Revolution of 2005 showed the world the resilience and determination of the Lebanese people.")
+    };
+    var randomTip = tips[new Random().Next(tips.Count)];
+}
+
+<div class="culture-tip mt-4">
+    <i class="bi bi-tree-fill"></i>
+    <strong>@randomTip.Title:</strong> @randomTip.Message
+    @if (!string.IsNullOrEmpty(randomTip.Icon))
+    {
+        <span style="margin-left: 4px;">@randomTip.Icon</span>
+    }
+</div>

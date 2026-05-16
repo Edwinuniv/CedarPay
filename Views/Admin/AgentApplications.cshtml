@@ -1,6 +1,7 @@
 ﻿@model List<MoneyTransfer.Models.AgentApplication>
 @{
     ViewData["Title"] = "Agent Applications";
+    ViewBag.PageClass = "page-admin";
 }
 
 <div class="page-header">
@@ -24,24 +25,23 @@
 }
 else
 {
-    <div class="d-flex flex-column gap-3">
+    <div class="applications-container">
         @foreach (var app in Model)
         {
-            <div class="tp-card">
-                <div style="display:flex;align-items:flex-start;gap:16px">
-                    <div class="ben-avatar"
-                         style="width:44px;height:44px;font-size:14px;flex-shrink:0">
+            <div class="tp-card application-card">
+                <div class="application-header">
+                    <div class="ben-avatar application-avatar">
                         @app.AgentName.Substring(0, 1).ToUpper()
                     </div>
 
-                    <div style="flex:1">
-                        <div style="font-size:15px;font-weight:700;color:var(--text-1)">
+                    <div class="application-info">
+                        <div class="application-store-name">
                             @app.StoreName
                         </div>
-                        <div style="font-size:13px;color:var(--text-2);margin-top:2px">
+                        <div class="application-details">
                             @app.AgentName · @app.Email · @app.PhoneNumber
                         </div>
-                        <div style="font-size:12px;color:var(--text-3);margin-top:3px">
+                        <div class="application-location">
                             <i class="bi bi-geo-alt"></i>
                             @app.City, @app.Country ·
                             <i class="bi bi-clock"></i>
@@ -49,39 +49,29 @@ else
                         </div>
                         @if (!string.IsNullOrEmpty(app.Description))
                         {
-                            <div style="font-size:13px;color:var(--text-2);
-                                                    margin-top:6px;font-style:italic">
+                            <div class="application-description">
                                 "@app.Description"
                             </div>
                         }
                     </div>
 
-                    <div style="font-size:11px;color:var(--text-3);
-                                        text-align:right;flex-shrink:0">
+                    <div class="application-date">
                         @app.SubmittedAt.ToString("MMM dd, yyyy")
                     </div>
                 </div>
 
-                <div style="display:flex;gap:10px;margin-top:14px;
-                                    padding-top:14px;border-top:1px solid var(--border)">
-                    <form asp-action="ApproveApplication"
-                          asp-route-id="@app.Id" method="post">
-                        <button type="submit" class="btn-tp-success"
-                                style="padding:8px 18px;font-size:13px">
+                <div class="application-actions">
+                    <form asp-action="ApproveApplication" asp-route-id="@app.Id" method="post">
+                        <button type="submit" class="btn-tp-success application-btn-approve">
                             <i class="bi bi-check-lg"></i> Approve
                         </button>
                     </form>
 
-                    <form asp-action="RejectApplication"
-                          asp-route-id="@app.Id" method="post"
-                          style="display:flex;gap:8px;flex:1"
-                          onsubmit="return validateReject(this)">
-                        <input type="text" name="reason"
-                               class="form-control"
-                               placeholder="Rejection reason (optional)"
-                               style="flex:1;font-size:13px" />
-                        <button type="submit" class="btn-tp-danger"
-                                style="padding:8px 16px;font-size:13px;flex-shrink:0">
+                    <form asp-action="RejectApplication" asp-route-id="@app.Id" method="post"
+                          class="application-reject-form" onsubmit="return validateReject(this)">
+                        <input type="text" name="reason" class="form-control application-reject-input"
+                               placeholder="Rejection reason (optional)" />
+                        <button type="submit" class="btn-tp-danger application-btn-reject">
                             <i class="bi bi-x-lg"></i> Reject
                         </button>
                     </form>

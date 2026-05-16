@@ -1,5 +1,6 @@
 ﻿@{
     ViewData["Title"] = "Cash In";
+    ViewBag.PageClass = "page-agent";
 }
 
 <div class="row justify-content-center">
@@ -7,19 +8,27 @@
         <div class="page-header">
             <div>
                 <h2>Cash In</h2>
-                <p>Add cash to a user's wallet</p>
+                <p>Add cash funds to a user's wallet</p>
             </div>
+            <a asp-action="Dashboard" class="btn-tp-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
         </div>
 
         <div class="tp-card">
-            <form asp-action="CashIn" method="post"
-                  class="tp-form">
+            <form asp-action="CashIn" method="post" class="tp-form">
                 @Html.AntiForgeryToken()
 
+                <div class="cash-info-alert">
+                    <i class="bi bi-info-circle"></i>
+                    You are <strong>adding</strong> cash
+                    to the user's wallet.
+                    Make sure you have received the physical
+                    cash from the user first.
+                </div>
+
                 <div class="form-group">
-                    <label class="form-label">
-                        User's Wallet Serial
-                    </label>
+                    <label class="form-label">User's Wallet Serial *</label>
                     <input type="text" name="walletSerial"
                            class="form-control"
                            placeholder="WAL-2026-XXXXX"
@@ -27,7 +36,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Amount</label>
+                    <label class="form-label">Amount to Deposit *</label>
                     <input type="number" name="amount"
                            class="form-control"
                            step="0.01" min="0.01"
@@ -41,19 +50,9 @@
                            placeholder="Cash deposit note" />
                 </div>
 
-                <div style="background:var(--teal-light);
-                            border-radius:var(--r-sm);
-                            padding:12px 16px;
-                            font-size:13px;
-                            color:var(--teal-dark)">
-                    <i class="bi bi-info-circle"></i>
-                    Funds will be added to the user's wallet instantly.
-                    Make sure you have received the physical cash first.
-                </div>
-
-                <button type="submit" class="btn-tp-primary">
+                <button type="submit" class="btn-tp-primary cash-submit-btn">
                     <i class="bi bi-cash-coin"></i>
-                    Process Cash Deposit
+                    Confirm Cash Deposit
                 </button>
             </form>
         </div>

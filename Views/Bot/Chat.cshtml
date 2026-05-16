@@ -1,0 +1,333 @@
+﻿@using System.IO
+@model MoneyTransfer.Models.Conversation
+@{
+    ViewData["Title"] = "Cedar Bot";
+    ViewBag.PageClass = "page-chat";
+    string currentUserId = ViewBag.CurrentUserId ?? "";
+    bool isAi = ViewBag.BotMode == "ai";
+}
+
+@functions {
+    string FormatBotMessage(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return "";
+        text = System.Net.WebUtility.HtmlEncode(text);
+        text = System.Text.RegularExpressions.Regex.Replace(
+            text, @"\*\*(.+?)\*\*", "<strong>$1</strong>");
+        var lines = text.Split('\n');
+        var result = new System.Text.StringBuilder();
+        bool inList = false;
+        foreach (var line in lines)
+        {
+            var t = line.Trim();
+            bool bullet = t.StartsWith("•") ||
+                          t.StartsWith("- ") ||
+                          t.StartsWith("* ");
+            if (bullet)
+            {
+                if (!inList)
+                {
+                    result.Append("<ul class='bot-message-list'>");
+                    inList = true;
+                }
+                var c = t.TrimStart('•', '-', '*', ' ');
+                result.Append($"<li class='bot-message-list-item'><span class='bot-message-bullet'>›</span><span>{c}</span></li>");
+            }
+            else
+            {
+                if (inList) { result.Append("</ul>"); inList = false; }
+                if (!string.IsNullOrWhiteSpace(t))
+                    result.Append($"<p class='bot-message-paragraph'>{t}</p>");
+            }
+        }
+        if (inList) result.Append("</ul>");
+        return result.ToString();
+    }
+}
+
+<div class="bot-shell">
+
+    <div class="bot-header">
+        <a asp-controller="Chat" asp-action="Index" class="bot-back-link">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div class="bot-avatar-wrap">🤖</div>
+        <div class="bot-header-info">
+            <div class="bot-header-name">Cedar Bot</div>
+            <div class="bot-header-status">
+                <span class="bot-status-dot @(isAi ? "ai" : "basic")"></span>
+                @(isAi ? "AI Powered · Always online" : "Basic Mode · Always online")
+            </div>
+        </div>
+        @if (isAi)
+        {
+            <div class="bot-ai-badge">Gemini AI</div>
+        }
+    </div>
+
+    <div class="bot-messages" id="botMsgs">
+        @{
+            DateTime? lastDate = null;
+        }
+
+        @foreach (var msg in Model.Messages.OrderBy(m => m.SentAt))
+        {
+            bool isMine = !msg.IsFromAdmin;
+
+            if (lastDate == null || lastDate.Value.Date != msg.SentAt.Date)
+            {
+                lastDate = msg.SentAt;
+                <div class="bot-date-sep">
+                    <span>@msg.SentAt.ToString("MMMM dd, yyyy")</span>
+                </div>
+            }
+
+            <div class="bot-row @(isMine ? "mine" : "theirs")">
+                @if (!isMine)
+                {
+                    <div class="bot-mini-avatar">🤖</div>
+                }
+                <div class="bot-bubble-wrap">
+                    <div class="bot-bubble @(isMine ? "mine" : "theirs")">
+                        @if (isMine)
+                        {
+                            @msg.Content
+                        }
+                        else
+                        {
+                            @Html.Raw(FormatBotMessage(msg.Content))
+                        }
+                    </div>
+                    <div class="bot-time">
+                        @msg.SentAt.ToString("HH:mm")
+                        @if (isMine)
+                        {
+                            <span class="bot-read-check">✓</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (!Model.Messages.Any())
+        {
+            <div class="bot-empty" id="emptyState">
+                <i class="bi bi-robot"></i>
+                <p>Ask me anything about CedarPay!</p>
+                <div class="bot-suggestions">
+                    @foreach (var s in new[]{
+                                "What's my balance?",
+                                "How do I send money?",
+                                "What are the fees?",
+                                "Supported currencies?",
+                                "How do I get verified?",
+                                "Find an agent"
+                                })
+                    {
+                        <button class="bot-chip" onclick="sendMessage('@s')">
+                            @s
+                        </button>
+                    }
+                </div>
+            </div>
+        }
+
+        <div class="bot-row theirs" id="typingRow">
+            <div class="bot-mini-avatar">🤖</div>
+            <div class="typing-bubble">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bot-input-bar">
+        <div class="bot-input-row">
+            <div class="bot-emoji-wrap">
+                <button type="button" class="bot-emoji-btn" id="emojiBtn" title="Emoji">
+                    😊
+                </button>
+                <div class="bot-emoji-picker" id="emojiPicker">
+                    <div class="bot-emoji-grid">
+                        @foreach (var e in new[]{
+                                                "😀","😂","😍","🥰","😎","🤔","😢","😡",
+                                                "👍","👎","❤️","🔥","🎉","🙏","💰","🌲",
+                                                "✅","❌","⭐","💯","🚀","💬","📱","🏦"
+                                                })
+                        {
+                            <button type="button" class="ep-btn" onclick="insertEmoji(event, '@e')">
+                                @e
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <input type="text" id="botInput" placeholder="Ask Cedar Bot..." autocomplete="off" />
+
+            <button class="bot-send-btn" id="botSendBtn" title="Send">
+                <i class="bi bi-send-fill"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <form id="csrfForm" style="display:none">@Html.AntiForgeryToken()</form>
+    <script>
+        const convId     = @Model.Id;
+        const token      = document.querySelector('#csrfForm input[name="__RequestVerificationToken"]').value;
+        const msgs       = document.getElementById('botMsgs');
+        const input      = document.getElementById('botInput');
+        const sendBtn    = document.getElementById('botSendBtn');
+        const typingRow  = document.getElementById('typingRow');
+
+        function scrollBot() {
+            if (msgs) msgs.scrollTop = msgs.scrollHeight;
+        }
+        scrollBot();
+
+        document.getElementById('emojiBtn').addEventListener('click', e => {
+            e.stopPropagation();
+            document.getElementById('emojiPicker').classList.toggle('open');
+        });
+        document.addEventListener('click', e => {
+            if (!e.target.closest('#emojiPicker') && !e.target.closest('#emojiBtn'))
+                document.getElementById('emojiPicker').classList.remove('open');
+        });
+
+        function insertEmoji(event, em) {
+            event.stopPropagation();
+            const s = input.selectionStart;
+            const en = input.selectionEnd;
+            input.value = input.value.slice(0,s) + em + input.value.slice(en);
+            input.selectionStart = input.selectionEnd = s + em.length;
+            input.focus();
+        }
+
+        function formatBotMessage(text) {
+            if (!text) return '';
+            let t = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+            t = t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+            const lines = t.split('\n');
+            let result = '', inList = false;
+            lines.forEach(line => {
+                const tr = line.trim();
+                const isBullet = tr.startsWith('•') || tr.startsWith('- ') || tr.startsWith('* ');
+                if (isBullet) {
+                    if (!inList) {
+                        result += "<ul class='bot-message-list'>";
+                        inList = true;
+                    }
+                    const c = tr.replace(/^[•\-\*]\s*/,'');
+                    result += `<li class='bot-message-list-item'><span class='bot-message-bullet'>›</span><span>${c}</span></li>`;
+                } else {
+                    if (inList) { result += '</ul>'; inList = false; }
+                    if (tr) result += `<p class='bot-message-paragraph'>${tr}</p>`;
+                }
+            });
+            if (inList) result += '</ul>';
+            return result;
+        }
+
+        function addBubble(text, isMine, msgId) {
+            const empty = document.getElementById('emptyState');
+            if (empty) empty.remove();
+
+            const now = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+
+            const row = document.createElement('div');
+            row.className = `bot-row ${isMine ? 'mine' : 'theirs'}`;
+            row.id = `botrow-${msgId}`;
+
+            if (!isMine) {
+                const av = document.createElement('div');
+                av.className = 'bot-mini-avatar';
+                av.textContent = '🤖';
+                row.appendChild(av);
+            }
+
+            const wrap = document.createElement('div');
+            wrap.className = 'bot-bubble-wrap';
+
+            const bubble = document.createElement('div');
+            bubble.className = `bot-bubble ${isMine ? 'mine' : 'theirs'}`;
+            if (isMine) {
+                bubble.textContent = text;
+            } else {
+                bubble.innerHTML = formatBotMessage(text);
+            }
+
+            const time = document.createElement('div');
+            time.className = 'bot-time';
+            time.innerHTML = now + (isMine ? ' <span class="bot-read-check">✓</span>' : '');
+
+            wrap.appendChild(bubble);
+            wrap.appendChild(time);
+            row.appendChild(wrap);
+
+            msgs.insertBefore(row, typingRow);
+            scrollBot();
+        }
+
+        async function sendMessage(text) {
+            text = (text || input.value).trim();
+            if (!text) return;
+
+            input.value = '';
+            input.disabled = true;
+            sendBtn.disabled = true;
+
+            addBubble(text, true, 'u' + Date.now());
+
+            typingRow.style.display = 'flex';
+            scrollBot();
+
+            try {
+                const fd = new FormData();
+                fd.append('conversationId', convId);
+                fd.append('content', text);
+                fd.append('__RequestVerificationToken', token);
+
+                const res = await fetch('/Bot/SendToBot', {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: fd
+                });
+
+                typingRow.style.display = 'none';
+
+                if (!res.ok) {
+                    addBubble('⚠️ Something went wrong. Please try again.', false, 'e' + Date.now());
+                    return;
+                }
+
+                const data = await res.json();
+                if (data.error) {
+                    addBubble('⚠️ ' + data.error, false, 'e' + Date.now());
+                    return;
+                }
+
+                addBubble(data.botResponse, false, data.botMessageId);
+
+            } catch (err) {
+                typingRow.style.display = 'none';
+                console.error('Bot error:', err);
+                addBubble('⚠️ Network error. Please try again.', false, 'e' + Date.now());
+            } finally {
+                input.disabled = false;
+                sendBtn.disabled = false;
+                input.focus();
+            }
+        }
+
+        sendBtn.addEventListener('click', () => sendMessage());
+        input.addEventListener('keypress', e => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    </script>
+}

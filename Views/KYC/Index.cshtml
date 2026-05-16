@@ -1,188 +1,183 @@
 ﻿@model MoneyTransfer.ViewModels.KYCViewModel
 @{
-    ViewData["Title"] = "Identity Verification";
+    ViewData["Title"] = "Identity Verification (KYC)";
+    ViewBag.PageClass = "page-kyc";
+    var kyc = ViewBag.KYC as MoneyTransfer.Models.KYCDocument;
+    bool isApproved = kyc?.Status == MoneyTransfer.Models.KYCStatus.Approved;
+    bool isPending = kyc?.Status == MoneyTransfer.Models.KYCStatus.Pending;
+    bool isRejected = kyc?.Status == MoneyTransfer.Models.KYCStatus.Rejected;
 }
 
-<div class="kyc-container">
-    <div class="kyc-header">
-        <div class="kyc-icon">
-            <i class="bi bi-shield-check"></i>
+<div class="row justify-content-center">
+    <div class="col-md-8">
+
+        <div class="page-header">
+            <div>
+                <h2 class="kyc-header">
+                    <i class="bi bi-shield-check kyc-header-icon"></i>Identity Verification
+                </h2>
+                <p>Submit your identity documents for KYC verification. This is optional and not required to create wallets.</p>
+            </div>
+            <a asp-controller="Account" asp-action="Profile" class="btn-tp-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Profile
+            </a>
         </div>
-        <h2>Verify Your Identity</h2>
-        <p>Help us keep CedarPay secure by verifying your identity</p>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert-tp success mb-3">
+                <i class="bi bi-check-circle-fill"></i> @TempData["Success"]
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert-tp error mb-3">
+                <i class="bi bi-x-circle-fill"></i> @TempData["Error"]
+            </div>
+        }
+
+        @if (kyc != null)
+        {
+            <div class="tp-card mb-3 kyc-status-banner @(isApproved ? "approved" : isPending ? "pending" : "rejected")">
+                <div class="kyc-status-content">
+                    @if (isApproved)
+                    {
+                        <i class="bi bi-patch-check-fill kyc-status-icon approved"></i>
+                        <div>
+                            <div class="kyc-status-title approved">✓ Identity Verified</div>
+                            <div class="kyc-status-message">
+                                @kyc.DocumentType · @kyc.DocumentNumber
+                                — Reviewed on @kyc.ReviewedAt?.ToString("MMM dd, yyyy")
+                            </div>
+                        </div>
+                    }
+                    else if (isPending)
+                    {
+                        <i class="bi bi-clock-history kyc-status-icon pending"></i>
+                        <div>
+                            <div class="kyc-status-title pending">⏳ Under Review</div>
+                            <div class="kyc-status-message">
+                                Submitted on @kyc.SubmittedAt.ToString("MMM dd, yyyy") — Our team will review your documents shortly.
+                            </div>
+                        </div>
+                    }
+                    else if (isRejected)
+                    {
+                        <i class="bi bi-x-circle-fill kyc-status-icon rejected"></i>
+                        <div>
+                            <div class="kyc-status-title rejected">✗ Rejected</div>
+                            @if (!string.IsNullOrEmpty(kyc.RejectionReason))
+                            {
+                                <div class="kyc-status-reason">Reason: @kyc.RejectionReason</div>
+                            }
+                            <div class="kyc-status-help">Please correct and resubmit your documents below.</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        @if (!isApproved)
+        {
+            <div class="tp-card mb-3 kyc-form-section">
+                <div class="kyc-form-header">
+                    <i class="bi bi-file-earmark-person"></i>
+                    @(kyc == null ? "Submit KYC Documents" : "Resubmit KYC Documents")
+                </div>
+
+                <form asp-action="Submit" method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+
+                    <div asp-validation-summary="ModelOnly" class="alert-tp error mb-3"
+                         style="@(ViewData.ModelState.ErrorCount > 0 ? "" : "display:none")"></div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Document Type <span class="kyc-required">*</span></label>
+                                <select asp-for="DocumentType" class="form-select">
+                                    <option value="NationalID">National ID</option>
+                                    <option value="Passport">Passport</option>
+                                    <option value="DriverLicense">Driver's License</option>
+                                </select>
+                                <span asp-validation-for="DocumentType" class="text-danger kyc-required-text"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Document Number <span class="kyc-required">*</span></label>
+                                <input asp-for="DocumentNumber" class="form-control" placeholder="e.g. LB12345678" />
+                                <span asp-validation-for="DocumentNumber" class="text-danger kyc-required-text"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    Front of Document <span class="kyc-required">*</span>
+                                </label>
+                                @if (!string.IsNullOrEmpty(kyc?.FrontImageUrl))
+                                {
+                                    <div class="kyc-document-preview">
+                                        <img src="@kyc.FrontImageUrl" class="kyc-preview-image" />
+                                        <div class="kyc-preview-label">Current — upload new to replace</div>
+                                    </div>
+                                }
+                                <input type="file" name="frontImage" class="form-control" accept="image/*" @(kyc == null ? "required" : "") />
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    Back of Document
+                                    @if (Model.DocumentType != MoneyTransfer.Models.DocumentType.Passport)
+                                    {
+                                        <span class="kyc-required">*</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="kyc-optional-hint">(optional for passport)</span>
+                                    }
+                                </label>
+                                @if (!string.IsNullOrEmpty(kyc?.BackImageUrl))
+                                {
+                                    <div class="kyc-document-preview">
+                                        <img src="@kyc.BackImageUrl" class="kyc-preview-image" />
+                                        <div class="kyc-preview-label">Current — upload new to replace</div>
+                                    </div>
+                                }
+                                <input type="file" name="backImage" class="form-control" accept="image/*" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="kyc-form-actions">
+                        <button type="submit" class="btn-tp-primary">
+                            <i class="bi bi-cloud-upload"></i>
+                            @(kyc == null ? "Submit for Review" : "Resubmit Documents")
+                        </button>
+                        <a asp-controller="Account" asp-action="Profile" class="btn-tp-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        }
+
+        <div class="tp-card kyc-info-box">
+            <div class="kyc-info-header">
+                <i class="bi bi-info-circle"></i>
+                About KYC Verification
+            </div>
+            <ul class="kyc-info-list">
+                <li>KYC (Know Your Customer) verification is <strong>optional</strong> — you can create wallets and transfer money without it.</li>
+                <li>Verified accounts may have higher transaction limits and priority support.</li>
+                <li>Accepted documents: National ID, Passport, or Driver's License.</li>
+                <li>Images must be clear, unobstructed, and under 5MB.</li>
+                <li>Review typically takes 1–2 business days.</li>
+            </ul>
+        </div>
+
     </div>
-
-    @if (ViewBag.KYC != null)
-    {
-        var kyc = ViewBag.KYC as MoneyTransfer.Models.KYCDocument;
-
-        @if (kyc.Status == MoneyTransfer.Models.KYCStatus.Pending)
-        {
-            <div class="kyc-pending-card">
-                <div class="pending-icon">
-                    <i class="bi bi-hourglass-split"></i>
-                </div>
-                <h3>Verification in Progress</h3>
-                <p>Your documents are being reviewed by our team. This usually takes 1-2 business days.</p>
-                <div class="pending-details">
-                    <div class="pending-item">
-                        <span>Submitted:</span>
-                        <strong>@kyc.SubmittedAt.ToString("MMMM dd, yyyy")</strong>
-                    </div>
-                    <div class="pending-item">
-                        <span>Status:</span>
-                        <strong class="status-pending">Pending</strong>
-                    </div>
-                </div>
-            </div>
-        }
-        else if (kyc.Status == MoneyTransfer.Models.KYCStatus.Approved)
-        {
-            <div class="kyc-approved-card">
-                <div class="approved-icon">
-                    <i class="bi bi-check-circle-fill"></i>
-                </div>
-                <h3>Identity Verified</h3>
-                <p>Your identity has been successfully verified. You now have full access to all CedarPay features.</p>
-                <div class="approved-details">
-                    <div class="approved-item">
-                        <span>Verified on:</span>
-                        <strong>@kyc.SubmittedAt.ToString("MMMM dd, yyyy")</strong>
-                    </div>
-                    <div class="approved-item">
-                        <span>Verification Level:</span>
-                        <strong class="status-approved">Tier 2</strong>
-                    </div>
-                </div>
-            </div>
-        }
-        else if (kyc.Status == MoneyTransfer.Models.KYCStatus.Rejected)
-        {
-            <div class="kyc-rejected-card">
-                <div class="rejected-icon">
-                    <i class="bi bi-x-circle-fill"></i>
-                </div>
-                <h3>Verification Failed</h3>
-                <p>Your verification was not approved. Please review the reason below and resubmit.</p>
-                @if (!string.IsNullOrEmpty(kyc.RejectionReason))
-                {
-                    <div class="rejection-reason">
-                        <i class="bi bi-info-circle-fill"></i>
-                        <span>@kyc.RejectionReason</span>
-                    </div>
-                }
-            </div>
-        }
-    }
-
-    @{
-        var status = ViewBag.KYC != null ? ((MoneyTransfer.Models.KYCDocument)ViewBag.KYC).Status : MoneyTransfer.Models.KYCStatus.Pending;
-        var showForm = ViewBag.KYC == null || status == MoneyTransfer.Models.KYCStatus.Rejected;
-    }
-
-    @if (showForm)
-    {
-        <form asp-action="Submit" method="post" enctype="multipart/form-data" class="kyc-form">
-            @Html.AntiForgeryToken()
-
-            <div class="kyc-section">
-                <h4>Document Information</h4>
-
-                <div class="form-group">
-                    <label asp-for="DocumentType">Document Type</label>
-                    <select asp-for="DocumentType" class="form-control">
-                        <option value="0">National ID</option>
-                        <option value="1">Passport</option>
-                        <option value="2">Driver's License</option>
-                    </select>
-                    <span asp-validation-for="DocumentType" class="text-danger"></span>
-                </div>
-
-                <div class="form-group">
-                    <label asp-for="DocumentNumber">Document Number</label>
-                    <input asp-for="DocumentNumber" class="form-control" placeholder="Enter your document number" />
-                    <span asp-validation-for="DocumentNumber" class="text-danger"></span>
-                </div>
-            </div>
-
-            <div class="kyc-section">
-                <h4>Upload Documents</h4>
-                <div class="document-types">
-                    <div class="document-card">
-                        <i class="bi bi-card-image"></i>
-                        <div class="document-info">
-                            <h5>Front Side of Document</h5>
-                            <p>Clear photo showing your photo, name, and document number</p>
-                        </div>
-                        <div class="file-upload">
-                            <input type="file" name="frontImage" accept="image/*" />
-                            <small>Max 10MB. JPG or PNG only</small>
-                        </div>
-                    </div>
-
-                    <div class="document-card">
-                        <i class="bi bi-card-image"></i>
-                        <div class="document-info">
-                            <h5>Back Side of Document</h5>
-                            <p>Clear photo showing the back of your document (if applicable)</p>
-                        </div>
-                        <div class="file-upload">
-                            <input type="file" name="backImage" accept="image/*" />
-                            <small>Max 10MB. JPG or PNG only</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="kyc-section">
-                <div class="kyc-terms">
-                    <label class="checkbox-container">
-                        <input type="checkbox" required />
-                        <span class="checkmark"></span>
-                        I confirm that the documents I am uploading are authentic and belong to me. I understand that providing false information may result in permanent account suspension.
-                    </label>
-                </div>
-
-                <div class="kyc-terms">
-                    <label class="checkbox-container">
-                        <input type="checkbox" required />
-                        <span class="checkmark"></span>
-                        I consent to CedarPay verifying my identity with government databases and third-party verification services.
-                    </label>
-                </div>
-            </div>
-
-            <div class="kyc-actions">
-                <button type="submit" class="btn-tp-primary">
-                    <i class="bi bi-cloud-upload"></i>
-                    Submit Verification
-                </button>
-                <button type="button" class="btn-tp-secondary" onclick="window.location.href='/Dashboard'">
-                    Cancel
-                </button>
-            </div>
-        </form>
-    }
-
-    @if (ViewBag.KYC != null && (status == MoneyTransfer.Models.KYCStatus.Pending || status == MoneyTransfer.Models.KYCStatus.Approved))
-    {
-        <div class="kyc-info-card">
-            <div class="info-icon">
-                <i class="bi bi-info-circle-fill"></i>
-            </div>
-            <div class="info-content">
-                <h4>What happens next?</h4>
-                @if (status == MoneyTransfer.Models.KYCStatus.Pending)
-                {
-                    <p>Our compliance team is reviewing your documents. You'll receive a notification once the review is complete. You can continue using basic features while we verify your identity.</p>
-                }
-                else if (status == MoneyTransfer.Models.KYCStatus.Approved)
-                {
-                    <p>Your verified status gives you access to higher transfer limits, faster processing, and all CedarPay features. Thank you for helping us maintain a secure platform.</p>
-                }
-            </div>
-        </div>
-    }
 </div>
 
 @section Scripts {

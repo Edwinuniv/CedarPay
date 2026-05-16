@@ -1,0 +1,137 @@
+﻿@model MoneyTransfer.ViewModels.ReviewsAnalyticsViewModel
+@{
+    ViewData["Title"] = "Reviews Analytics";
+    ViewBag.PageClass = "page-admin";
+}
+
+<div class="page-header">
+    <div>
+        <h2>Reviews Analytics</h2>
+        <p>Customer feedback and ratings across the platform</p>
+    </div>
+    <div>
+        <a asp-action="Index" class="btn-tp-secondary"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:var(--teal-light);color:var(--teal)"><i class="bi bi-star-fill"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">@string.Format("{0:N1}", Model.AverageAppRating) / 5</div>
+                <div class="stat-label">App Rating (@Model.AppReviews.Count reviews)</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:var(--purple-light);color:#6c63ff"><i class="bi bi-shop"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">@string.Format("{0:N1}", Model.AverageAgentRating) / 5</div>
+                <div class="stat-label">Agent Rating (@Model.AgentReviews.Count reviews)</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:var(--yellow-light);color:#f59e0b"><i class="bi bi-arrow-left-right"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">@string.Format("{0:N1}", Model.AverageTransactionRating) / 5</div>
+                <div class="stat-label">Transaction Rating (@Model.TransactionReviews.Count reviews)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Model.TopAgents.Any())
+{
+    <div class="tp-card mb-4">
+        <div class="tp-card-header">
+            <h3 class="tp-card-title">Top Rated Agents</h3>
+        </div>
+        <table class="tp-table">
+            <thead>
+                <tr>
+                    <th>Agent</th>
+                    <th>Store</th>
+                    <th>Average Rating</th>
+                    <th>Reviews</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var agent in Model.TopAgents.Take(10))
+                {
+                    <tr>
+                        <td>@agent.AgentName</td>
+                        <td>@agent.StoreName</td>
+                        <td>@string.Format("{0:N1}", agent.AverageRating) ★</td>
+                        <td>@agent.ReviewCount</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="tp-card">
+            <div class="tp-card-header">
+                <h3 class="tp-card-title">App Reviews</h3>
+            </div>
+            @if (!Model.AppReviews.Any())
+            {
+                <div class="empty-state"><i class="bi bi-inbox"></i><p>No app reviews yet.</p></div>
+            }
+            else
+            {
+                <div style="max-height: 400px; overflow-y: auto;">
+                    @foreach (var review in Model.AppReviews)
+                    {
+                        <div style="padding: 12px; border-bottom: 1px solid var(--border);">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <strong>@review.User?.FirstName @review.User?.LastName</strong>
+                                <span style="color: #f59e0b;">@string.Format("{0:N1}", review.Rating) ★</span>
+                            </div>
+                            <div style="font-size: 14px; color: var(--text-2);">@review.Comment</div>
+                            <div style="font-size: 12px; color: var(--text-3); margin-top: 8px;">@review.CreatedAt.ToString("MMM dd, yyyy")</div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="tp-card">
+            <div class="tp-card-header">
+                <h3 class="tp-card-title">Agent Reviews</h3>
+            </div>
+            @if (!Model.AgentReviews.Any())
+            {
+                <div class="empty-state"><i class="bi bi-inbox"></i><p>No agent reviews yet.</p></div>
+            }
+            else
+            {
+                <div style="max-height: 400px; overflow-y: auto;">
+                    @foreach (var review in Model.AgentReviews)
+                    {
+                        <div style="padding: 12px; border-bottom: 1px solid var(--border);">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <div>
+                                    <strong>@review.User?.FirstName @review.User?.LastName</strong>
+                                    <span style="color: var(--text-3); font-size: 12px;"> → </span>
+                                    <span style="font-size: 14px;">@review.Agent?.StoreName</span>
+                                </div>
+                                <span style="color: #f59e0b;">@string.Format("{0:N1}", review.Rating) ★</span>
+                            </div>
+                            <div style="font-size: 14px; color: var(--text-2);">@review.Comment</div>
+                            <div style="font-size: 12px; color: var(--text-3); margin-top: 8px;">@review.CreatedAt.ToString("MMM dd, yyyy")</div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

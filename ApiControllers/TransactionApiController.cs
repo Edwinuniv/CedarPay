@@ -14,9 +14,7 @@ namespace MoneyTransfer.ApiControllers
         private readonly ITransactionRepository _transactionRepository;
         private readonly UserManager<User> _userManager;
 
-        public TransactionApiController(
-            ITransactionRepository transactionRepository,
-            UserManager<User> userManager)
+        public TransactionApiController(ITransactionRepository transactionRepository, UserManager<User> userManager)
         {
             _transactionRepository = transactionRepository;
             _userManager = userManager;
@@ -43,9 +41,7 @@ namespace MoneyTransfer.ApiControllers
                 Type = t.Type.ToString(),
                 t.CreatedAt,
                 IsSent = true,
-                ReceiverName = t.ReceiverWallet?.User != null
-                    ? $"{t.ReceiverWallet.User.FirstName} {t.ReceiverWallet.User.LastName}"
-                    : t.ReceiverName,
+                ReceiverName = t.ReceiverWallet?.User != null ? $"{t.ReceiverWallet.User.FirstName} {t.ReceiverWallet.User.LastName}" : t.ReceiverName,
                 SenderCurrency = t.SenderCurrency?.Code,
                 ReceiverCurrency = t.ReceiverCurrency?.Code
             })
@@ -62,9 +58,7 @@ namespace MoneyTransfer.ApiControllers
                 Type = t.Type.ToString(),
                 t.CreatedAt,
                 IsSent = false,
-                ReceiverName = t.ReceiverWallet?.User != null
-                    ? $"{t.ReceiverWallet.User.FirstName} {t.ReceiverWallet.User.LastName}"
-                    : t.ReceiverName,
+                ReceiverName = t.ReceiverWallet?.User != null ? $"{t.ReceiverWallet.User.FirstName} {t.ReceiverWallet.User.LastName}" : t.ReceiverName,
                 SenderCurrency = t.SenderCurrency?.Code,
                 ReceiverCurrency = t.ReceiverCurrency?.Code
             }))
@@ -77,8 +71,7 @@ namespace MoneyTransfer.ApiControllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetTransaction(int id)
         {
-            var transaction = await _transactionRepository
-                .GetTransactionWithDetailsAsync(id);
+            var transaction = await _transactionRepository.GetTransactionWithDetailsAsync(id);
 
             if (transaction == null)
                 return NotFound(new { message = "Transaction not found." });
@@ -97,12 +90,8 @@ namespace MoneyTransfer.ApiControllers
                 Type = transaction.Type.ToString(),
                 transaction.CreatedAt,
                 transaction.CompletedAt,
-                SenderName = $"{transaction.SenderWallet?.User?.FirstName} " +
-                             $"{transaction.SenderWallet?.User?.LastName}",
-                ReceiverName = transaction.ReceiverWallet?.User != null
-                    ? $"{transaction.ReceiverWallet.User.FirstName} " +
-                      $"{transaction.ReceiverWallet.User.LastName}"
-                    : transaction.ReceiverName,
+                SenderName = $"{transaction.SenderWallet?.User?.FirstName} " + $"{transaction.SenderWallet?.User?.LastName}",
+                ReceiverName = transaction.ReceiverWallet?.User != null ? $"{transaction.ReceiverWallet.User.FirstName} " + $"{transaction.ReceiverWallet.User.LastName}" : transaction.ReceiverName,
                 SenderCurrency = transaction.SenderCurrency?.Code,
                 ReceiverCurrency = transaction.ReceiverCurrency?.Code
             });
@@ -113,12 +102,9 @@ namespace MoneyTransfer.ApiControllers
         {
             var userId = _userManager.GetUserId(User);
 
-            var totalSent = await _transactionRepository
-                .GetTotalSentByUserAsync(userId);
-            var totalReceived = await _transactionRepository
-                .GetTotalReceivedByUserAsync(userId);
-            var count = await _transactionRepository
-                .GetUserTransactionCountAsync(userId);
+            var totalSent = await _transactionRepository.GetTotalSentByUserAsync(userId);
+            var totalReceived = await _transactionRepository.GetTotalReceivedByUserAsync(userId);
+            var count = await _transactionRepository.GetUserTransactionCountAsync(userId);
 
             return Ok(new
             {

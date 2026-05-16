@@ -1,0 +1,79 @@
+﻿@page
+@model VerifyCodeModel
+@{
+    ViewData["Title"] = "Verify Your Email";
+    Layout = "/Views/Shared/_Layout.cshtml";
+    ViewBag.PageClass = "page-dashboard";
+}
+
+<div class="confirm-email-container">
+    <div class="confirm-email-card">
+
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="alert-tp error" style="margin-bottom:16px;">
+                @Model.ErrorMessage
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(TempData["SuccessMessage"]?.ToString()))
+        {
+            <div class="alert-tp success" style="margin-bottom:16px;">
+                @TempData["SuccessMessage"]
+            </div>
+        }
+
+        <div class="confirm-email-icon">🔐</div>
+        <h1 class="confirm-email-title">Enter Verification Code</h1>
+
+        <div class="confirm-email-message">
+            <p>We sent a 6-digit code to <strong>@Model.Email</strong></p>
+            <p style="color:#888;font-size:13px;">Check your inbox and spam folder.</p>
+        </div>
+
+        <form method="post" style="margin-top:20px;">
+            <input type="hidden" name="Email" value="@Model.Email" />
+
+            <div class="form-group" style="text-align:center;">
+                <label class="form-label">Verification Code</label>
+                <input name="Code"
+                       class="form-control"
+                       style="font-size:32px;letter-spacing:16px;text-align:center;font-weight:bold;max-width:280px;margin:0 auto;"
+                       maxlength="6"
+                       placeholder="000000"
+                       pattern="[0-9]{6}"
+                       inputmode="numeric"
+                       autocomplete="one-time-code"
+                       required />
+                <small style="color:#888;">Enter the 6-digit code from your email</small>
+            </div>
+
+            <button type="submit" class="btn-tp-primary" style="width:100%;margin-top:16px;">
+                <i class="bi bi-check-circle-fill"></i> Verify Email
+            </button>
+        </form>
+
+        <div class="confirm-email-actions" style="margin-top:20px;text-align:center;">
+            <form method="post" asp-page-handler="Resend" style="display:inline;">
+                <input type="hidden" name="Email" value="@Model.Email" />
+                <button type="submit" class="btn-tp-secondary" style="border:none;background:none;color:var(--teal);cursor:pointer;text-decoration:underline;">
+                    <i class="bi bi-arrow-repeat"></i> Resend code
+                </button>
+            </form>
+        </div>
+
+        <div class="confirm-email-footer" style="margin-top:20px;text-align:center;color:#aaa;">
+            <i class="bi bi-tree-fill"></i>
+            <span>CedarPay — Secure Digital Wallet</span>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var input = document.querySelector('input[name="Code"]');
+            if (input) input.focus();
+        });
+    </script>
+}

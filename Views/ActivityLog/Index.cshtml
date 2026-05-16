@@ -1,0 +1,73 @@
+﻿@model List<MoneyTransfer.Models.ActivityLog>
+@{
+    ViewData["Title"] = "Activity Log";
+    ViewBag.PageClass = "page-settings";
+}
+
+<div class="page-header">
+    <div>
+        <h2>Activity Log</h2>
+        <p>Your last 100 account actions</p>
+    </div>
+    <a asp-controller="Settings" asp-action="Index" class="btn-tp-secondary">
+        <i class="bi bi-arrow-left"></i> Back
+    </a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="tp-card">
+        <div class="empty-state" style="padding:60px 20px;text-align:center">
+            <i class="bi bi-clipboard-data" style="font-size:40px;color:var(--text-3);display:block;margin-bottom:12px"></i>
+            <p>No activity recorded yet.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="tp-card">
+        <div class="tp-card-header">
+            <span class="tp-card-title"><i class="bi bi-shield-check"></i> Recent Activity</span>
+            <span class="badge-tp default">@Model.Count entries</span>
+        </div>
+        <div style="overflow-x:auto">
+            <table class="tp-table">
+                <thead>
+                    <tr>
+                        <th>Action</th>
+                        <th>Details</th>
+                        <th>IP Address</th>
+                        <th>Date & Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var log in Model)
+                    {
+                        var (icon, color) = log.Action switch
+                        {
+                            MoneyTransfer.Models.ActivityType.Login => ("bi-box-arrow-in-right", "var(--teal)"),
+                            MoneyTransfer.Models.ActivityType.Logout => ("bi-box-arrow-left", "var(--text-3)"),
+                            MoneyTransfer.Models.ActivityType.TransferSent => ("bi-send-fill", "var(--red)"),
+                            MoneyTransfer.Models.ActivityType.TransferReceived => ("bi-arrow-down-circle-fill", "var(--teal)"),
+                            MoneyTransfer.Models.ActivityType.TopUp => ("bi-plus-circle-fill", "var(--teal)"),
+                            MoneyTransfer.Models.ActivityType.PasswordChanged => ("bi-lock-fill", "var(--orange, #f4a820)"),
+                            MoneyTransfer.Models.ActivityType.KYCSubmitted => ("bi-shield-check", "var(--teal)"),
+                            _ => ("bi-activity", "var(--text-2)")
+                        };
+                        <tr>
+                            <td>
+                                <span style="display:flex;align-items:center;gap:8px">
+                                    <i class="bi @icon" style="color:@color"></i>
+                                    <span>@log.Action.ToString().Replace("_", " ")</span>
+                                </span>
+                            </td>
+                            <td style="color:var(--text-2);font-size:13px">@(log.Details ?? "—")</td>
+                            <td style="font-family:monospace;font-size:12px;color:var(--text-3)">@(log.IpAddress ?? "—")</td>
+                            <td style="font-size:13px;color:var(--text-2)">@log.CreatedAt.ToString("MMM dd, yyyy HH:mm")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

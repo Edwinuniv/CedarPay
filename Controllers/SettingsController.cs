@@ -4,25 +4,20 @@ using Microsoft.AspNetCore.Mvc;
 using MoneyTransfer.Models;
 using MoneyTransfer.Repositories.Interfaces;
 using MoneyTransfer.ViewModels;
+using MoneyTransfer.Services.Interfaces;
 
 namespace MoneyTransfer.Controllers
 {
     [Authorize]
     public class SettingsController : BaseController
     {
-        private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
-        private readonly IUserRepository _userRepository;
+        private readonly IEmailService _emailService;
 
-        public SettingsController(
-            UserManager<User> userManager,
-            SignInManager<User> signInManager,
-            IUserRepository userRepository)
-            : base(userManager, userRepository)
+        public SettingsController(UserManager<User> userManager, SignInManager<User> signInManager, IUserRepository userRepository,IEmailService emailService): base(userManager, userRepository)
         {
-            _userManager = userManager;
             _signInManager = signInManager;
-            _userRepository = userRepository;
+            _emailService = emailService;
         }
 
         public IActionResult Index()
@@ -58,6 +53,21 @@ namespace MoneyTransfer.Controllers
 
             await _signInManager.RefreshSignInAsync(user);
             TempData["Success"] = "Password changed!";
+
+            if (user.Email != null)
+            {
+                _ = Task.Run(async () =>
+                {
+                    await _emailService.SendNotificationAsync(
+                        user.Email,
+                        $"{user.FirstName} {user.LastName}",
+                        "Password Changed Successfully",
+                        $"Your CedarPay account password was changed on {DateTime.Now:MMMM dd, yyyy} at {DateTime.Now:HH:mm}.\n\n" +
+                        $"If you did not make this change, please contact our support team immediately at support@cedarpay.lb\n\n" +
+                        $"You can also reset your password by clicking 'Forgot Password' on the login page.");
+                });
+            }
+
             return RedirectToAction("Index");
         }
     }

@@ -18,9 +18,9 @@ namespace MoneyTransfer.Data
             {
                 await roleManager.CreateAsync(new IdentityRole(Roles.User));
             }
-             if(!await roleManager.RoleExistsAsync(Roles.Agent))
+            if(!await roleManager.RoleExistsAsync(Roles.Agent))
             {
-                await roleManager.CreateAsync(new IdentityRole(Roles.Agent));
+               await roleManager.CreateAsync(new IdentityRole(Roles.Agent));
             }
         }
     }

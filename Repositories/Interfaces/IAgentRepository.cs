@@ -10,5 +10,7 @@ namespace MoneyTransfer.Repositories.Interfaces
         Task<IEnumerable<Agent>> GetByCityAsync(string city);
         Task<IEnumerable<Agent>> GetByCountryAsync(string country);
         Task<Agent?> GetAgentWithCommissionsAsync(int id);
+        Task UpdateLocationAsync(int agentId, double latitude, double longitude);
+
     }
 }

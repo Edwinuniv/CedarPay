@@ -1,6 +1,7 @@
 ﻿@model List<MoneyTransfer.Models.Conversation>
 @{
     ViewData["Title"] = "Messages";
+    ViewBag.PageClass = "page-chat";
     string currentUserId = ViewBag.CurrentUserId ?? "";
 }
 
@@ -14,6 +15,37 @@
     </a>
 </div>
 
+<div class="tp-card chat-bot-card">
+    <div class="chat-bot-content">
+        <div class="chat-bot-info">
+            <div class="chat-bot-avatar">🤖</div>
+            <div>
+                <div class="chat-bot-name">CedarPay Assistant</div>
+                <div class="chat-bot-desc">Ask me anything about CedarPay</div>
+            </div>
+        </div>
+        <a asp-controller="Bot" asp-action="Chat" class="btn-tp-primary">
+            <i class="bi bi-chat-dots"></i> Chat with Bot
+        </a>
+    </div>
+</div>
+
+<div class="tp-card mb-3">
+    <div class="chat-search-bar">
+        <i class="bi bi-search chat-search-icon"></i>
+        <input type="text"
+               id="chatSearch"
+               class="form-control chat-search-input"
+               placeholder="Search chats by name..."
+               oninput="filterChats(this.value)" />
+        <button onclick="document.getElementById('chatSearch').value='';filterChats('')"
+                id="clearSearch"
+                class="chat-search-clear">
+            <i class="bi bi-x"></i>
+        </button>
+    </div>
+</div>
+
 @{
     var benefsNotInChat =
         ViewBag.BeneficiariesNotInChat
@@ -24,45 +56,18 @@
 @if (benefsNotInChat.Any())
 {
     <div class="tp-card mb-3">
-        <div style="font-size:13px;font-weight:700;
-                        color:var(--text-1);margin-bottom:12px">
-            <i class="bi bi-people-fill"
-               style="color:var(--teal);margin-right:6px"></i>
+        <div class="chat-beneficiaries-header">
+            <i class="bi bi-people-fill"></i>
             Start a chat with a beneficiary
         </div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <div class="chat-beneficiaries-list">
             @foreach (var b in benefsNotInChat)
             {
-                <form asp-action="FindAndStart"
-                      method="post"
-                      style="display:inline">
+                <form asp-action="FindAndStart" method="post" style="display:inline">
                     @Html.AntiForgeryToken()
-                    <input type="hidden"
-                           name="phoneNumber"
-                           value="@b.ReceiverPhoneNumber" />
-                    <button type="submit"
-                            style="display:flex;
-                                           align-items:center;
-                                           gap:8px;
-                                           padding:8px 14px;
-                                           border-radius:20px;
-                                           border:1px solid var(--border);
-                                           background:var(--surface-2);
-                                           cursor:pointer;
-                                           transition:var(--transition);
-                                           font-size:13px;
-                                           color:var(--text-1)"
-                            onmouseover="this.style.background='var(--teal-light)';this.style.borderColor='var(--teal)'"
-                            onmouseout="this.style.background='var(--surface-2)';this.style.borderColor='var(--border)'">
-                        <div style="width:28px;height:28px;
-                                            border-radius:50%;
-                                            background:var(--teal-light);
-                                            display:flex;
-                                            align-items:center;
-                                            justify-content:center;
-                                            font-size:11px;
-                                            font-weight:700;
-                                            color:var(--teal)">
+                    <input type="hidden" name="phoneNumber" value="@b.ReceiverPhoneNumber" />
+                    <button type="submit" class="chat-beneficiary-btn">
+                        <div class="chat-beneficiary-avatar">
                             @(b.Nickname?.Substring(0, 1).ToUpper() ?? "?")
                         </div>
                         @b.Nickname
@@ -77,9 +82,7 @@
 {
     <div class="tp-card">
         <div class="empty-state">
-            <i class="bi bi-chat-dots"
-               style="font-size:48px;opacity:.3;
-                              display:block;margin-bottom:12px"></i>
+            <i class="bi bi-chat-dots"></i>
             <p>No conversations yet.</p>
             <a asp-action="New" class="btn-tp-primary">
                 <i class="bi bi-plus"></i> Start a Chat
@@ -92,94 +95,109 @@ else
     <div class="tp-card" style="padding:0;overflow:hidden">
         @foreach (var c in Model)
         {
-            var other = c.Participants
-            .FirstOrDefault(p => p.UserId != currentUserId);
+            var other = c.Participants.FirstOrDefault(p => p.UserId != currentUserId);
             var lastMsg = c.Messages.OrderByDescending(m => m.SentAt).FirstOrDefault();
             var unread = c.Messages.Count(m => !m.IsRead && m.SenderId != currentUserId);
+            var otherName = $"{other?.User?.FirstName} {other?.User?.LastName}";
 
-            <a asp-action="Open" asp-route-id="@c.Id"
-               style="display:flex;align-items:center;
-                                      gap:14px;padding:14px 20px;
-                                      text-decoration:none;
-                                      border-bottom:1px solid var(--border);
-                                      transition:all .15s;
-                                      background:@(unread > 0 ? "rgba(0,184,148,0.04)" : "transparent")"
-               onmouseover="this.style.background='var(--surface-2)'"
-               onmouseout="this.style.background='@(unread > 0 ? "rgba(0,184,148,0.04)" : "transparent")'">
+            <div class="chat-list-item" data-name="@otherName">
 
-                <div style="flex-shrink:0;position:relative">
-                    @if (!string.IsNullOrEmpty(other?.User?.ProfilePictureUrl))
-                    {
-                        <img src="@other.User.ProfilePictureUrl"
-                             style="width:48px;height:48px;
-                                                border-radius:50%;
-                                                object-fit:cover" />
-                    }
-                    else
-                    {
-                        <div style="width:48px;height:48px;
-                                            border-radius:50%;
-                                            background:linear-gradient(135deg,
-                                                var(--teal),var(--teal-mid));
-                                            display:flex;align-items:center;
-                                            justify-content:center;
-                                            font-size:16px;font-weight:700;
-                                            color:#fff">
-                            @(other?.User?.FirstName?.Substring(0, 1) ?? "?")
-                        </div>
-                    }
-                    @if (unread > 0)
-                    {
-                        <div style="position:absolute;top:-2px;
-                                                            right:-2px;width:18px;height:18px;
-                                                            background:var(--teal);
-                                                            border-radius:50%;
-                                                            font-size:10px;font-weight:700;
-                                                            color:#fff;
-                                                            display:flex;align-items:center;
-                                                            justify-content:center;
-                                                            border:2px solid var(--surface)">
-                            @(unread > 9 ? "9+" : unread.ToString())
-                        </div>
-                    }
-                </div>
+                <a asp-action="Open" asp-route-id="@c.Id"
+                   class="chat-link @(unread > 0 ? "unread" : "")"
+                   onmouseover="this.style.background='var(--surface-2)'"
+                   onmouseout="this.style.background='@(unread > 0 ? "rgba(0,184,148,0.04)" : "transparent")'">
 
-                <div style="flex:1;min-width:0">
-                    <div style="display:flex;
-                                            justify-content:space-between;
-                                            align-items:center;
-                                            margin-bottom:2px">
-                        <div style="font-weight:@(unread > 0 ? "700" : "600");
-                                                color:var(--text-1);
-                                                font-size:14px">
-                            @(other?.User?.FirstName) @(other?.User?.LastName)
-                        </div>
-                        <div style="font-size:11px;
-                                                color:var(--text-3)">
-                            @(lastMsg?.SentAt.ToString("HH:mm") ?? "")
-                        </div>
-                    </div>
-                    <div style="font-size:13px;
-                                        color:@(unread > 0 ? "var(--text-1)" : "var(--text-3)");
-                                        font-weight:@(unread > 0 ? "500" : "400");
-                                        white-space:nowrap;
-                                        overflow:hidden;
-                                        text-overflow:ellipsis">
-                        @if (lastMsg != null)
+                    <div class="chat-avatar-wrapper">
+                        @if (!string.IsNullOrEmpty(other?.User?.ProfilePictureUrl))
                         {
-                            if (lastMsg.SenderId == currentUserId)
-                            {
-                                <text>You: </text>
-                            }
-                            @lastMsg.Content
+                            <img src="@other.User.ProfilePictureUrl" class="chat-avatar-img" />
                         }
                         else
                         {
-                            <text>No messages yet</text>
+                            <div class="chat-avatar-initials">
+                                @(other?.User?.FirstName?.Substring(0, 1) ?? "?")
+                            </div>
+                        }
+                        @if (unread > 0)
+                        {
+                            <div class="chat-unread-badge">
+                                @(unread > 9 ? "9+" : unread.ToString())
+                            </div>
                         }
                     </div>
-                </div>
-            </a>
+
+                    <div class="chat-info">
+                        <div class="chat-header-row">
+                            <div class="chat-name @(unread > 0 ? "unread" : "read")">
+                                @(other?.User?.FirstName) @(other?.User?.LastName)
+                            </div>
+                            <div class="chat-time">@(lastMsg?.SentAt.ToString("HH:mm") ?? "")</div>
+                        </div>
+                        <div class="chat-last-message @(unread > 0 ? "unread" : "read")">
+                            @if (lastMsg != null)
+                            {
+                                if (lastMsg.SenderId == currentUserId)
+                                {
+                                    <text>You: </text>
+                                }
+                                @(lastMsg.MessageType != MoneyTransfer.Models.MessageType.Text ? "📎 " + lastMsg.MediaFileName : lastMsg.Content)
+                            }
+                            else
+                            {
+                                <text>No messages yet</text>
+                            }
+                        </div>
+                    </div>
+                </a>
+
+                <button onclick="confirmDelete(@c.Id, '@Html.Raw(otherName.Replace("'", "\\'"))', event)"
+                        class="delete-conv-btn"
+                        title="Delete conversation">
+                    <i class="bi bi-trash"></i>
+                </button>
+
+                <form id="delForm-@c.Id" asp-action="DeleteConversation" method="post" style="display:none">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@c.Id" />
+                </form>
+            </div>
         }
     </div>
+}
+
+@section Scripts {
+    <script>
+        function filterChats(q) {
+            const lower = q.toLowerCase().trim();
+            const clearBtn = document.getElementById('clearSearch');
+            if (clearBtn) clearBtn.style.display = lower ? 'block' : 'none';
+
+            let anyVisible = false;
+            document.querySelectorAll('.chat-list-item').forEach(item => {
+                const name = (item.dataset.name || '').toLowerCase();
+                const show = !lower || name.includes(lower);
+                item.style.display = show ? '' : 'none';
+                if (show) anyVisible = true;
+            });
+
+            let noResult = document.getElementById('noSearchResult');
+            if (!noResult) {
+                noResult = document.createElement('div');
+                noResult.id = 'noSearchResult';
+                noResult.className = 'chat-no-result';
+                noResult.innerHTML = '<i class="bi bi-search"></i>No chats found';
+                const list = document.querySelector('.tp-card:last-of-type');
+                if (list) list.appendChild(noResult);
+            }
+            noResult.style.display = lower && !anyVisible ? 'block' : 'none';
+        }
+
+        function confirmDelete(convId, name, e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (confirm(`Delete your conversation with ${name}?\n\nThis will delete all messages for both users.`)) {
+                document.getElementById(`delForm-${convId}`).submit();
+            }
+        }
+    </script>
 }

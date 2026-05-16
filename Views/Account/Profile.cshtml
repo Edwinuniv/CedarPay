@@ -1,6 +1,7 @@
 ﻿@model MoneyTransfer.ViewModels.ProfileViewModel
 @{
     ViewData["Title"] = "Profile";
+    ViewBag.PageClass = "page-profile";
     bool isEditMode = ViewBag.EditMode == true;
     string agentStatus = ViewBag.AgentApplicationStatus as string ?? "";
     bool isAgentUser = ViewBag.IsAgent == true;
@@ -13,14 +14,11 @@
         <div class="page-header">
             <div>
                 <h2>My Profile</h2>
-                <p>
-                    @(isEditMode ? "Edit your information below" : "Your account information")
-                </p>
+                <p>@(isEditMode ? "Edit your information below" : "Your account information")</p>
             </div>
             @if (!isEditMode)
             {
-                <a asp-action="Profile" asp-route-edit="true"
-                   class="btn-tp-primary">
+                <a asp-action="Profile" asp-route-edit="true" class="btn-tp-primary">
                     <i class="bi bi-pencil"></i> Edit Profile
                 </a>
             }
@@ -28,91 +26,68 @@
 
         @if (!isEditMode)
         {
-            <div style="background:var(--surface-2);
-                            border:1px solid var(--border);
-                            border-radius:var(--r-md);
-                            padding:12px 16px;
-                            font-size:13px;color:var(--text-2);
-                            margin-bottom:16px;
-                            display:flex;align-items:center;gap:8px">
-                <i class="bi bi-lock-fill"
-                   style="color:var(--teal)"></i>
-                Click <strong style="margin:0 4px">Edit Profile</strong>
-                to make changes to your information.
+            <div class="profile-info-alert">
+                <i class="bi bi-lock-fill"></i>
+                Click <strong>Edit Profile</strong> to make changes to your information.
             </div>
         }
 
-        <form asp-action="UpdateProfile" method="post"
-              enctype="multipart/form-data">
+        <form asp-action="UpdateProfile" method="post" enctype="multipart/form-data">
             @Html.AntiForgeryToken()
-            <input type="hidden" name="RemoveProfilePicture"
-                   id="removePicFlag" value="false" />
+            <input type="hidden" name="RemoveProfilePicture" id="removePicFlag" value="false" />
+            <input type="hidden" name="croppedProfilePicture" id="croppedPicData" />
 
             @if (isEditMode)
             {
-                <div asp-validation-summary="All"
-                     class="alert-tp error"
+                <div asp-validation-summary="All" class="alert-tp error"
                      style="@(ViewData.ModelState.ErrorCount > 0 ? "" : "display:none")"></div>
             }
 
             <div class="tp-card mb-3">
-                <div style="display:flex;align-items:center;gap:20px">
-                    <div>
+                <div class="profile-avatar-wrapper">
+                    <div class="profile-avatar-container">
                         @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
                         {
-                            <img id="avatarImg"
-                                 src="@Model.ProfilePictureUrl"
-                                 style="width:80px;height:80px;
-                                                        border-radius:50%;
-                                                        object-fit:cover;
-                                                        border:3px solid var(--teal)" />
+                            <img id="avatarImg" src="@Model.ProfilePictureUrl" class="profile-avatar-img" />
+                            <div id="avatarInitials" class="profile-avatar-initials profile-avatar-hidden">
+                                @(Model.FirstName?.Length > 0 ? Model.FirstName.Substring(0, 1).ToUpper() : "?")
+                            </div>
                         }
                         else
                         {
-                            <div id="avatarInitials"
-                                 style="width:80px;height:80px;
-                                                border-radius:50%;
-                                                background:linear-gradient(135deg,
-                                                    var(--teal),var(--teal-mid));
-                                                display:flex;align-items:center;
-                                                justify-content:center;
-                                                font-size:28px;font-weight:800;
-                                                color:#fff">
+                            <div id="avatarInitials" class="profile-avatar-initials">
                                 @(Model.FirstName?.Length > 0 ? Model.FirstName.Substring(0, 1).ToUpper() : "?")
                             </div>
-                            <img id="avatarImg"
-                                 style="display:none;width:80px;height:80px;
-                                            border-radius:50%;object-fit:cover;
-                                            border:3px solid var(--teal)" />
+                            <img id="avatarImg" class="profile-avatar-img profile-avatar-hidden" />
                         }
                     </div>
-                    <div>
-                        <div style="font-size:14px;font-weight:700;
-                                    color:var(--text-1);margin-bottom:2px">
+
+                    <div class="profile-info-details">
+                        <div class="profile-info-name">
                             @Model.FirstName @Model.LastName
                         </div>
-                        <div style="font-size:12px;color:var(--text-3);
-                                    margin-bottom:10px">
+                        <div class="profile-info-hint">
                             JPG, PNG or GIF · Max 2MB
                         </div>
+
                         @if (isEditMode)
                         {
-                            <div style="display:flex;gap:8px;flex-wrap:wrap">
-                                <label class="btn-tp-secondary"
-                                       style="padding:7px 14px;font-size:12px;
-                                                    cursor:pointer;margin:0">
-                                    <i class="bi bi-camera"></i> Change Photo
-                                    <input type="file" name="profilePicture"
+                            <div class="profile-actions">
+                                <label class="btn-edit-photo">
+                                    <i class="bi bi-pencil-fill"></i> Edit Photo
+                                    <input type="file" id="profilePicInput" name="profilePicture"
                                            accept="image/*" style="display:none"
-                                           onchange="previewPicture(this)" />
+                                           onchange="openCropper(this)" />
                                 </label>
+
+                                <label class="btn-change-photo" onclick="document.getElementById('profilePicInput').click()">
+                                    <i class="bi bi-camera-fill"></i> Change
+                                </label>
+
                                 @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
                                 {
-                                    <button type="button"
-                                            class="btn-tp-danger"
-                                            style="padding:7px 14px;font-size:12px"
-                                            onclick="removePicture()">
-                                        <i class="bi bi-trash"></i> Remove
+                                    <button type="button" onclick="removePicture()" class="btn-delete-photo">
+                                        <i class="bi bi-trash"></i> Delete
                                     </button>
                                 }
                             </div>
@@ -122,172 +97,85 @@
             </div>
 
             <div class="tp-card mb-3">
-                <div style="font-size:13px;font-weight:700;
-                            color:var(--text-1);margin-bottom:14px">
-                    <i class="bi bi-person-badge"
-                       style="color:var(--teal);margin-right:6px"></i>
+                <div class="section-header">
+                    <i class="bi bi-person-badge"></i>
                     Account Type
                 </div>
 
-                @if (ViewBag.WalletApproved == true && !isEditMode)
-                {
-                    <div style="display:flex;align-items:center;gap:8px;
-                                            font-size:12px;color:var(--text-3);
-                                            margin-bottom:10px">
-                        <i class="bi bi-lock-fill"
-                           style="color:var(--teal)"></i>
-                        Account type is locked after wallet approval.
-                    </div>
-                }
-
                 @if (ViewBag.WalletApproved == true)
                 {
-                    <div style="display:flex;align-items:center;gap:10px;
-                                            padding:12px;background:var(--surface-2);
-                                            border-radius:var(--r-sm)">
-                        <span style="font-size:24px">
-                            @(Model.AccountType == "Corporate" ? "🏢" : "👤")
-                        </span>
+                    <div class="account-type-locked">
+                        <span class="account-type-icon">@(Model.AccountType == "Corporate" ? "🏢" : "👤")</span>
                         <div>
-                            <div style="font-size:14px;font-weight:700;
-                                                    color:var(--text-1)">
-                                @(Model.AccountType ?? "Individual")
-                            </div>
-                            <div style="font-size:11px;color:var(--text-3)">
-                                Locked — cannot be changed
-                            </div>
+                            <div class="account-type-title">@(Model.AccountType ?? "Individual")</div>
+                            <div class="account-type-note">Locked — cannot be changed</div>
                         </div>
                     </div>
                     <input type="hidden" name="AccountType" value="@Model.AccountType" />
                 }
+                else if (isEditMode)
+                {
+                    <div class="account-type-selector">
+                        <label class="account-type-option">
+                            <input type="radio" name="AccountType" value="Individual" style="display:none" class="acct-type-radio" />
+                            <div class="account-type-card" data-val="Individual">
+                                <div class="account-type-emoji">👤</div>
+                                <div class="account-type-name">Individual</div>
+                                <div class="account-type-desc">Personal account</div>
+                            </div>
+                        </label>
+                        <label class="account-type-option">
+                            <input type="radio" name="AccountType" value="Corporate" style="display:none" class="acct-type-radio" />
+                            <div class="account-type-card" data-val="Corporate">
+                                <div class="account-type-emoji">🏢</div>
+                                <div class="account-type-name">Corporate</div>
+                                <div class="account-type-desc">Business account</div>
+                            </div>
+                        </label>
+                    </div>
+                }
                 else
                 {
-                    @if (isEditMode)
-                    {
-                        <div style="display:flex;gap:12px">
-                            <label style="flex:1;cursor:pointer">
-                                <input type="radio" name="AccountType"
-                                       value="Individual"
-                                       style="display:none"
-                                       class="acct-type-radio" />
-                                <div class="acct-type-card"
-                                     data-val="Individual"
-                                     style="padding:14px;border-radius:var(--r-md);
-                                                border:2px solid var(--border);
-                                                background:var(--surface-2);
-                                                text-align:center;
-                                                transition:var(--transition);
-                                                cursor:pointer">
-                                    <div style="font-size:22px;margin-bottom:4px">
-                                        👤
-                                    </div>
-                                    <div style="font-size:13px;font-weight:700;
-                                                                                    color:var(--text-1)">
-                                        Individual
-                                    </div>
-                                    <div style="font-size:11px;color:var(--text-3)">
-                                        Personal account
-                                    </div>
-                                </div>
-                            </label>
-                            <label style="flex:1;cursor:pointer">
-                                <input type="radio" name="AccountType"
-                                       value="Corporate"
-                                       style="display:none"
-                                       class="acct-type-radio" />
-                                <div class="acct-type-card"
-                                     data-val="Corporate"
-                                     style="padding:14px;border-radius:var(--r-md);
-                                                border:2px solid var(--border);
-                                                background:var(--surface-2);
-                                                text-align:center;
-                                                transition:var(--transition);
-                                                cursor:pointer">
-                                    <div style="font-size:22px;margin-bottom:4px">
-                                        🏢
-                                    </div>
-                                    <div style="font-size:13px;font-weight:700;
-                                                                color:var(--text-1)">
-                                        Corporate
-                                    </div>
-                                    <div style="font-size:11px;color:var(--text-3)">
-                                        Business account
-                                    </div>
-                                </div>
-                            </label>
+                    <div class="account-type-locked">
+                        <span class="account-type-icon">@(Model.AccountType == "Corporate" ? "🏢" : "👤")</span>
+                        <div>
+                            <div class="account-type-title">@(Model.AccountType ?? "Individual")</div>
+                            <div class="account-type-note">@(Model.AccountType == "Corporate" ? "Business account" : "Personal account")</div>
                         </div>
-                    }
-                    else
-                    {
-                        <div style="display:flex;align-items:center;gap:10px;
-                                                        padding:12px;background:var(--surface-2);
-                                                        border-radius:var(--r-sm)">
-                            <span style="font-size:24px">
-                                @(Model.AccountType == "Corporate" ? "🏢" : "👤")
-                            </span>
-                            <div>
-                                <div style="font-size:14px;font-weight:700;
-                                                                                color:var(--text-1)">
-                                    @(Model.AccountType ?? "Individual")
-                                </div>
-                                <div style="font-size:11px;color:var(--text-3)">
-                                    @(Model.AccountType == "Corporate" ? "Business account" : "Personal account")
-                                </div>
-                            </div>
-                        </div>
-                    }
+                    </div>
                 }
             </div>
 
-            <div id="corporateFields"
-                 style="display:@(Model.AccountType == "Corporate" ? "block" : "none")">
+            <div id="corporateFields" style="display:@(Model.AccountType == "Corporate" ? "block" : "none")">
                 <div class="tp-card mb-3">
-                    <div style="font-size:13px;font-weight:700;
-                                color:var(--text-1);margin-bottom:14px">
-                        <i class="bi bi-building"
-                           style="color:var(--teal);margin-right:6px"></i>
+                    <div class="section-header">
+                        <i class="bi bi-building"></i>
                         Corporate Information
                     </div>
                     <div class="row g-3">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="form-label">
-                                    Company Name
-                                </label>
+                                <label class="form-label">Company Name</label>
                                 @if (isEditMode)
                                 {
-                                    <input name="CompanyName"
-                                           class="form-control"
-                                           value="@Model.CompanyName"
-                                           placeholder="Official company name" />
+                                    <input name="CompanyName" class="form-control" value="@Model.CompanyName" placeholder="Official company name" />
                                 }
                                 else
                                 {
-                                    <div class="form-control"
-                                         style="background:var(--surface-2)">
-                                        @(Model.CompanyName ?? "—")
-                                    </div>
+                                    <div class="form-control form-control-readonly">@(Model.CompanyName ?? "—")</div>
                                 }
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="form-label">
-                                    Business Registration No.
-                                </label>
+                                <label class="form-label">Business Registration No.</label>
                                 @if (isEditMode)
                                 {
-                                    <input name="BusinessRegNumber"
-                                           class="form-control"
-                                           value="@Model.BusinessRegNumber"
-                                           placeholder="e.g. LB-2024-XXXXX" />
+                                    <input name="BusinessRegNumber" class="form-control" value="@Model.BusinessRegNumber" placeholder="e.g. LB-2024-XXXXX" />
                                 }
                                 else
                                 {
-                                    <div class="form-control"
-                                         style="background:var(--surface-2)">
-                                        @(Model.BusinessRegNumber ?? "—")
-                                    </div>
+                                    <div class="form-control form-control-readonly">@(Model.BusinessRegNumber ?? "—")</div>
                                 }
                             </div>
                         </div>
@@ -296,43 +184,29 @@
             </div>
 
             <div class="tp-card mb-3">
-                <div style="font-size:13px;font-weight:700;
-                            color:var(--text-1);margin-bottom:14px">
-                    <i class="bi bi-person-fill"
-                       style="color:var(--teal);margin-right:6px"></i>
+                <div class="section-header">
+                    <i class="bi bi-person-fill"></i>
                     Personal Information
                     @if (isEditMode)
                     {
-                        <span style="color:var(--red);font-size:11px;
-                                        margin-left:6px">* Required</span>
+                        <span class="section-header-required">* Required</span>
                     }
                 </div>
                 <div class="row g-3">
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label class="form-label">
-                                First Name
-                                @if (isEditMode)
-                                {
-                                    <span style="color:var(--red)">*</span>
-                                }
-                            </label>
+                            <label class="form-label">First Name @if (isEditMode) {
+                            <span class="text-danger">*</span>
+                                                        }
+</label>
                             @if (isEditMode)
                             {
-                                <input asp-for="FirstName"
-                                       class="form-control"
-                                       placeholder="First name" />
-                                <span asp-validation-for="FirstName"
-                                      class="text-danger"
-                                      style="font-size:11px"></span>
+                                <input asp-for="FirstName" class="form-control" placeholder="First name" />
+                                <span asp-validation-for="FirstName" class="text-danger" style="font-size:11px"></span>
                             }
                             else
                             {
-                                <div class="form-control"
-                                     style="background:var(--surface-2);
-                                                    color:var(--text-1)">
-                                    @(Model.FirstName ?? "—")
-                                </div>
+                                <div class="form-control form-control-readonly">@(Model.FirstName ?? "—")</div>
                             }
                         </div>
                     </div>
@@ -341,45 +215,28 @@
                             <label class="form-label">Father's Name</label>
                             @if (isEditMode)
                             {
-                                <input asp-for="FatherName"
-                                       class="form-control"
-                                       placeholder="Father's name" />
+                                <input asp-for="FatherName" class="form-control" placeholder="Father's name" />
                             }
                             else
                             {
-                                <div class="form-control"
-                                     style="background:var(--surface-2);
-                                                    color:var(--text-1)">
-                                    @(Model.FatherName ?? "—")
-                                </div>
+                                <div class="form-control form-control-readonly">@(Model.FatherName ?? "—")</div>
                             }
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label class="form-label">
-                                Last Name
-                                @if (isEditMode)
-                                {
-                                    <span style="color:var(--red)">*</span>
-                                }
-                            </label>
+                            <label class="form-label">Last Name @if (isEditMode) {
+                            <span class="text-danger">*</span>
+                                                        }
+</label>
                             @if (isEditMode)
                             {
-                                <input asp-for="LastName"
-                                       class="form-control"
-                                       placeholder="Last name" />
-                                <span asp-validation-for="LastName"
-                                      class="text-danger"
-                                      style="font-size:11px"></span>
+                                <input asp-for="LastName" class="form-control" placeholder="Last name" />
+                                <span asp-validation-for="LastName" class="text-danger" style="font-size:11px"></span>
                             }
                             else
                             {
-                                <div class="form-control"
-                                     style="background:var(--surface-2);
-                                                    color:var(--text-1)">
-                                    @(Model.LastName ?? "—")
-                                </div>
+                                <div class="form-control form-control-readonly">@(Model.LastName ?? "—")</div>
                             }
                         </div>
                     </div>
@@ -388,44 +245,28 @@
                             <label class="form-label">Mother's Name</label>
                             @if (isEditMode)
                             {
-                                <input asp-for="MotherName"
-                                       class="form-control"
-                                       placeholder="Mother's full name" />
+                                <input asp-for="MotherName" class="form-control" placeholder="Mother's full name" />
                             }
                             else
                             {
-                                <div class="form-control"
-                                     style="background:var(--surface-2);
-                                                    color:var(--text-1)">
-                                    @(Model.MotherName ?? "—")
-                                </div>
+                                <div class="form-control form-control-readonly">@(Model.MotherName ?? "—")</div>
                             }
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">
-                                Date of Birth
-                                @if (isEditMode)
-                                {
-                                    <span style="color:var(--red)">*</span>
-                                }
-                            </label>
+                            <label class="form-label">Date of Birth @if (isEditMode) {
+                            <span class="text-danger">*</span>
+                                                        }
+</label>
                             @if (isEditMode)
                             {
-                                <input asp-for="DateOfBirth"
-                                       class="form-control"
-                                       type="date"
-                                       max="@DateTime.Now.AddYears(-18).ToString("yyyy-MM-dd")" />
+                                <input asp-for="DateOfBirth" class="form-control" type="date" max="@DateTime.Now.AddYears(-18).ToString("yyyy-MM-dd")" />
                                 <span asp-validation-for="DateOfBirth" class="text-danger" style="font-size:11px"></span>
                             }
                             else
                             {
-                                <div class="form-control"
-                                     style="background:var(--surface-2);
-                                                    color:var(--text-1)">
-                                    @(Model.DateOfBirth.Year > 1 ? Model.DateOfBirth.ToString("MMM dd, yyyy") : "—")
-                                </div>
+                                <div class="form-control form-control-readonly">@(Model.DateOfBirth.Year > 1 ? Model.DateOfBirth.ToString("MMM dd, yyyy") : "—")</div>
                             }
                         </div>
                     </div>
@@ -434,47 +275,28 @@
                             <label class="form-label">Place of Birth</label>
                             @if (isEditMode)
                             {
-                                <input asp-for="PlaceOfBirth"
-                                       class="form-control"
-                                       placeholder="City of birth" />
+                                <input asp-for="PlaceOfBirth" class="form-control" placeholder="City of birth" />
                             }
                             else
                             {
-                                <div class="form-control"
-                                     style="background:var(--surface-2);
-                                                    color:var(--text-1)">
-                                    @(Model.PlaceOfBirth ?? "—")
-                                </div>
+                                <div class="form-control form-control-readonly">@(Model.PlaceOfBirth ?? "—")</div>
                             }
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label class="form-label">
-                                Gender
-                                @if (isEditMode)
-                                {
-                                    <span style="color:var(--red)">*</span>
-                                }
-                            </label>
+                            <label class="form-label">Gender @if (isEditMode) {
+                            <span class="text-danger">*</span>
+                                                        }
+</label>
                             @if (isEditMode)
                             {
-                                <select asp-for="Gender" class="form-select">
-                                    <option value="">— Select —</option>
-                                    <option value="Male">Male</option>
-                                    <option value="Female">Female</option>
-                                </select>
-                                <span asp-validation-for="Gender"
-                                      class="text-danger"
-                                      style="font-size:11px"></span>
+                                <select asp-for="Gender" class="form-select"><option value="">— Select —</option><option value="Male">Male</option><option value="Female">Female</option></select>
+                                <span asp-validation-for="Gender" class="text-danger" style="font-size:11px"></span>
                             }
                             else
                             {
-                                <div class="form-control"
-                                     style="background:var(--surface-2);
-                                                        color:var(--text-1)">
-                                    @(Model.Gender ?? "—")
-                                </div>
+                                <div class="form-control form-control-readonly">@(Model.Gender ?? "—")</div>
                             }
                         </div>
                     </div>
@@ -483,99 +305,92 @@
                             <label class="form-label">Marital Status</label>
                             @if (isEditMode)
                             {
-                                <select asp-for="MaritalStatus"
-                                        class="form-select">
-                                    <option value="">— Select —</option>
-                                    <option value="Single">Single</option>
-                                    <option value="Married">Married</option>
-                                    <option value="Divorced">Divorced</option>
-                                    <option value="Widowed">Widowed</option>
-                                </select>
+                                <select asp-for="MaritalStatus" class="form-select"><option value="">— Select —</option><option value="Single">Single</option><option value="Married">Married</option><option value="Divorced">Divorced</option><option value="Widowed">Widowed</option></select>
                             }
                             else
                             {
-                                <div class="form-control"
-                                     style="background:var(--surface-2);
-                                                        color:var(--text-1)">
-                                    @(Model.MaritalStatus ?? "—")
-                                </div>
+                                <div class="form-control form-control-readonly">@(Model.MaritalStatus ?? "—")</div>
                             }
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">
-                                Nationality
-                                @if (isEditMode)
-                                {
-                                    <span style="color:var(--red)">*</span>
-                                }
-                            </label>
+                            <label class="form-label">Nationality @if (isEditMode) {
+                            <span class="text-danger">*</span>
+                                                        }
+</label>
                             @if (isEditMode)
                             {
-                                <input asp-for="Nationality"
-                                       class="form-control"
-                                       placeholder="e.g. Lebanese" />
-                                <span asp-validation-for="Nationality"
-                                      class="text-danger"
-                                      style="font-size:11px"></span>
+                                <input asp-for="Nationality" class="form-control" placeholder="e.g. Lebanese" />
+                                <span asp-validation-for="Nationality" class="text-danger" style="font-size:11px"></span>
                             }
                             else
                             {
-                                <div class="form-control"
-                                     style="background:var(--surface-2);
-                                                     color:var(--text-1)">
-                                    @(Model.Nationality ?? "—")
-                                </div>
+                                <div class="form-control form-control-readonly">@(Model.Nationality ?? "—")</div>
                             }
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">
-                                Other Nationality
-                            </label>
+                            <label class="form-label">Other Nationality</label>
                             @if (isEditMode)
                             {
-                                <input asp-for="OtherNationality"
-                                       class="form-control"
-                                       placeholder="If applicable" />
+                                <input asp-for="OtherNationality" class="form-control" placeholder="If applicable" />
                             }
                             else
                             {
-                                <div class="form-control"
-                                     style="background:var(--surface-2);
-                                                        color:var(--text-1)">
-                                    @(Model.OtherNationality ?? "—")
-                                </div>
+                                <div class="form-control form-control-readonly">@(Model.OtherNationality ?? "—")</div>
                             }
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">
-                                Phone Number
-                                @if (isEditMode)
-                                {
-                                    <span style="color:var(--red)">*</span>
-                                }
-                            </label>
+                            <label class="form-label">Phone Number @if (isEditMode) {
+                            <span class="text-danger">*</span>
+                                                        }
+</label>
                             @if (isEditMode)
                             {
-                                <input asp-for="PhoneNumber"
-                                       class="form-control"
-                                       placeholder="+961 XX XXX XXX" />
-                                <span asp-validation-for="PhoneNumber"
-                                      class="text-danger"
-                                      style="font-size:11px"></span>
+                                <input asp-for="PhoneNumber" class="form-control" placeholder="+961 XX XXX XXX" />
+                                <span asp-validation-for="PhoneNumber" class="text-danger" style="font-size:11px"></span>
                             }
                             else
                             {
-                                <div class="form-control"
-                                     style="background:var(--surface-2);
-                                                        color:var(--text-1)">
-                                    @(Model.PhoneNumber ?? "—")
+                                <div class="form-control form-control-readonly">@(Model.PhoneNumber ?? "—")</div>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Email @if (isEditMode) {
+                            <span class="text-danger">*</span>
+                                                        }
+</label>
+                            @if (isEditMode)
+                            {
+                                <input asp-for="Email" class="form-control" type="email" placeholder="you@example.com" />
+                                <span asp-validation-for="Email" class="text-danger" style="font-size:11px"></span>
+                            }
+                            else
+                            {
+                                <div class="form-control form-control-readonly">@(Model.Email ?? "—")</div>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Username</label>
+                            @if (isEditMode)
+                            {
+                                <div class="username-input-wrapper">
+                                    <span class="username-prefix">@@</span>
+                                    <input name="UserUsername" value="@Model.UserUsername" class="username-input" placeholder="yourname" />
                                 </div>
+                                <small class="text-muted">Letters, numbers, and underscores only</small>
+                            }
+                            else
+                            {
+                                <div class="form-control form-control-readonly">@@@(Model.UserUsername ?? "—")</div>
                             }
                         </div>
                     </div>
@@ -584,17 +399,11 @@
                             <label class="form-label">Bio</label>
                             @if (isEditMode)
                             {
-                                <input asp-for="Description"
-                                       class="form-control"
-                                       placeholder="Short bio (optional)" />
+                                <input asp-for="Description" class="form-control" placeholder="Short bio (optional)" />
                             }
                             else
                             {
-                                <div class="form-control"
-                                     style="background:var(--surface-2);
-                                                     color:var(--text-1)">
-                                    @(Model.Description ?? "—")
-                                </div>
+                                <div class="form-control form-control-readonly">@(Model.Description ?? "—")</div>
                             }
                         </div>
                     </div>
@@ -602,10 +411,8 @@
             </div>
 
             <div class="tp-card mb-3">
-                <div style="font-size:13px;font-weight:700;
-                            color:var(--text-1);margin-bottom:14px">
-                    <i class="bi bi-journal-bookmark"
-                       style="color:var(--teal);margin-right:6px"></i>
+                <div class="section-header">
+                    <i class="bi bi-journal-bookmark"></i>
                     Civil Registry
                 </div>
                 <div class="row g-3">
@@ -614,17 +421,11 @@
                             <label class="form-label">Record Number</label>
                             @if (isEditMode)
                             {
-                                <input asp-for="RecordNumber"
-                                       class="form-control"
-                                       placeholder="Registry number" />
+                                <input asp-for="RecordNumber" class="form-control" placeholder="Registry number" />
                             }
                             else
                             {
-                                <div class="form-control"
-                                     style="background:var(--surface-2);
-                                                    color:var(--text-1)">
-                                    @(Model.RecordNumber ?? "—")
-                                </div>
+                                <div class="form-control form-control-readonly">@(Model.RecordNumber ?? "—")</div>
                             }
                         </div>
                     </div>
@@ -633,17 +434,11 @@
                             <label class="form-label">Governate</label>
                             @if (isEditMode)
                             {
-                                <input asp-for="Governate"
-                                       class="form-control"
-                                       placeholder="e.g. Beirut" />
+                                <input asp-for="Governate" class="form-control" placeholder="e.g. Beirut" />
                             }
                             else
                             {
-                                <div class="form-control"
-                                     style="background:var(--surface-2);
-                                                    color:var(--text-1)">
-                                    @(Model.Governate ?? "—")
-                                </div>
+                                <div class="form-control form-control-readonly">@(Model.Governate ?? "—")</div>
                             }
                         </div>
                     </div>
@@ -652,17 +447,11 @@
                             <label class="form-label">District</label>
                             @if (isEditMode)
                             {
-                                <input asp-for="District"
-                                       class="form-control"
-                                       placeholder="e.g. Metn" />
+                                <input asp-for="District" class="form-control" placeholder="e.g. Metn" />
                             }
                             else
                             {
-                                <div class="form-control"
-                                     style="background:var(--surface-2);
-                                                    color:var(--text-1)">
-                                    @(Model.District ?? "—")
-                                </div>
+                                <div class="form-control form-control-readonly">@(Model.District ?? "—")</div>
                             }
                         </div>
                     </div>
@@ -671,17 +460,11 @@
                             <label class="form-label">Village</label>
                             @if (isEditMode)
                             {
-                                <input asp-for="Village"
-                                       class="form-control"
-                                       placeholder="Village of origin" />
+                                <input asp-for="Village" class="form-control" placeholder="Village of origin" />
                             }
                             else
                             {
-                                <div class="form-control"
-                                     style="background:var(--surface-2);
-                                                    color:var(--text-1)">
-                                    @(Model.Village ?? "—")
-                                </div>
+                                <div class="form-control form-control-readonly">@(Model.Village ?? "—")</div>
                             }
                         </div>
                     </div>
@@ -689,66 +472,42 @@
             </div>
 
             <div class="tp-card mb-3">
-                <div style="font-size:13px;font-weight:700;
-                            color:var(--text-1);margin-bottom:14px">
-                    <i class="bi bi-geo-alt-fill"
-                       style="color:var(--teal);margin-right:6px"></i>
+                <div class="section-header">
+                    <i class="bi bi-geo-alt-fill"></i>
                     Address
                 </div>
                 <div class="row g-3">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">
-                                Country
-                                @if (isEditMode)
-                                {
-                                    <span style="color:var(--red)">*</span>
-                                }
-                            </label>
+                            <label class="form-label">Country @if (isEditMode) {
+                            <span class="text-danger">*</span>
+                                                        }
+</label>
                             @if (isEditMode)
                             {
-                                <input asp-for="Country"
-                                       class="form-control"
-                                       placeholder="Lebanon" />
-                                <span asp-validation-for="Country"
-                                      class="text-danger"
-                                      style="font-size:11px"></span>
+                                <input asp-for="Country" class="form-control" placeholder="Lebanon" />
+                                <span asp-validation-for="Country" class="text-danger" style="font-size:11px"></span>
                             }
                             else
                             {
-                                <div class="form-control"
-                                     style="background:var(--surface-2);
-                                                    color:var(--text-1)">
-                                    @(Model.Country ?? "—")
-                                </div>
+                                <div class="form-control form-control-readonly">@(Model.Country ?? "—")</div>
                             }
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">
-                                City
-                                @if (isEditMode)
-                                {
-                                    <span style="color:var(--red)">*</span>
-                                }
-                            </label>
+                            <label class="form-label">City @if (isEditMode) {
+                            <span class="text-danger">*</span>
+                                                        }
+</label>
                             @if (isEditMode)
                             {
-                                <input asp-for="City"
-                                       class="form-control"
-                                       placeholder="Beirut" />
-                                <span asp-validation-for="City"
-                                      class="text-danger"
-                                      style="font-size:11px"></span>
+                                <input asp-for="City" class="form-control" placeholder="Beirut" />
+                                <span asp-validation-for="City" class="text-danger" style="font-size:11px"></span>
                             }
                             else
                             {
-                                <div class="form-control"
-                                     style="background:var(--surface-2);
-                                                    color:var(--text-1)">
-                                    @(Model.City ?? "—")
-                                </div>
+                                <div class="form-control form-control-readonly">@(Model.City ?? "—")</div>
                             }
                         </div>
                     </div>
@@ -757,17 +516,11 @@
                             <label class="form-label">Region</label>
                             @if (isEditMode)
                             {
-                                <input asp-for="Region"
-                                       class="form-control"
-                                       placeholder="e.g. Hamra" />
+                                <input asp-for="Region" class="form-control" placeholder="e.g. Hamra" />
                             }
                             else
                             {
-                                <div class="form-control"
-                                     style="background:var(--surface-2);
-                                                    color:var(--text-1)">
-                                    @(Model.Region ?? "—")
-                                </div>
+                                <div class="form-control form-control-readonly">@(Model.Region ?? "—")</div>
                             }
                         </div>
                     </div>
@@ -776,17 +529,11 @@
                             <label class="form-label">State</label>
                             @if (isEditMode)
                             {
-                                <input asp-for="State"
-                                       class="form-control"
-                                       placeholder="State / Province" />
+                                <input asp-for="State" class="form-control" placeholder="State / Province" />
                             }
                             else
                             {
-                                <div class="form-control"
-                                     style="background:var(--surface-2);
-                                                color:var(--text-1)">
-                                    @(Model.State ?? "—")
-                                </div>
+                                <div class="form-control form-control-readonly">@(Model.State ?? "—")</div>
                             }
                         </div>
                     </div>
@@ -795,17 +542,11 @@
                             <label class="form-label">Street</label>
                             @if (isEditMode)
                             {
-                                <input asp-for="Street"
-                                       class="form-control"
-                                       placeholder="Street name" />
+                                <input asp-for="Street" class="form-control" placeholder="Street name" />
                             }
                             else
                             {
-                                <div class="form-control"
-                                     style="background:var(--surface-2);
-                                                color:var(--text-1)">
-                                    @(Model.Street ?? "—")
-                                </div>
+                                <div class="form-control form-control-readonly">@(Model.Street ?? "—")</div>
                             }
                         </div>
                     </div>
@@ -814,17 +555,11 @@
                             <label class="form-label">Building</label>
                             @if (isEditMode)
                             {
-                                <input asp-for="BuildingName"
-                                       class="form-control"
-                                       placeholder="Name" />
+                                <input asp-for="BuildingName" class="form-control" placeholder="Name" />
                             }
                             else
                             {
-                                <div class="form-control"
-                                     style="background:var(--surface-2);
-                                                 color:var(--text-1)">
-                                    @(Model.BuildingName ?? "—")
-                                </div>
+                                <div class="form-control form-control-readonly">@(Model.BuildingName ?? "—")</div>
                             }
                         </div>
                     </div>
@@ -833,17 +568,11 @@
                             <label class="form-label">No.</label>
                             @if (isEditMode)
                             {
-                                <input asp-for="BuildingNumber"
-                                       class="form-control"
-                                       placeholder="#" />
+                                <input asp-for="BuildingNumber" class="form-control" placeholder="#" />
                             }
                             else
                             {
-                                <div class="form-control"
-                                     style="background:var(--surface-2);
-                                                color:var(--text-1)">
-                                    @(Model.BuildingNumber ?? "—")
-                                </div>
+                                <div class="form-control form-control-readonly">@(Model.BuildingNumber ?? "—")</div>
                             }
                         </div>
                     </div>
@@ -852,17 +581,11 @@
                             <label class="form-label">Postal Code</label>
                             @if (isEditMode)
                             {
-                                <input asp-for="PostalCode"
-                                       class="form-control"
-                                       placeholder="Postal code" />
+                                <input asp-for="PostalCode" class="form-control" placeholder="Postal code" />
                             }
                             else
                             {
-                                <div class="form-control"
-                                     style="background:var(--surface-2);
-                                                color:var(--text-1)">
-                                    @(Model.PostalCode ?? "—")
-                                </div>
+                                <div class="form-control form-control-readonly">@(Model.PostalCode ?? "—")</div>
                             }
                         </div>
                     </div>
@@ -870,10 +593,8 @@
             </div>
 
             <div class="tp-card mb-3">
-                <div style="font-size:13px;font-weight:700;
-                            color:var(--text-1);margin-bottom:14px">
-                    <i class="bi bi-briefcase-fill"
-                       style="color:var(--teal);margin-right:6px"></i>
+                <div class="section-header">
+                    <i class="bi bi-briefcase-fill"></i>
                     Professional Information
                 </div>
                 <div class="row g-3">
@@ -882,17 +603,11 @@
                             <label class="form-label">Occupation</label>
                             @if (isEditMode)
                             {
-                                <input asp-for="Occupation"
-                                       class="form-control"
-                                       placeholder="e.g. Engineer" />
+                                <input asp-for="Occupation" class="form-control" placeholder="e.g. Engineer" />
                             }
                             else
                             {
-                                <div class="form-control"
-                                     style="background:var(--surface-2);
-                                                    color:var(--text-1)">
-                                    @(Model.Occupation ?? "—")
-                                </div>
+                                <div class="form-control form-control-readonly">@(Model.Occupation ?? "—")</div>
                             }
                         </div>
                     </div>
@@ -901,17 +616,11 @@
                             <label class="form-label">Employer Name</label>
                             @if (isEditMode)
                             {
-                                <input asp-for="EmployerName"
-                                       class="form-control"
-                                       placeholder="Company name" />
+                                <input asp-for="EmployerName" class="form-control" placeholder="Company name" />
                             }
                             else
                             {
-                                <div class="form-control"
-                                     style="background:var(--surface-2);
-                                                     color:var(--text-1)">
-                                    @(Model.EmployerName ?? "—")
-                                </div>
+                                <div class="form-control form-control-readonly">@(Model.EmployerName ?? "—")</div>
                             }
                         </div>
                     </div>
@@ -920,8 +629,7 @@
                             <label class="form-label">Annual Income (USD)</label>
                             @if (isEditMode)
                             {
-                                <select asp-for="AnnualIncomeUSD"
-                                        class="form-select">
+                                <select asp-for="AnnualIncomeUSD" class="form-select">
                                     <option value="">— Select range —</option>
                                     <option value="$100 - $999">$100 – $999</option>
                                     <option value="$1,000 - $2,999">$1,000 – $2,999</option>
@@ -936,507 +644,162 @@
                             }
                             else
                             {
-                                <div class="form-control"
-                                     style="background:var(--surface-2);
-                                                color:var(--text-1)">
-                                    @(Model.AnnualIncomeUSD ?? "—")
-                                </div>
+                                <div class="form-control form-control-readonly">@(Model.AnnualIncomeUSD ?? "—")</div>
                             }
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">
-                                Other Source of Income
-                            </label>
+                            <label class="form-label">Other Source of Income</label>
                             @if (isEditMode)
                             {
-                                <input asp-for="OtherIncomeSource"
-                                       class="form-control"
-                                       placeholder="e.g. Freelancing, Rental" />
+                                <input asp-for="OtherIncomeSource" class="form-control" placeholder="e.g. Freelancing, Rental" />
                             }
                             else
                             {
-                                <div class="form-control"
-                                     style="background:var(--surface-2);
-                                                                    color:var(--text-1)">
-                                    @(Model.OtherIncomeSource ?? "—")
-                                </div>
+                                <div class="form-control form-control-readonly">@(Model.OtherIncomeSource ?? "—")</div>
                             }
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- KYC Section -->
-            @if (Model.KYCStatus == "Approved" || ViewBag.WalletApproved == true)
-            {
-                <div class="tp-card mb-3">
-                    <div style="display:flex;align-items:center;gap:12px">
-                        <i class="bi bi-check-circle-fill"
-                           style="color:var(--teal);font-size:22px"></i>
-                        <div>
-                            <div style="font-weight:700;font-size:14px">
-                                Identity Verified
+            <div class="tp-card mb-3">
+                <div class="kyc-status-card">
+                    <div class="kyc-status-content">
+                        @if (Model.KYCStatus == "Approved")
+                        {
+                            <i class="bi bi-patch-check-fill kyc-status-icon approved"></i>
+                            <div>
+                                <div class="kyc-status-title">Identity Verified</div>
+                                <div class="kyc-status-text">Your KYC has been approved by our team.</div>
                             </div>
-                            <div style="font-size:12px;color:var(--text-3)">
-                                @Model.DocumentType · @Model.DocumentNumber
-                                — Cannot be changed
+                        }
+                        else if (Model.KYCStatus == "Pending")
+                        {
+                            <i class="bi bi-clock-fill kyc-status-icon pending"></i>
+                            <div>
+                                <div class="kyc-status-title">KYC Under Review</div>
+                                <div class="kyc-status-text">Your documents have been submitted and are being reviewed.</div>
                             </div>
-                        </div>
+                        }
+                        else if (Model.KYCStatus == "Rejected")
+                        {
+                            <i class="bi bi-x-circle-fill kyc-status-icon rejected"></i>
+                            <div>
+                                <div class="kyc-status-title rejected">KYC Rejected</div>
+                                <div class="kyc-status-text">Your documents were rejected. Please resubmit.</div>
+                            </div>
+                        }
+                        else
+                        {
+                            <i class="bi bi-shield-exclamation kyc-status-icon none"></i>
+                            <div>
+                                <div class="kyc-status-title">Identity Not Verified</div>
+                                <div class="kyc-status-text">Submit your KYC documents to verify your identity. (Optional — not required for wallet creation)</div>
+                            </div>
+                        }
                     </div>
+                    <a asp-controller="KYC" asp-action="Index" class="kyc-manage-btn">
+                        <i class="bi bi-shield-check"></i>
+                        @(Model.KYCStatus == "Approved" ? "View KYC" : "Manage KYC")
+                    </a>
                 </div>
-                <input type="hidden" name="DocumentType" value="@Model.DocumentType" />
-                <input type="hidden" name="DocumentNumber" value="@Model.DocumentNumber" />
-            }
-            else
-            {
-                <div class="tp-card mb-3">
-                    <div style="font-size:13px;font-weight:700;
-                                            color:var(--text-1);margin-bottom:14px">
-                        <i class="bi bi-shield-check"
-                           style="color:var(--teal);margin-right:6px"></i>
-                        Identity Verification
-                        @if (isEditMode)
-                        {
-                            <span style="color:var(--red);font-size:11px;
-                                                    margin-left:6px">* Required</span>
-                        }
-                    </div>
-
-                    @if (Model.KYCStatus == "Pending")
-                    {
-                        <div style="padding:10px 14px;background:var(--yellow-light);
-                                                        border-radius:var(--r-sm);font-size:13px;
-                                                        color:var(--yellow);margin-bottom:12px">
-                            <i class="bi bi-clock"></i>
-                            Your documents are under review.
-                        </div>
-                    }
-
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="form-label">
-                                    Document Type
-                                    @if (isEditMode)
-                                    {
-                                        <span style="color:var(--red)">*</span>
-                                    }
-                                </label>
-                                @if (isEditMode)
-                                {
-                                    <select asp-for="DocumentType"
-                                            class="form-select">
-                                        <option value="NationalID">
-                                            National ID
-                                        </option>
-                                        <option value="Passport">Passport</option>
-                                        <option value="DriverLicense">
-                                            Driver's License
-                                        </option>
-                                    </select>
-                                }
-                                else
-                                {
-                                    <div class="form-control"
-                                         style="background:var(--surface-2);
-                                                                 color:var(--text-1)">
-                                        @Model.DocumentType
-                                    </div>
-                                }
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="form-label">
-                                    Document Number
-                                    @if (isEditMode)
-                                    {
-                                        <span style="color:var(--red)">*</span>
-                                    }
-                                </label>
-                                @if (isEditMode)
-                                {
-                                    <input asp-for="DocumentNumber"
-                                           class="form-control"
-                                           placeholder="e.g. LB12345678" />
-                                    <span asp-validation-for="DocumentNumber"
-                                          class="text-danger"
-                                          style="font-size:11px"></span>
-                                }
-                                else
-                                {
-                                    <div class="form-control"
-                                         style="background:var(--surface-2);
-                                                                     color:var(--text-1)">
-                                        @(string.IsNullOrEmpty(Model.DocumentNumber) ? "—" : Model.DocumentNumber)
-                                    </div>
-                                }
-                            </div>
-                        </div>
-
-                        @if (isEditMode)
-                        {
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label">
-                                        Front of Document
-                                    </label>
-                                    @if (!string.IsNullOrEmpty(Model.FrontImageUrl))
-                                    {
-                                        <div style="margin-bottom:8px">
-                                            <img src="@Model.FrontImageUrl"
-                                                 style="height:60px;
-                                                                border-radius:var(--r-sm);
-                                                                object-fit:cover;
-                                                                border:1px solid var(--border)" />
-                                        </div>
-                                    }
-                                    <input type="file" name="frontImage"
-                                           class="form-control"
-                                           accept="image/*" />
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label">
-                                        Back of Document
-                                    </label>
-                                    @if (!string.IsNullOrEmpty(Model.BackImageUrl))
-                                    {
-                                        <div style="margin-bottom:8px">
-                                            <img src="@Model.BackImageUrl"
-                                                 style="height:60px;
-                                                            border-radius:var(--r-sm);
-                                                            object-fit:cover;
-                                                            border:1px solid var(--border)" />
-                                        </div>
-                                    }
-                                    <input type="file" name="backImage"
-                                           class="form-control"
-                                           accept="image/*" />
-                                </div>
-                            </div>
-                        }
-                        else if (!string.IsNullOrEmpty(Model.FrontImageUrl))
-                        {
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label">Front</label>
-                                    <img src="@Model.FrontImageUrl"
-                                         style="height:60px;
-                                                border-radius:var(--r-sm);
-                                                object-fit:cover;
-                                                border:1px solid var(--border)" />
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label">Back</label>
-                                    @if (!string.IsNullOrEmpty(Model.BackImageUrl))
-                                    {
-                                        <img src="@Model.BackImageUrl"
-                                             style="height:60px;
-                                                        border-radius:var(--r-sm);
-                                                        object-fit:cover;
-                                                        border:1px solid var(--border)" />
-                                    }
-                                    else
-                                    {
-                                        <div style="color:var(--text-3);
-                                                        font-size:13px">
-                                            —
-                                        </div>
-                                    }
-                                </div>
-                            </div>
-                        }
-                    </div>
-                </div>
-            }
+            </div>
 
             @if (isEditMode)
             {
                 <div class="tp-card mb-3">
-                    <div style="display:flex;align-items:flex-start;
-                                                        gap:10px;margin-bottom:16px">
-                        <input type="checkbox" id="termsCheck"
-                               @(Model.ProfileCompleted ? "checked" : "")
-                               required
-                               style="width:16px;height:16px;
-                                                              margin-top:2px;flex-shrink:0;
-                                                              accent-color:var(--teal)" />
-                        <label for="termsCheck"
-                               style="font-size:13px;
-                                                              color:var(--text-2);cursor:pointer">
-                            I confirm that all information provided is accurate
-                            and I agree to the
-                            <a href="#" style="color:var(--teal)">
-                                Terms of Service
-                            </a>
-                            and
-                            <a href="#" style="color:var(--teal)">
-                                Privacy Policy
-                            </a>
-                            of CedarPay.
+                    <div class="terms-checkbox-wrapper">
+                        <input type="checkbox" id="termsCheck" @(Model.ProfileCompleted ? "checked" : "") required class="terms-checkbox" />
+                        <label for="termsCheck" class="terms-label">
+                            I confirm that all information provided is accurate and I agree to the
+                            <a href="#" class="terms-link">Terms of Service</a> and
+                            <a href="#" class="terms-link">Privacy Policy</a> of CedarPay.
                         </label>
                     </div>
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn-tp-primary">
                             <i class="bi bi-check-lg"></i> Save Profile
                         </button>
-                        <a asp-action="Profile" class="btn-tp-secondary">
-                            Cancel
-                        </a>
+                        <a asp-action="Profile" class="btn-tp-secondary">Cancel</a>
                     </div>
                 </div>
             }
         </form>
 
-        <!-- ROLE-SPECIFIC SECTIONS - REPLACED WITH NEW VERSION -->
-        @if (isAdminUser)
+        @if (isAgentUser)
         {
-            <div class="tp-card mb-3"
-                 style="border:1px solid rgba(167,139,250,.3);
-                            background:rgba(167,139,250,.05)">
-                <div style="display:flex;align-items:center;
-                                justify-content:space-between;gap:16px">
-                    <div>
-                        <div style="font-size:14px;font-weight:700;
-                                        color:var(--text-1);margin-bottom:4px">
-                            <i class="bi bi-shield-fill"
-                               style="color:var(--purple);
-                                          margin-right:6px"></i>
-                            Admin Powers
-                        </div>
-                        <div style="font-size:13px;
-                                        color:var(--text-2)">
-                            @(isAgentUser ? "You are currently active as an agent."
-                                           : "As admin, you can instantly become an agent.")
+            <div class="tp-card mb-3 agent-card">
+                <div class="agent-card-content">
+                    <i class="bi bi-check-circle-fill agent-card-icon"></i>
+                    <div class="agent-card-text">
+                        <div class="agent-card-title">You are a CedarPay Agent ✓</div>
+                        <div class="agent-card-subtitle">Your application was approved. Access your agent tools below.</div>
                     </div>
-                </div>
-                @if (!isAgentUser)
-                    {
-                        <a asp-controller="Admin"
-                           asp-action="InstantAgent"
-                           class="btn-tp-primary"
-                           style="white-space:nowrap">
-                            <i class="bi bi-shop"></i>
-                            Become Agent Instantly
-                        </a>
-                    }
-                    else
-                    {
-                        <a asp-controller="Agent"
-                           asp-action="Dashboard"
-                           class="btn-tp-secondary"
-                           style="white-space:nowrap">
-                            Agent Dashboard →
-                        </a>
-                    }
-                </div>
-            </div>
-        }
-        else if (isAgentUser)
-        {
-            <div class="tp-card mb-3"
-                 style="border:1px solid rgba(0,184,148,.2);
-                            background:var(--teal-light)">
-                <div style="display:flex;align-items:center;
-                                gap:12px">
-                    <i class="bi bi-check-circle-fill"
-                       style="color:var(--teal);
-                                  font-size:24px;flex-shrink:0"></i>
-                    <div style="flex:1">
-                        <div style="font-size:14px;font-weight:700;
-                                        color:var(--text-1)">
-                            You are a CedarPay Agent ✓
-                        </div>
-                        <div style="font-size:13px;
-                                        color:var(--text-2);
-                                        margin-top:2px">
-                            Your application was approved.
-                            Access your agent tools below.
-                        </div>
-                    </div>
-                    <a asp-controller="Agent"
-                       asp-action="Dashboard"
-                       class="btn-tp-primary"
-                       style="white-space:nowrap;flex-shrink:0">
-                        <i class="bi bi-speedometer2"></i>
-                        Agent Dashboard
+                    <a asp-controller="Agent" asp-action="Dashboard" class="btn-tp-primary" style="white-space:nowrap;flex-shrink:0">
+                        <i class="bi bi-speedometer2"></i> Agent Dashboard
                     </a>
                 </div>
             </div>
-
-            @if (ViewBag.AgentApplicationHistory != null)
-            {
-                var history = ViewBag.AgentApplicationHistory
-                as List<MoneyTransfer.Models.AgentApplication>;
-                @if (history?.Any() == true)
-                {
-                    <div class="tp-card mb-3">
-                        <div style="font-size:13px;font-weight:700;
-                                                color:var(--text-1);
-                                                margin-bottom:12px">
-                            Application History
-                        </div>
-                        @foreach (var app in history)
-                        {
-                            <div style="display:flex;
-                                                        justify-content:space-between;
-                                                        align-items:center;
-                                                        padding:10px 0;
-                                                        border-bottom:
-                                                        1px solid var(--border);
-                                                        font-size:13px">
-                                <div>
-                                    <div style="font-weight:600">
-                                        @app.StoreName
-                                    </div>
-                                    <div style="color:var(--text-3)">
-                                        Submitted
-                                        @app.SubmittedAt
-                                        .ToString("MMM dd, yyyy")
-                                    </div>
-                                </div>
-                                <span class="badge-tp @(app.Status == MoneyTransfer.Models.ApplicationStatus.Approved
-                                                            ? "success" : app.Status == MoneyTransfer.Models
-                                                                .ApplicationStatus.Pending ? "warning" : "danger")">
-                    @app.Status
-                </span>
-            </div>
-                        }
-                    </div>
-                }
-            }
         }
         else
         {
             @if (agentStatus == "Pending")
             {
-                <div class="tp-card mb-3"
-                     style="border:1px solid rgba(255,209,102,.3);
-                                    background:var(--yellow-light)">
-                    <div style="display:flex;align-items:center;
-                                        gap:12px">
-                        <i class="bi bi-clock-fill"
-                           style="color:var(--yellow);
-                                          font-size:20px"></i>
-                        <div style="flex:1">
-                            <div style="font-size:14px;
-                                                font-weight:700;
-                                                color:var(--text-1)">
-                                Application Under Review
-                            </div>
-                            <div style="font-size:13px;
-                                                color:var(--text-2)">
-                                Your application is pending.
-                                You'll be notified once reviewed.
-                            </div>
+                <div class="tp-card mb-3 agent-pending-card">
+                    <div class="agent-card-content">
+                        <i class="bi bi-clock-fill agent-pending-icon"></i>
+                        <div class="agent-card-text">
+                            <div class="agent-card-title">Application Under Review</div>
+                            <div class="agent-card-subtitle">Your agent application is pending. You'll be notified once reviewed.</div>
                         </div>
-                        <a asp-controller="AgentApplication"
-                           asp-action="MyApplication"
-                           class="btn-tp-secondary">
-                            View
-                        </a>
+                        <a asp-controller="AgentApplication" asp-action="MyApplication" class="btn-tp-secondary">View Application</a>
                     </div>
                 </div>
             }
             else if (agentStatus == "Rejected")
             {
-                <div class="tp-card mb-3"
-                     style="border:1px solid rgba(255,107,107,.3);
-                                    background:var(--red-light)">
-                    <div style="display:flex;align-items:center;
-                                        justify-content:space-between;
-                                        gap:16px">
+                <div class="tp-card mb-3 agent-rejected-card">
+                    <div class="kyc-status-card">
                         <div>
-                            <div style="font-size:14px;
-                                                font-weight:700;
-                                                color:var(--red)">
-                                Application Rejected
-                            </div>
-                            <div style="font-size:13px;
-                                                color:var(--text-2)">
-                                You can reapply or view history.
-                            </div>
+                            <div class="agent-rejected-title">Application Rejected</div>
+                            <div class="agent-card-subtitle">Your application was rejected. You can reapply below.</div>
                         </div>
                         <div style="display:flex;gap:8px">
-                            <a asp-controller="AgentApplication"
-                               asp-action="MyApplication"
-                               class="btn-tp-secondary"
-                               style="padding:8px 14px;
-                                              font-size:12px">
-                                History
-                            </a>
-                            <a asp-controller="AgentApplication"
-                               asp-action="Apply"
-                               class="btn-tp-primary"
-                               style="padding:8px 14px;
-                                              font-size:12px">
-                                Reapply
-                            </a>
+                            <a asp-controller="AgentApplication" asp-action="MyApplication" class="btn-tp-secondary" style="padding:8px 14px;font-size:12px">View History</a>
+                            <a asp-controller="AgentApplication" asp-action="Apply" class="btn-tp-primary" style="padding:8px 14px;font-size:12px">Reapply</a>
                         </div>
                     </div>
                 </div>
             }
             else
             {
-                <div class="tp-card mb-3"
-                     style="border:1px solid rgba(0,184,148,.2);
-                                    background:var(--teal-light)">
-                    <div style="display:flex;align-items:center;
-                                        justify-content:space-between;
-                                        gap:16px">
+                <div class="tp-card mb-3 agent-card">
+                    <div class="kyc-status-card">
                         <div>
-                            <div style="font-size:14px;
-                                                font-weight:700;
-                                                color:var(--text-1);
-                                                margin-bottom:4px">
-                                <i class="bi bi-shop"
-                                   style="color:var(--teal);
-                                                  margin-right:6px"></i>
-                                Become a CedarPay Agent
+                            <div class="agent-card-title">
+                                <i class="bi bi-shop" style="color:var(--teal);margin-right:6px"></i>Become a CedarPay Agent
                             </div>
-                            <div style="font-size:13px;
-                                                color:var(--text-2)">
-                                Register your store and earn
-                                commissions. Admin review required.
-                            </div>
+                            <div class="agent-card-subtitle">Register your store and earn commissions. Admin review required.</div>
                         </div>
-                        <a asp-controller="AgentApplication"
-                           asp-action="Apply"
-                           class="btn-tp-primary"
-                           style="white-space:nowrap;flex-shrink:0">
-                            Apply Now
+                        <a asp-controller="AgentApplication" asp-action="Apply" class="btn-tp-primary" style="white-space:nowrap;flex-shrink:0">
+                            <i class="bi bi-arrow-right"></i> Apply Now
                         </a>
                     </div>
                 </div>
             }
         }
 
-        <div class="tp-card"
-             style="border:1px solid rgba(255,107,107,.25)">
-            <div style="display:flex;align-items:center;
-                        justify-content:space-between;gap:16px">
+        <div class="tp-card delete-account-card">
+            <div class="delete-account-content">
                 <div>
-                    <div style="font-size:14px;font-weight:700;
-                                color:var(--red);margin-bottom:4px">
-                        <i class="bi bi-exclamation-triangle-fill"
-                           style="margin-right:6px"></i>
-                        Delete Account
+                    <div class="delete-account-title">
+                        <i class="bi bi-exclamation-triangle-fill" style="margin-right:6px"></i>Delete Account
                     </div>
-                    <div style="font-size:13px;color:var(--text-2)">
-                        Permanently delete your account and all data.
-                        This cannot be undone.
-                    </div>
+                    <div class="delete-account-text">Permanently delete your account and all data. This cannot be undone.</div>
                 </div>
-                <a asp-action="DeleteAccount"
-                   class="btn-tp-danger"
-                   style="white-space:nowrap;flex-shrink:0;
-                          padding:9px 18px">
+                <a asp-action="DeleteAccount" class="btn-tp-danger" style="white-space:nowrap;flex-shrink:0;padding:9px 18px">
                     <i class="bi bi-trash"></i> Delete Account
                 </a>
             </div>
@@ -1445,86 +808,96 @@
     </div>
 </div>
 
+<div id="cropperModal" class="cropper-modal">
+    <div class="cropper-modal-content">
+        <div class="cropper-modal-header">
+            Crop Profile Picture
+            <button onclick="closeCropper()" class="cropper-modal-close">×</button>
+        </div>
+        <div class="cropper-image-container">
+            <img id="cropperImg" class="cropper-image" />
+        </div>
+        <div class="cropper-actions">
+            <button type="button" onclick="cropImage()" class="btn-tp-primary">
+                <i class="bi bi-check-lg"></i> Use This Photo
+            </button>
+            <button type="button" onclick="closeCropper()" class="btn-tp-secondary">Cancel</button>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.css" />
+}
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.js"></script>
     <script>
-        const currentType = '@Model.AccountType';
-        document.querySelectorAll('.acct-type-card').forEach(card => {
+        var currentType = '@Model.AccountType';
+        document.querySelectorAll('.account-type-card').forEach(function(card) {
             if (card.dataset.val === currentType) {
-                card.style.borderColor = 'var(--teal)';
-                card.style.background = 'var(--teal-light)';
-                const radio = card.closest('label')
-                    .querySelector('input[type="radio"]');
+                card.classList.add('active');
+                var radio = card.closest('label').querySelector('input[type="radio"]');
                 if (radio) radio.checked = true;
             }
         });
 
-        document.querySelectorAll('.acct-type-radio').forEach(radio => {
-            radio.addEventListener('change', function() {
-                document.querySelectorAll('.acct-type-card')
-                    .forEach(c => {
-                        c.style.borderColor = 'var(--border)';
-                        c.style.background = 'var(--surface-2)';
-                    });
-                const card = this.closest('label')
-                    .querySelector('.acct-type-card');
-                if (card) {
-                    card.style.borderColor = 'var(--teal)';
-                    card.style.background = 'var(--teal-light)';
-                }
+        document.querySelectorAll('.acct-type-radio').forEach(function(radio) {
+            radio.addEventListener('change', function () {
+                document.querySelectorAll('.account-type-card').forEach(function(c) { c.classList.remove('active'); });
+                var card = this.closest('label').querySelector('.account-type-card');
+                if (card) card.classList.add('active');
+                var corp = document.getElementById('corporateFields');
+                if (corp) corp.style.display = this.value === 'Corporate' ? 'block' : 'none';
             });
         });
 
-        function updateCorporateFields() {
-            const radios = document.querySelectorAll(
-                'input[name="AccountType"]');
-            radios.forEach(r => {
-                r.addEventListener('change', () => {
-                    const corp = document.getElementById(
-                        'corporateFields');
-                    if (corp) {
-                        corp.style.display =
-                            r.value === 'Corporate' &&
-                            r.checked ? 'block' : 'none';
-                    }
-                });
-            });
-        }
-        updateCorporateFields();
+        var cropperInstance = null;
 
-        function previewPicture(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    let img = document.getElementById('avatarImg');
-                    const init = document.getElementById(
-                        'avatarInitials');
-                    if (!img) {
-                        img = document.createElement('img');
-                        img.id = 'avatarImg';
-                        img.style.cssText =
-                            'width:80px;height:80px;border-radius:50%;' +
-                            'object-fit:cover;border:3px solid var(--teal)';
-                        if (init) init.parentNode
-                            .insertBefore(img, init.nextSibling);
-                    }
-                    img.src = e.target.result;
-                    img.style.display = 'block';
-                    if (init) init.style.display = 'none';
-                    document.getElementById('removePicFlag')
-                        .value = 'false';
-                };
-                reader.readAsDataURL(input.files[0]);
-            }
+        function openCropper(input) {
+            if (!input.files || !input.files[0]) return;
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var img = document.getElementById('cropperImg');
+                var modal = document.getElementById('cropperModal');
+                img.src = e.target.result;
+                modal.style.display = 'flex';
+                if (cropperInstance) cropperInstance.destroy();
+                cropperInstance = new Cropper(img, { aspectRatio: 1, viewMode: 1, dragMode: 'move', autoCropArea: 1, restore: false, guides: true, center: true, highlight: false });
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+
+        function cropImage() {
+            if (!cropperInstance) return;
+            var canvas = cropperInstance.getCroppedCanvas({ width: 300, height: 300, fillColor: '#fff', imageSmoothingEnabled: true, imageSmoothingQuality: 'high' });
+            var dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+            var preview = document.getElementById('avatarImg');
+            var initials = document.getElementById('avatarInitials');
+            if (preview) { preview.src = dataUrl; preview.classList.remove('profile-avatar-hidden'); }
+            if (initials) initials.classList.add('profile-avatar-hidden');
+            document.getElementById('croppedPicData').value = dataUrl;
+            document.getElementById('removePicFlag').value = 'false';
+            closeCropper();
+        }
+
+        function closeCropper() {
+            var modal = document.getElementById('cropperModal');
+            modal.style.display = 'none';
+            if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
+            var input = document.getElementById('profilePicInput');
+            if (input) input.value = '';
         }
 
         function removePicture() {
             if (!confirm('Remove your profile picture?')) return;
-            const img = document.getElementById('avatarImg');
-            const init = document.getElementById('avatarInitials');
-            if (img) img.style.display = 'none';
-            if (init) init.style.display = 'flex';
+            var img = document.getElementById('avatarImg');
+            var init = document.getElementById('avatarInitials');
+            if (img) img.classList.add('profile-avatar-hidden');
+            if (init) init.classList.remove('profile-avatar-hidden');
             document.getElementById('removePicFlag').value = 'true';
+            document.getElementById('croppedPicData').value = '';
         }
     </script>
 }

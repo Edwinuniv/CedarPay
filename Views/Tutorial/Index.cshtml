@@ -1,0 +1,64 @@
+﻿@{
+    ViewData["Title"] = "CedarPay Tutorial";
+    ViewBag.PageClass = "page-dashboard";
+}
+
+<div class="tutorial-container">
+    <div class="tutorial-header">
+        <div class="tutorial-icon">🌲</div>
+        <h2 class="tutorial-title">Welcome to CedarPay</h2>
+        <p class="tutorial-subtitle">Here's how to use the app</p>
+    </div>
+
+    <div class="d-flex flex-column gap-3" id="tutorialSteps">
+
+        @{
+            var steps = new[]
+            {
+                ("1", "bi-person-fill", "Complete Your Profile",
+                "Fill in all required information including your national ID for KYC verification. This is required before creating wallets.",
+                "/Account/Profile?edit=true"),
+                ("2", "bi-wallet2", "Create a Wallet",
+                "Request a wallet in your preferred currency (USD, EUR, LBP, AED and more). Admin approval required.",
+                "/Wallet/Create"),
+                ("3", "bi-plus-circle-fill", "Top Up Your Wallet",
+                "Add funds to your wallet using Credit Card or Bank Transfer via Stripe secure payments.",
+                "/TopUp/Create"),
+                ("4", "bi-people-fill", "Add Beneficiaries",
+                "Save your contacts by @username search or wallet serial. Makes sending money faster.",
+                "/Beneficiary/Create"),
+                ("5", "bi-send-fill", "Send Money",
+                "Transfer money wallet-to-wallet or via mobile number. Automatic currency conversion included.",
+                "/Transfer/Create"),
+                ("6", "bi-geo-alt-fill", "Find an Agent",
+                "Need cash? Find a CedarPay agent near you for cash-in and cash-out operations.",
+                "/Map/Index"),
+                };
+        }
+
+        @foreach (var step in steps)
+        {
+            <a href="@step.Item5" class="tutorial-step-link">
+                <div class="tp-card tutorial-step-card">
+                    <div class="tutorial-step-number">@step.Item1</div>
+                    <div class="tutorial-step-content">
+                        <div class="tutorial-step-title">
+                            <i class="bi @step.Item2" style="color:var(--teal); margin-right:6px"></i>
+                            @step.Item3
+                        </div>
+                        <div class="tutorial-step-description">@step.Item4</div>
+                        <div class="tutorial-step-action">
+                            Click to start <i class="bi bi-arrow-right"></i>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        }
+    </div>
+
+    <div class="tutorial-footer">
+        <a asp-controller="Dashboard" asp-action="Index" class="btn-tp-secondary">
+            <i class="bi bi-house"></i> Go to Dashboard
+        </a>
+    </div>
+</div>

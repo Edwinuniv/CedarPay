@@ -14,9 +14,7 @@ namespace MoneyTransfer.ApiControllers
         private readonly IWalletRepository _walletRepository;
         private readonly UserManager<User> _userManager;
 
-        public WalletApiController(
-            IWalletRepository walletRepository,
-            UserManager<User> userManager)
+        public WalletApiController(IWalletRepository walletRepository, UserManager<User> userManager)
         {
             _walletRepository = walletRepository;
             _userManager = userManager;

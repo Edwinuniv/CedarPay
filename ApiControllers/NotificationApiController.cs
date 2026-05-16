@@ -14,9 +14,7 @@ namespace MoneyTransfer.ApiControllers
         private readonly INotificationRepository _notificationRepository;
         private readonly UserManager<User> _userManager;
 
-        public NotificationApiController(
-            INotificationRepository notificationRepository,
-            UserManager<User> userManager)
+        public NotificationApiController(INotificationRepository notificationRepository, UserManager<User> userManager)
         {
             _notificationRepository = notificationRepository;
             _userManager = userManager;
@@ -26,8 +24,7 @@ namespace MoneyTransfer.ApiControllers
         public async Task<IActionResult> GetMyNotifications()
         {
             var userId = _userManager.GetUserId(User);
-            var notifications = await _notificationRepository
-                .GetByUserIdAsync(userId);
+            var notifications = await _notificationRepository.GetByUserIdAsync(userId);
 
             return Ok(notifications.Select(n => new
             {

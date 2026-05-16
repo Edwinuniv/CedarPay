@@ -11,10 +11,7 @@ namespace MoneyTransfer.Repositories.Implementations
 
         public async Task<IEnumerable<AgentApplication>> GetByUserIdAsync(string userId)
         {
-            return await _context.AgentApplications
-                .Where(a => a.UserId == userId)
-                .OrderByDescending(a => a.SubmittedAt)
-                .ToListAsync();
+            return await _context.AgentApplications.Where(a => a.UserId == userId).OrderByDescending(a => a.SubmittedAt).ToListAsync();
         }
 
         public async Task<IEnumerable<AgentApplication>> GetPendingAsync()
@@ -28,14 +25,12 @@ namespace MoneyTransfer.Repositories.Implementations
 
         public async Task<AgentApplication?> GetByUserIdAndStatusAsync(string userId, ApplicationStatus status)
         {
-            return await _context.AgentApplications
-                .FirstOrDefaultAsync(a => a.UserId == userId && a.Status == status);
+            return await _context.AgentApplications.FirstOrDefaultAsync(a => a.UserId == userId && a.Status == status);
         }
 
         public async Task<bool> HasPendingApplicationAsync(string userId)
         {
-            return await _context.AgentApplications
-                .AnyAsync(a => a.UserId == userId && a.Status == ApplicationStatus.Pending);
+            return await _context.AgentApplications.AnyAsync(a => a.UserId == userId && a.Status == ApplicationStatus.Pending);
         }
     }
 }

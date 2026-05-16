@@ -1,219 +1,399 @@
 ﻿@model MoneyTransfer.ViewModels.TransactionViewModel
 @{
     ViewData["Title"] = "Transaction Details";
+    ViewBag.PageClass = "page-transactions";
+    var shareUrl = $"{Context.Request.Scheme}://{Context.Request.Host}/Transaction/Details/{Model.Id}";
 }
+
+<style>
+    @@media print {
+        .topbar, .sidebar, .page-header .btn-tp-secondary, .tx-details-review-box, .page-header button, .tx-action-bar {
+            display: none !important;
+        }
+
+        .app-wrapper {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .main-content {
+            margin-left: 0 !important;
+            padding: 20px !important;
+        }
+
+        .tp-card {
+            box-shadow: none !important;
+            border: 1px solid #ddd !important;
+        }
+    }
+
+    .tx-details-serial {
+        font-size: 13px;
+        color: var(--text-3);
+        margin-top: 4px;
+    }
+
+    .tx-details-amount-section {
+        text-align: center;
+        padding: 20px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .tx-details-avatar {
+        width: 80px;
+        height: 80px;
+        font-size: 28px;
+        margin: 0 auto 16px;
+    }
+
+    .tx-details-avatar-img {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .tx-details-party-name {
+        font-size: 16px;
+        color: var(--text-2);
+        margin-bottom: 12px;
+    }
+
+    .tx-details-amount-large {
+        font-size: 32px;
+        font-weight: 700;
+        margin-bottom: 12px;
+    }
+
+    .tx-details-status-wrapper {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .tx-details-status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+    }
+
+    .tx-details-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        padding: 24px;
+    }
+
+    .tx-details-info-section {
+        padding: 12px;
+        background: var(--surface-2);
+        border-radius: 12px;
+    }
+
+    .tx-details-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        color: var(--text-3);
+        margin-bottom: 6px;
+    }
+
+    .tx-details-value {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-1);
+    }
+
+    .tx-details-sub {
+        font-size: 11px;
+        color: var(--text-3);
+        margin-top: 4px;
+    }
+
+    .tx-details-value-normal {
+        font-size: 14px;
+    }
+
+    .tx-details-free-fee {
+        color: #00b894;
+    }
+
+    .tx-details-note {
+        padding: 16px 24px;
+        background: var(--surface-2);
+        border-top: 1px solid var(--border);
+        font-size: 13px;
+    }
+
+    .tx-details-review-box {
+        margin-top: 20px;
+    }
+
+    .tx-details-review-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .tx-details-review-icon {
+        font-size: 32px;
+    }
+
+    .tx-details-review-text {
+        flex: 1;
+    }
+
+    .tx-details-review-title {
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+
+    .tx-details-review-subtitle {
+        font-size: 12px;
+        color: var(--text-3);
+    }
+
+    .tx-details-review-btn {
+        white-space: nowrap;
+    }
+
+    .text-success {
+        color: #00b894 !important;
+    }
+
+    .tx-action-bar {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 16px;
+        padding: 0 24px 12px;
+    }
+
+    .tx-copy-btn {
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        color: var(--text-1);
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: var(--transition);
+    }
+
+        .tx-copy-btn:hover {
+            background: var(--teal-light);
+            color: var(--teal);
+            border-color: var(--teal);
+        }
+
+        .tx-copy-btn.copied {
+            color: var(--teal);
+            border-color: var(--teal);
+        }
+
+    .tx-category-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: var(--teal-light);
+        color: var(--teal-dark);
+        font-size: 12px;
+        font-weight: 600;
+        padding: 4px 12px;
+        border-radius: 20px;
+    }
+</style>
 
 <div class="row justify-content-center">
     <div class="col-md-7">
         <div class="page-header">
             <div>
                 <h2>Transaction Details</h2>
-                <p style="font-family:var(--font-mono);
-                           font-size:12px">
-                    @Model.SerialNumber
-                </p>
+                <p class="tx-details-serial">@Model.SerialNumber</p>
             </div>
-            <a asp-action="Index" class="btn-tp-secondary">
-                <i class="bi bi-arrow-left"></i> Back
-            </a>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button onclick="window.print()" class="btn-tp-secondary">
+                    <i class="bi bi-printer"></i> Print
+                </button>
+                <button onclick="shareReceipt()" class="btn-tp-secondary" id="shareBtn">
+                    <i class="bi bi-share"></i> Share
+                </button>
+                <a asp-action="Index" class="btn-tp-secondary">
+                    <i class="bi bi-arrow-left"></i> Back
+                </a>
+            </div>
         </div>
 
         <div class="tp-card">
-            <div style="text-align:center;
-                        padding:24px 0 20px;
-                        border-bottom:1px solid var(--border)">
-                <div class="tx-avatar @(Model.IsSent ? "sent" : "received")"
-                     style="width:60px;height:60px;
-                            font-size:22px;
-                            margin:0 auto 12px;
-                            @(!string.IsNullOrEmpty(Model.OtherPartyPictureUrl) ? "padding:0;overflow:hidden" : "")">
-                    @if (!string.IsNullOrEmpty(
-                                        Model.OtherPartyPictureUrl))
+            <div class="tx-details-amount-section">
+                <div class="tx-avatar tx-details-avatar @(Model.IsSent ? "sent" : "received")">
+                    @if (!string.IsNullOrEmpty(Model.OtherPartyPictureUrl))
                     {
-                        <img src="@Model.OtherPartyPictureUrl"
-                             style="width:100%;height:100%;
-                                        object-fit:cover" />
+                        <img src="@Model.OtherPartyPictureUrl" class="tx-details-avatar-img" />
                     }
                     else
                     {
                         @Model.OtherPartyInitials
                     }
                 </div>
-                <div style="font-size:16px;font-weight:600;
-                            color:var(--text-1);
-                            margin-bottom:6px">
-                    @(Model.IsSent ? "Sent to" : "Received from")
-                    @Model.OtherPartyName
+                <div class="tx-details-party-name">
+                    @(Model.IsSent ? "Sent to" : "Received from") @Model.OtherPartyName
                 </div>
-                <div style="font-size:34px;font-weight:800;
-                            letter-spacing:-0.5px"
-                     class="tx-amount @(Model.IsSent ? "sent" : "received")">
-                    @(Model.IsSent ? "−" : "+")@Model.CurrencySymbol@Model.Amount.ToString("N2")
+                <div class="tx-details-amount-large tx-amount @(Model.IsSent ? "sent" : "received")">
+                    @(Model.IsSent ? "−" : "+")@Model.Amount.ToString("N2") @Model.SenderCurrency
                 </div>
-                <div style="margin-top:8px;
-                            display:flex;justify-content:center;
-                            gap:8px">
-                    <span class="tx-status @Model.Status.ToLower()"
-                          style="font-size:12px;
-                                 padding:4px 12px">
+                <div class="tx-details-status-wrapper">
+                    <span class="tx-details-status-badge tx-status @Model.Status.ToLower()">
                         @Model.Status
                     </span>
                     @if (Model.FeeWaived)
                     {
-                        <span class="badge-tp success">
-                            Fee Waived 🎉
+                        <span class="badge-tp success">Fee Waived 🎉</span>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Category) && Model.Category != "General")
+                    {
+                        <span class="tx-category-pill">
+                            <i class="bi bi-tag"></i> @Model.Category
                         </span>
                     }
                 </div>
             </div>
 
-            <div style="display:grid;
-                        grid-template-columns:1fr 1fr;
-                        gap:16px;padding:20px 0">
-                <div>
-                    <div style="font-size:11px;
-                                color:var(--text-3);
-                                text-transform:uppercase;
-                                letter-spacing:.5px;
-                                font-weight:600">
-                        From
-                    </div>
-                    <div style="font-size:14px;font-weight:600;
-                                margin-top:3px">
-                        @Model.SenderName
-                    </div>
-                    <div style="font-size:12px;color:var(--text-3);
-                                font-family:var(--font-mono)">
-                        @Model.SenderWalletSerial
+            <div class="tx-action-bar">
+                <button class="tx-copy-btn" id="copySerial" onclick="copyText('@Model.SerialNumber', 'copySerial', 'Transaction ID copied')">
+                    <i class="bi bi-clipboard"></i> Copy Transaction ID
+                </button>
+                @if (!string.IsNullOrEmpty(Model.SenderWalletSerial))
+                {
+                    <button class="tx-copy-btn" id="copyWallet" onclick="copyText('@Model.SenderWalletSerial', 'copyWallet', 'Wallet serial copied')">
+                        <i class="bi bi-wallet2"></i> Copy Wallet Serial
+                    </button>
+                }
+            </div>
+
+            <div class="tx-details-grid">
+                <div class="tx-details-info-section">
+                    <div class="tx-details-label">From</div>
+                    <div class="tx-details-value">@Model.SenderName</div>
+                    <div class="tx-details-sub">@Model.SenderWalletSerial</div>
+                </div>
+                <div class="tx-details-info-section">
+                    <div class="tx-details-label">To</div>
+                    <div class="tx-details-value">@Model.ReceiverName</div>
+                    <div class="tx-details-sub">@Model.ReceiverWalletSerial</div>
+                </div>
+                <div class="tx-details-info-section">
+                    <div class="tx-details-label">Amount Sent</div>
+                    <div class="tx-details-value">@Model.Amount.ToString("N2") @Model.SenderCurrency</div>
+                </div>
+                <div class="tx-details-info-section">
+                    <div class="tx-details-label">Amount Received</div>
+                    <div class="tx-details-value">
+                        @(Model.ConvertedAmount > 0 ? $"{Model.ConvertedAmount.ToString("N2")} {Model.ReceiverCurrency}" : $"{Model.Amount.ToString("N2")} {Model.ReceiverCurrency}")
                     </div>
                 </div>
-                <div>
-                    <div style="font-size:11px;
-                                color:var(--text-3);
-                                text-transform:uppercase;
-                                letter-spacing:.5px;
-                                font-weight:600">
-                        To
-                    </div>
-                    <div style="font-size:14px;font-weight:600;
-                                margin-top:3px">
-                        @Model.ReceiverName
-                    </div>
-                    <div style="font-size:12px;color:var(--text-3);
-                                font-family:var(--font-mono)">
-                        @Model.ReceiverWalletSerial
-                    </div>
-                </div>
-                <div>
-                    <div style="font-size:11px;
-                                color:var(--text-3);
-                                text-transform:uppercase;
-                                letter-spacing:.5px;
-                                font-weight:600">
-                        Amount Sent
-                    </div>
-                    <div style="font-size:14px;font-weight:600;
-                                margin-top:3px">
-                        $@Model.Amount.ToString("N2")
-                        @Model.SenderCurrency
-                    </div>
-                </div>
-                <div>
-                    <div style="font-size:11px;
-                                color:var(--text-3);
-                                text-transform:uppercase;
-                                letter-spacing:.5px;
-                                font-weight:600">
-                        Amount Received
-                    </div>
-                    <div style="font-size:14px;font-weight:600;
-                                margin-top:3px">
-                        @(Model.ConvertedAmount > 0
-                                                ? Model.ConvertedAmount.ToString("N2")
-                                                : Model.Amount.ToString("N2"))
-                        @Model.ReceiverCurrency
-                    </div>
-                </div>
-                <div>
-                    <div style="font-size:11px;
-                                color:var(--text-3);
-                                text-transform:uppercase;
-                                letter-spacing:.5px;
-                                font-weight:600">
-                        Fee
-                    </div>
-                    <div style="font-size:14px;font-weight:600;
-                                margin-top:3px">
+                <div class="tx-details-info-section">
+                    <div class="tx-details-label">Fee</div>
+                    <div class="tx-details-value">
                         @if (Model.FeeWaived)
                         {
-                            <span style="color:var(--teal)">
-                                Free 🎉
-                            </span>
+                            <span class="tx-details-free-fee">Free 🎉</span>
                         }
                         else
                         {
-                            <span>
-                                $@Model.FeeAmount.ToString("N2")
-                            </span>
+                            <span>@Model.FeeAmount.ToString("N2") USD</span>
                         }
                     </div>
                 </div>
-                <div>
-                    <div style="font-size:11px;
-                                color:var(--text-3);
-                                text-transform:uppercase;
-                                letter-spacing:.5px;
-                                font-weight:600">
-                        Exchange Rate
-                    </div>
-                    <div style="font-size:14px;font-weight:600;
-                                margin-top:3px">
-                        @Model.ExchangeRateUsed.ToString("N4")
+                <div class="tx-details-info-section">
+                    <div class="tx-details-label">Exchange Rate</div>
+                    <div class="tx-details-value">1 @Model.SenderCurrency = @Model.ExchangeRateUsed.ToString("N4") @Model.ReceiverCurrency</div>
+                </div>
+                <div class="tx-details-info-section">
+                    <div class="tx-details-label">Type</div>
+                    <div class="tx-details-value-normal">
+                        <span class="badge-tp default">@Model.Type</span>
                     </div>
                 </div>
-                <div>
-                    <div style="font-size:11px;
-                                color:var(--text-3);
-                                text-transform:uppercase;
-                                letter-spacing:.5px;
-                                font-weight:600">
-                        Type
-                    </div>
-                    <div style="margin-top:3px">
-                        <span class="badge-tp default">
-                            @Model.Type
+                <div class="tx-details-info-section">
+                    <div class="tx-details-label">Category</div>
+                    <div class="tx-details-value-normal">
+                        <span class="tx-category-pill">
+                            <i class="bi bi-tag"></i> @(string.IsNullOrEmpty(Model.Category) ? "General" : Model.Category)
                         </span>
                     </div>
                 </div>
-                <div>
-                    <div style="font-size:11px;
-                                color:var(--text-3);
-                                text-transform:uppercase;
-                                letter-spacing:.5px;
-                                font-weight:600">
-                        Date
-                    </div>
-                    <div style="font-size:14px;font-weight:600;
-                                margin-top:3px">
-                        @Model.CreatedAt.ToString(
-                        "MMM dd, yyyy HH:mm")
-                    </div>
+                <div class="tx-details-info-section">
+                    <div class="tx-details-label">Date</div>
+                    <div class="tx-details-value">@Model.CreatedAt.ToString("MMM dd, yyyy HH:mm")</div>
                 </div>
             </div>
 
             @if (!string.IsNullOrEmpty(Model.Description))
             {
-                <div style="padding:14px;
-                                background:var(--surface-2);
-                                border-radius:var(--r-sm);
-                                font-size:13px;
-                                color:var(--text-2)">
-                    <strong style="color:var(--text-1)">
-                        Note:
-                    </strong>
-                    @Model.Description
+                <div class="tx-details-note">
+                    <strong>Note:</strong> @Model.Description
                 </div>
             }
         </div>
+
+        @if (Model.Status == "Completed" && Model.IsSent && Model.TransactionType != "CashIn")
+        {
+            <div class="tp-card mt-3 tx-details-review-box">
+                <div class="tx-details-review-content">
+                    <span class="tx-details-review-icon">⭐</span>
+                    <div class="tx-details-review-text">
+                        <div class="tx-details-review-title">How was this transfer?</div>
+                        <div class="tx-details-review-subtitle">Rate your experience</div>
+                    </div>
+                    <a asp-controller="Review" asp-action="Create" asp-route-transactionId="@Model.Id" class="btn-tp-primary tx-details-review-btn">
+                        Rate This Transfer
+                    </a>
+                </div>
+            </div>
+        }
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        var shareUrl = '@shareUrl';
+
+        function shareReceipt() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'CedarPay Receipt — @Model.SerialNumber',
+                    text: 'Transaction of @Model.Amount.ToString("N2") @Model.SenderCurrency — @Model.Status',
+                    url: shareUrl
+                }).catch(function() {});
+            } else {
+                navigator.clipboard.writeText(shareUrl).then(function() {
+                    var btn = document.getElementById('shareBtn');
+                    btn.innerHTML = '<i class="bi bi-check-lg"></i> Link Copied!';
+                    setTimeout(function() {
+                        btn.innerHTML = '<i class="bi bi-share"></i> Share';
+                    }, 2000);
+                });
+            }
+        }
+
+        function copyText(text, btnId, label) {
+            navigator.clipboard.writeText(text).then(function() {
+                var btn = document.getElementById(btnId);
+                var original = btn.innerHTML;
+                btn.innerHTML = '<i class="bi bi-check-lg"></i> ' + label;
+                btn.classList.add('copied');
+                setTimeout(function() {
+                    btn.innerHTML = original;
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+    </script>
+}

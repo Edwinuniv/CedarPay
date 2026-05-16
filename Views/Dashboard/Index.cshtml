@@ -1,74 +1,523 @@
 ﻿@model MoneyTransfer.ViewModels.DashboardViewModel
 @{
     ViewData["Title"] = "Dashboard";
+    ViewBag.PageClass = "page-dashboard";
+    bool isAdmin = User.IsInRole("Admin");
+    bool isAgent = User.IsInRole("Agent");
 }
 
-<div style="margin-bottom:24px">
-    <h2 style="font-size:22px;font-weight:800;color:var(--text-1);letter-spacing:-0.4px">
+<style>
+    .welcome-section {
+        margin-bottom: 24px;
+    }
+
+    .welcome-title {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+
+    .welcome-subtitle {
+        color: var(--text-3);
+        font-size: 14px;
+    }
+
+    .panel-nav {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+    }
+
+    .panel-card {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 20px;
+        border-radius: 16px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        background: var(--bg-1);
+        border: 1px solid var(--border);
+    }
+
+        .panel-card.admin {
+            background: linear-gradient(135deg, rgba(108, 99, 255, 0.1), rgba(108, 99, 255, 0.05));
+            border-left: 4px solid #6c63ff;
+        }
+
+        .panel-card.agent {
+            background: linear-gradient(135deg, rgba(0, 184, 148, 0.1), rgba(0, 184, 148, 0.05));
+            border-left: 4px solid #00b894;
+        }
+
+        .panel-card i:first-child {
+            font-size: 32px;
+        }
+
+        .panel-card.admin i:first-child {
+            color: #6c63ff;
+        }
+
+        .panel-card.agent i:first-child {
+            color: #00b894;
+        }
+
+    .panel-title {
+        font-weight: 700;
+        font-size: 16px;
+        color: var(--text-1);
+    }
+
+    .panel-desc {
+        font-size: 12px;
+        color: var(--text-3);
+        margin-top: 2px;
+    }
+
+    .panel-arrow {
+        margin-left: auto;
+        color: var(--text-3);
+        font-size: 20px;
+    }
+
+    .stat-card {
+        background: var(--bg-1);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 20px;
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+
+        .stat-card:hover {
+            border-color: var(--cedar-gold);
+            transform: translateY(-2px);
+        }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        margin-bottom: 12px;
+    }
+
+        .stat-icon.sent {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+
+        .stat-icon.received {
+            background: rgba(0, 184, 148, 0.1);
+            color: #00b894;
+        }
+
+        .stat-icon.beneficiaries {
+            background: rgba(108, 99, 255, 0.1);
+            color: #6c63ff;
+        }
+
+    .stat-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--text-1);
+    }
+
+    .stat-label {
+        font-size: 13px;
+        color: var(--text-3);
+        margin-top: 4px;
+    }
+
+    .stat-sub {
+        font-size: 11px;
+        margin-top: 6px;
+    }
+
+    .stat-sub-teal {
+        color: var(--teal);
+    }
+
+    .balance-card {
+        background: linear-gradient(135deg, var(--teal) 0%, #00a884 100%);
+        border-radius: 20px;
+        padding: 24px;
+        color: white;
+        height: 100%;
+    }
+
+    .balance-label {
+        font-size: 14px;
+        opacity: 0.8;
+        margin-bottom: 8px;
+    }
+
+    .balance-amount {
+        font-size: 36px;
+        font-weight: 700;
+        margin-bottom: 16px;
+    }
+
+        .balance-amount .decimals {
+            font-size: 20px;
+            font-weight: 500;
+        }
+
+    .balance-account, .balance-wallet {
+        font-size: 12px;
+        opacity: 0.7;
+        margin-bottom: 4px;
+    }
+
+    .currency-pills-container {
+        display: flex;
+        gap: 8px;
+        margin-top: 16px;
+        flex-wrap: wrap;
+    }
+
+    .currency-pill {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        padding: 6px 14px;
+        border-radius: 30px;
+        font-size: 13px;
+        font-weight: 600;
+        color: white;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+        .currency-pill.active {
+            background: rgba(255, 255, 255, 0.35);
+            transform: scale(1.05);
+        }
+
+        .currency-pill:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+    .quick-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        padding: 4px;
+    }
+
+    .quick-action {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 16px;
+        background: var(--bg-2);
+        border-radius: 16px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+        .quick-action:hover {
+            transform: translateY(-4px);
+            background: var(--bg-1);
+            border-color: var(--cedar-gold);
+        }
+
+    .qa-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+
+        .qa-icon.send {
+            background: rgba(0, 184, 148, 0.1);
+            color: #00b894;
+        }
+
+        .qa-icon.topup {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+        }
+
+        .qa-icon.wallet {
+            background: rgba(108, 99, 255, 0.1);
+            color: #6c63ff;
+        }
+
+        .qa-icon.rate {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+
+    .qa-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-1);
+    }
+
+    .tx-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .tx-item {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 12px;
+        background: var(--bg-2);
+        border-radius: 12px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+        .tx-item:hover {
+            background: var(--bg-1);
+            transform: translateX(4px);
+        }
+
+    .tx-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+
+        .tx-avatar.sent {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+
+        .tx-avatar.received {
+            background: rgba(0, 184, 148, 0.1);
+            color: #00b894;
+        }
+
+    .tx-info {
+        flex: 1;
+    }
+
+    .tx-name {
+        font-weight: 600;
+        color: var(--text-1);
+        margin-bottom: 4px;
+    }
+
+    .tx-meta {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .tx-right {
+        text-align: right;
+        flex-shrink: 0;
+    }
+
+    .tx-amount {
+        font-weight: 700;
+        font-size: 16px;
+    }
+
+        .tx-amount.sent {
+            color: #dc3545;
+        }
+
+        .tx-amount.received {
+            color: #00b894;
+        }
+
+    .tx-status {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-size: 10px;
+        font-weight: 500;
+    }
+
+        .tx-status.completed {
+            background: rgba(0, 184, 148, 0.1);
+            color: #00b894;
+        }
+
+        .tx-status.pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+        }
+
+        .tx-status.failed {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+
+    .wallet-card {
+        padding: 16px;
+        background: var(--bg-2);
+        border-radius: 12px;
+        transition: all 0.2s ease;
+    }
+
+        .wallet-card.default {
+            border-left: 3px solid var(--teal);
+            background: var(--bg-1);
+        }
+
+    .wallet-currency {
+        font-weight: 700;
+        font-size: 14px;
+        color: var(--cedar-gold);
+    }
+
+    .wallet-balance {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-1);
+        margin: 8px 0;
+    }
+
+    .wallet-serial {
+        font-size: 11px;
+        color: var(--text-3);
+        font-family: monospace;
+    }
+
+    .add-funds-btn {
+        width: 100%;
+        margin-top: 12px;
+        text-align: center;
+    }
+
+    .wallets-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 12px;
+        padding: 0 20px 20px;
+    }
+</style>
+
+<div class="welcome-section">
+    <h2 class="welcome-title">
         Good @(DateTime.Now.Hour < 12 ? "Morning" : DateTime.Now.Hour < 17 ? "Afternoon" : "Evening"),
         @Model.FullName.Split(' ')[0] 👋
     </h2>
-    <p style="font-size:13px;color:var(--text-3);margin-top:3px">
+    <p class="welcome-subtitle">
         Here's what's happening with your account today.
     </p>
 </div>
 
-<div class="row g-3 mb-3">
+@if (isAdmin || isAgent)
+{
+    <div class="panel-nav">
+        @if (isAdmin)
+        {
+            <a asp-controller="Admin" asp-action="Index" class="panel-card admin">
+                <i class="bi bi-shield-fill-check"></i>
+                <div>
+                    <div class="panel-title">Admin Panel</div>
+                    <div class="panel-desc">Manage platform</div>
+                </div>
+                <i class="bi bi-arrow-right-circle-fill panel-arrow"></i>
+            </a>
+        }
+        @if (isAgent)
+        {
+            <a asp-controller="Agent" asp-action="Dashboard" class="panel-card agent">
+                <i class="bi bi-shop-window"></i>
+                <div>
+                    <div class="panel-title">Agent Panel</div>
+                    <div class="panel-desc">Manage your store</div>
+                </div>
+                <i class="bi bi-arrow-right-circle-fill panel-arrow"></i>
+            </a>
+        }
+    </div>
+}
 
+@if (isAdmin)
+{
+    <div class="row g-3 mb-3">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon beneficiaries"><i class="bi bi-people-fill"></i></div>
+                <div class="stat-value">@ViewBag.TotalUsers</div>
+                <div class="stat-label">Total Users</div>
+                <div class="stat-sub stat-sub-teal">registered accounts</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon received"><i class="bi bi-shop-window"></i></div>
+                <div class="stat-value">@ViewBag.TotalAgents</div>
+                <div class="stat-label">Active Agents</div>
+                <div class="stat-sub">@ViewBag.PendingAgents pending</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon sent"><i class="bi bi-receipt"></i></div>
+                <div class="stat-value">@ViewBag.TotalTransactions</div>
+                <div class="stat-label">All Transactions</div>
+                <div class="stat-sub">platform-wide</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon sent"><i class="bi bi-wallet2"></i></div>
+                <div class="stat-value">@ViewBag.PendingWallets</div>
+                <div class="stat-label">Pending Wallets</div>
+                <div class="stat-sub">awaiting approval</div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row g-3 mb-3">
     <div class="col-lg-4">
         <div class="balance-card h-100">
             <div class="balance-label">Available Balance</div>
-
             @{
-                var activeWallet = Model.Wallets
-                .FirstOrDefault(w => w.IsDefault)
-                ?? Model.Wallets.FirstOrDefault();
+                var activeWallet = Model.Wallets.FirstOrDefault(w => w.IsDefault) ?? Model.Wallets.FirstOrDefault();
             }
-
             <div class="balance-amount">
                 @if (activeWallet != null)
                 {
                     var wholePart = (long)activeWallet.Balance;
-                    var decPart = (int)Math.Round(
-                    (activeWallet.Balance - wholePart) * 100);
-                    <text>
-                        @activeWallet.CurrencySymbol@wholePart.ToString("N0")<span class="decimals">.@decPart.ToString("00")</span>
-                    </text>
+                    var decPart = (int)Math.Round((activeWallet.Balance - wholePart) * 100);
+                    <text>@activeWallet.CurrencySymbol@wholePart.ToString("N0")<span class="decimals">.@decPart.ToString("00")</span></text>
                 }
                 else
                 {
                     <text>$0<span class="decimals">.00</span></text>
                 }
             </div>
-
-            <div style="font-size:11px;opacity:.75;
-                        font-family:var(--font-mono);
-                        letter-spacing:.4px;margin-top:6px">
+            <div class="balance-account">
                 Account: @Model.AccountSerial
             </div>
-            <div style="font-size:11px;opacity:.65;
-                        font-family:var(--font-mono);
-                        letter-spacing:.4px;margin-top:2px">
-                Wallet:
-                @(activeWallet?.SerialNumber ?? "—")
+            <div class="balance-wallet">
+                Wallet: @(activeWallet?.SerialNumber ?? "—")
             </div>
-
-            <div class="currency-pills" style="margin-top:14px">
+            <div class="currency-pills-container">
                 @foreach (var w in Model.Wallets)
                 {
-                    <form asp-controller="Dashboard"
-                          asp-action="SetDefaultWallet"
-                          method="post"
-                          style="display:inline;margin:0">
+                    <form asp-controller="Dashboard" asp-action="SetDefaultWallet" method="post" style="display:inline;margin:0">
                         @Html.AntiForgeryToken()
-                        <input type="hidden" name="walletId"
-                               value="@w.Id" />
-                        <button type="submit"
-                                class="currency-pill @(w.IsDefault ? "active" : "")"
-                                style="background:transparent;
-                                           border:1.5px solid rgba(255,255,255,@(w.IsDefault ? "1" : "0.45"));
-                                           cursor:pointer;font-weight:700;
-                                           color:rgba(255,255,255,@(w.IsDefault ? "1" : "0.8"))">
+                        <input type="hidden" name="walletId" value="@w.Id" />
+                        <button type="submit" class="currency-pill currency-pill-btn @(w.IsDefault ? "active" : "")">
                             @w.CurrencyCode
                         </button>
                     </form>
@@ -81,73 +530,45 @@
         <div class="row g-3">
             <div class="col-md-4">
                 <div class="stat-card">
-                    <div class="stat-icon sent">
-                        <i class="bi bi-arrow-up-right"></i>
-                    </div>
+                    <div class="stat-icon sent"><i class="bi bi-arrow-up-right"></i></div>
                     <div class="stat-value">$@Model.TotalSent.ToString("N0")</div>
                     <div class="stat-label">Total Sent</div>
-                    <div class="stat-sub">
-                        <i class="bi bi-arrow-up"></i>
-                        @Model.SentThisMonth this month
-                    </div>
+                    <div class="stat-sub"><i class="bi bi-arrow-up"></i> @Model.SentThisMonth this month</div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="stat-card">
-                    <div class="stat-icon received">
-                        <i class="bi bi-arrow-down-left"></i>
-                    </div>
+                    <div class="stat-icon received"><i class="bi bi-arrow-down-left"></i></div>
                     <div class="stat-value">$@Model.TotalReceived.ToString("N0")</div>
                     <div class="stat-label">Total Received</div>
-                    <div class="stat-sub">
-                        <i class="bi bi-arrow-up"></i>
-                        @Model.ReceivedThisMonth this month
-                    </div>
+                    <div class="stat-sub"><i class="bi bi-arrow-up"></i> @Model.ReceivedThisMonth this month</div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="stat-card">
-                    <div class="stat-icon beneficiaries">
-                        <i class="bi bi-people-fill"></i>
-                    </div>
+                    <div class="stat-icon beneficiaries"><i class="bi bi-people-fill"></i></div>
                     <div class="stat-value">@Model.ActiveBeneficiaries</div>
                     <div class="stat-label">Beneficiaries</div>
-                    <div class="stat-sub neutral">
-                        <i class="bi bi-globe"></i>
-                        @Model.BeneficiaryCountries countries
-                    </div>
+                    <div class="stat-sub"><i class="bi bi-globe"></i> @Model.BeneficiaryCountries countries</div>
                 </div>
             </div>
-
             <div class="col-12">
-                <div class="tp-card" style="padding:16px 20px">
-                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
-                        <a asp-controller="Transfer" asp-action="Create"
-                           class="quick-action">
-                            <div class="qa-icon send">
-                                <i class="bi bi-send-fill"></i>
-                            </div>
+                <div class="tp-card">
+                    <div class="quick-actions-grid">
+                        <a asp-controller="Transfer" asp-action="Create" class="quick-action">
+                            <div class="qa-icon send"><i class="bi bi-send-fill"></i></div>
                             <span class="qa-label">Send Money</span>
                         </a>
-                        <a asp-controller="TopUp" asp-action="Create"
-                           class="quick-action">
-                            <div class="qa-icon topup">
-                                <i class="bi bi-plus-circle-fill"></i>
-                            </div>
+                        <a asp-controller="TopUp" asp-action="Create" class="quick-action">
+                            <div class="qa-icon topup"><i class="bi bi-plus-circle-fill"></i></div>
                             <span class="qa-label">Top Up</span>
                         </a>
-                        <a asp-controller="Wallet" asp-action="Index"
-                           class="quick-action">
-                            <div class="qa-icon wallet">
-                                <i class="bi bi-wallet2"></i>
-                            </div>
+                        <a asp-controller="Wallet" asp-action="Index" class="quick-action">
+                            <div class="qa-icon wallet"><i class="bi bi-wallet2"></i></div>
                             <span class="qa-label">My Wallets</span>
                         </a>
-                        <a asp-controller="Beneficiary" asp-action="Index"
-                           class="quick-action">
-                            <div class="qa-icon rate">
-                                <i class="bi bi-people-fill"></i>
-                            </div>
+                        <a asp-controller="Beneficiary" asp-action="Index" class="quick-action">
+                            <div class="qa-icon rate"><i class="bi bi-people-fill"></i></div>
                             <span class="qa-label">Beneficiaries</span>
                         </a>
                     </div>
@@ -157,121 +578,159 @@
     </div>
 </div>
 
-<div class="row g-3">
+<div class="tp-card mb-3">
+    <div class="tp-card-header">
+        <span class="tp-card-title">
+            <i class="bi bi-clock-history"></i> Recent Transactions
+        </span>
+        <a asp-controller="Transaction" asp-action="Index" class="btn-tp-secondary" style="font-size:12px;padding:4px 12px">
+            View All
+        </a>
+    </div>
 
-    <div class="col-lg-8">
-        <div class="tp-card">
-            <div class="tp-card-header">
-                <span class="tp-card-title">
-                    <i class="bi bi-clock-history" style="color:var(--teal);margin-right:6px"></i>
-                    Recent Transactions
-                </span>
-                <a asp-controller="Transaction" asp-action="Index"
-                   class="tp-card-link">View all →</a>
-            </div>
-
-            @if (!Model.RecentTransactions.Any())
+    @if (!Model.RecentTransactions.Any())
+    {
+        <div class="empty-state" style="padding:48px 20px;text-align:center">
+            <i class="bi bi-receipt" style="font-size:36px;color:var(--text-3);display:block;margin-bottom:10px"></i>
+            <p>No transactions yet.</p>
+            <a asp-controller="Transfer" asp-action="Create" class="btn-tp-primary mt-2">
+                <i class="bi bi-send-fill"></i> Send Your First Transfer
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="tx-list" style="padding:0 20px 20px">
+            @foreach (var t in Model.RecentTransactions)
             {
-                <div class="empty-state">
-                    <i class="bi bi-receipt"></i>
-                    <p>No transactions yet. Make your first transfer!</p>
-                    <a asp-controller="Transfer" asp-action="Create"
-                       class="btn-tp-primary">
-                        <i class="bi bi-send"></i> Send Money
-                    </a>
-                </div>
-            }
-            else
-            {
-                @foreach (var tx in Model.RecentTransactions)
-                {
-                    <div class="transaction-item">
-                        <div class="tx-avatar @(tx.IsSent ? "sent" : "received")"
-                             style="@(!string.IsNullOrEmpty(tx.ReceiverPictureUrl) ? "padding:0;overflow:hidden" : "")">
-                            @if (!string.IsNullOrEmpty(tx.ReceiverPictureUrl))
-                            {
-                                <img src="@tx.ReceiverPictureUrl"
-                                     style="width:100%;height:100%;object-fit:cover;border-radius:var(--r-sm)" />
-                            }
-                            else
-                            {
-                                @tx.ReceiverInitials
-                            }
-                        </div>
-                        <div class="tx-info">
-                            <div class="tx-name">@tx.ReceiverName</div>
-                            <div class="tx-date">
-                                @tx.CreatedAt.ToString("MMM dd, yyyy")
-                                <span class="tx-status @tx.Status.ToLower()">
-                                    @tx.Status
-                                </span>
-                            </div>
-                        </div>
-                        <div style="text-align:right">
-                            <div class="tx-amount @(tx.IsSent ? "sent" : "received")">
-                                @(tx.IsSent ? "−" : "+")@tx.CurrencySymbol@tx.Amount.ToString("N2")
-                            </div>
-                            <a asp-controller="Transaction" asp-action="Details"
-                               asp-route-id="@tx.Id"
-                               style="font-size:11px;color:var(--teal);text-decoration:none">
-                                Details
-                            </a>
+                <a asp-controller="Transaction" asp-action="Details" asp-route-id="@t.Id" class="tx-item">
+                    <div class="tx-avatar @(t.IsSent ? "sent" : "received")">
+                        @if (!string.IsNullOrEmpty(t.ReceiverPictureUrl))
+                        {
+                            <img src="@t.ReceiverPictureUrl" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />
+                        }
+                        else
+                        {
+                            @t.ReceiverInitials
+                        }
+                    </div>
+                    <div class="tx-info">
+                        <div class="tx-name">@t.ReceiverName</div>
+                        <div class="tx-meta">
+                            <span class="badge-tp default" style="font-size:10px">@t.Type</span>
+                            <span style="color:var(--text-3);font-size:11px">@t.CreatedAt.ToString("MMM dd, HH:mm")</span>
                         </div>
                     </div>
-                }
-            }
-        </div>
-    </div>
-
-    <div class="col-lg-4">
-        <div class="tp-card">
-            <div class="tp-card-header">
-                <span class="tp-card-title">
-                    <i class="bi bi-wallet2" style="color:var(--teal);margin-right:6px"></i>
-                    My Wallets
-                </span>
-                <a asp-controller="Wallet" asp-action="Create"
-                   class="tp-card-link">+ New</a>
-            </div>
-
-            @if (!Model.Wallets.Any())
-            {
-                <div class="empty-state">
-                    <i class="bi bi-wallet2"></i>
-                    <p>No wallets yet</p>
-                    <a asp-controller="Wallet" asp-action="Create"
-                       class="btn-tp-primary" style="font-size:12px;padding:8px 16px">
-                        Create Wallet
-                    </a>
-                </div>
-            }
-            else
-            {
-                <div class="d-flex flex-column gap-2">
-                    @foreach (var w in Model.Wallets)
-                    {
-                        <div class="wallet-card @(w.IsDefault ? "default" : "")">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="wallet-currency">@w.CurrencyCode</div>
-                                @if (w.IsDefault)
-                                {
-                                    <span class="badge-tp success"
-                                          style="font-size:10px">Default</span>
-                                }
-                            </div>
-                            <div class="wallet-balance">
-                                @w.CurrencySymbol@w.Balance.ToString("N2")
-                            </div>
-                            <div class="wallet-serial">@w.SerialNumber</div>
+                    <div class="tx-right">
+                        <div class="tx-amount @(t.IsSent ? "sent" : "received")">
+                            @(t.IsSent ? "−" : "+")@t.CurrencySymbol@t.Amount.ToString("N2")
                         </div>
-                    }
-                    <a asp-controller="TopUp" asp-action="Create"
-                       class="btn-tp-primary"
-                       style="justify-content:center;font-size:12px;padding:9px">
-                        <i class="bi bi-plus-circle"></i> Add Funds
-                    </a>
-                </div>
+                        <span class="tx-status @t.Status.ToLower()">@t.Status</span>
+                        <div style="font-size:10px;color:var(--text-3);font-family:monospace">@t.SerialNumber</div>
+                    </div>
+                </a>
             }
         </div>
+        <div style="padding:12px 20px;border-top:1px solid var(--border);text-align:center">
+            <a asp-controller="Transaction" asp-action="Index" style="font-size:13px;color:var(--teal);text-decoration:none;font-weight:600">
+                View all transactions <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    }
+</div>
+
+
+
+<div class="row g-3 mb-3">
+    <div class="col-md-4">
+        <a asp-controller="ScheduledTransfer" asp-action="Index" class="tp-card d-block dash-feature-card" style="text-decoration:none;transition:var(--transition)">
+            <div class="dash-feature-icon" style="background:rgba(0,184,148,0.1);color:var(--teal)">
+                <i class="bi bi-calendar-check-fill"></i>
+            </div>
+            <div class="dash-feature-body">
+                <div class="dash-feature-title">Scheduled Transfers</div>
+                <div class="dash-feature-desc">Set up recurring or future-dated payments automatically</div>
+            </div>
+            <i class="bi bi-arrow-right dash-feature-arrow"></i>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a asp-controller="Referral" asp-action="Index" class="tp-card d-block dash-feature-card" style="text-decoration:none;transition:var(--transition)">
+            <div class="dash-feature-icon" style="background:rgba(244,168,32,0.1);color:#f4a820">
+                <i class="bi bi-gift-fill"></i>
+            </div>
+            <div class="dash-feature-body">
+                <div class="dash-feature-title">Referral Program</div>
+                <div class="dash-feature-desc">Invite friends and earn rewards when they join CedarPay</div>
+            </div>
+            <i class="bi bi-arrow-right dash-feature-arrow"></i>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a asp-controller="ActivityLog" asp-action="Index" class="tp-card d-block dash-feature-card" style="text-decoration:none;transition:var(--transition)">
+            <div class="dash-feature-icon" style="background:rgba(108,99,255,0.1);color:#6c63ff">
+                <i class="bi bi-shield-check"></i>
+            </div>
+            <div class="dash-feature-body">
+                <div class="dash-feature-title">Activity Log</div>
+                <div class="dash-feature-desc">Review your recent account actions and security events</div>
+            </div>
+            <i class="bi bi-arrow-right dash-feature-arrow"></i>
+        </a>
     </div>
 </div>
+
+<style>
+    .dash-feature-card {
+        display: flex !important;
+        align-items: center;
+        gap: 14px;
+        padding: 16px 20px;
+        color: var(--text-1);
+    }
+
+        .dash-feature-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+    .dash-feature-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+
+    .dash-feature-body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .dash-feature-title {
+        font-weight: 700;
+        font-size: 14px;
+        margin-bottom: 3px;
+    }
+
+    .dash-feature-desc {
+        font-size: 12px;
+        color: var(--text-3);
+        line-height: 1.4;
+    }
+
+    .dash-feature-arrow {
+        color: var(--text-3);
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+
+    .dash-feature-card:hover .dash-feature-arrow {
+        color: var(--teal);
+    }
+</style>
+
+<partial name="_CultureTip" />

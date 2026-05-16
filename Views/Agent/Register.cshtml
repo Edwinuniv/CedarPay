@@ -1,36 +1,40 @@
 ﻿@model MoneyTransfer.Models.Agent
 @{
-    ViewData["Title"] = "Register as Agent";
+    ViewData["Title"] = "Register New Store";
+    ViewBag.PageClass = "page-agent";
 }
 
 <div class="row justify-content-center">
     <div class="col-md-7">
         <div class="page-header">
             <div>
-                <h2>Register as Agent</h2>
-                <p>Submit your store for admin approval</p>
+                <h2>Register New Store</h2>
+                <p>Add another agent store location</p>
             </div>
+            <a asp-action="Dashboard" class="btn-tp-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
         </div>
         <div class="tp-card">
-            <form asp-action="Store" method="post" class="tp-form">
-
+            <form asp-action="Register" method="post" class="tp-form">
+                @Html.AntiForgeryToken()
                 <div class="row g-3">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">Agent Name</label>
+                            <label class="form-label">Store Name *</label>
+                            <input asp-for="StoreName" class="form-control" placeholder="My Store" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Agent Name *</label>
                             <input asp-for="AgentName" class="form-control" />
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">Store Name</label>
-                            <input asp-for="StoreName" class="form-control" />
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="form-label">Phone Number</label>
-                            <input asp-for="PhoneNumber" class="form-control" />
+                            <label class="form-label">Phone *</label>
+                            <input asp-for="PhoneNumber" class="form-control" placeholder="+961..." />
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -41,43 +45,40 @@
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">City</label>
-                            <input asp-for="City" class="form-control" />
+                            <label class="form-label">City *</label>
+                            <input asp-for="City" class="form-control" placeholder="Beirut" />
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">Country</label>
-                            <input asp-for="Country" class="form-control" />
+                            <label class="form-label">Country *</label>
+                            <input asp-for="Country" class="form-control" placeholder="Lebanon" />
                         </div>
                     </div>
-                    <div class="col-12">
+                    <div class="col-md-8">
                         <div class="form-group">
-                            <label class="form-label">Street Address</label>
+                            <label class="form-label">Street</label>
                             <input asp-for="Street" class="form-control" />
                         </div>
                     </div>
-                    <div class="col-12">
+                    <div class="col-md-4">
                         <div class="form-group">
                             <label class="form-label">Working Hours</label>
-                            <input asp-for="WorkingHours" class="form-control"
-                                   placeholder="e.g. Mon-Fri 9AM-6PM" />
+                            <input asp-for="WorkingHours" class="form-control" placeholder="Mon-Fri 9-6" />
                         </div>
                     </div>
                     <div class="col-12">
                         <div class="form-group">
                             <label class="form-label">Description</label>
-                            <textarea asp-for="Description" class="form-control"
-                                      rows="2" style="resize:vertical"></textarea>
+                            <textarea asp-for="Description" class="form-control" rows="2"></textarea>
                         </div>
                     </div>
                 </div>
-
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 mt-2">
                     <button type="submit" class="btn-tp-primary">
-                        <i class="bi bi-send"></i> Submit for Approval
+                        <i class="bi bi-shop"></i> Register Store
                     </button>
-                    <a asp-action="Index" class="btn-tp-secondary">Cancel</a>
+                    <a asp-action="Dashboard" class="btn-tp-secondary">Cancel</a>
                 </div>
             </form>
         </div>

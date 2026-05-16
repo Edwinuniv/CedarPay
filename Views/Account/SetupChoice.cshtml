@@ -1,75 +1,50 @@
 ﻿@{
-    ViewData["Title"] = "Welcome to CedarPay";
+    ViewData["Title"] = "Complete Your Setup";
     Layout = "/Views/Shared/_Layout.cshtml";
+    ViewBag.PageClass = "page-dashboard";
 }
 
-<div style="min-height:calc(100vh - 140px);
-            display:flex;align-items:center;
-            justify-content:center;padding:40px 20px">
-    <div style="width:100%;max-width:500px;
-                text-align:center">
+<div class="setup-container">
+    <div class="setup-card">
 
-        <!-- Cedar tree welcome -->
-        <div style="margin-bottom:32px">
-            <svg viewBox="0 0 80 80"
-                 width="80" height="80"
-                 style="margin:0 auto 16px;display:block">
-                <circle cx="40" cy="40" r="40"
-                        fill="#e8faf5" />
-                <rect x="36" y="52" width="8" height="16"
-                      fill="#2d5a27" opacity=".8" />
-                <polygon points="10,58 40,22 70,58"
-                         fill="#2d5a27" opacity=".7" />
-                <polygon points="16,48 40,16 64,48"
-                         fill="#2d5a27" opacity=".85" />
-                <polygon points="22,38 40,10 58,38"
-                         fill="#2d5a27" />
+        <div class="setup-logo">
+            <svg viewBox="0 0 80 80" width="80" height="80" class="setup-svg">
+                <circle cx="40" cy="40" r="40" fill="#e8faf5" />
+                <rect x="36" y="52" width="8" height="16" fill="#2d5a27" opacity=".8" />
+                <polygon points="10,58 40,22 70,58" fill="#2d5a27" opacity=".7" />
+                <polygon points="16,48 40,16 64,48" fill="#2d5a27" opacity=".85" />
+                <polygon points="22,38 40,10 58,38" fill="#2d5a27" />
             </svg>
-            <h1 style="font-size:26px;font-weight:800;
-                       color:var(--text-1);
-                       letter-spacing:-0.5px;margin:0">
-                Welcome to Cedar<span style="color:var(--teal)">Pay</span>!
+            <h1 class="setup-title">
+                Welcome to Cedar<span>Pay</span>!
             </h1>
-            <p style="font-size:14px;color:var(--text-3);
-                      margin-top:8px">
-                Your account has been created.
-                Would you like to complete your profile now?
+            <p class="setup-subtitle">
+                Let's get your account ready. Would you like to complete your profile now?
             </p>
         </div>
 
-        <div style="display:flex;flex-direction:column;
-                    gap:14px">
-            <!-- Setup now -->
+        <div class="setup-buttons">
             <a asp-controller="Account"
                asp-action="Profile"
                asp-route-edit="true"
-               class="btn-tp-primary"
-               style="justify-content:center;
-                      padding:16px;font-size:15px;
-                      border-radius:var(--r-lg)">
+               class="btn-tp-primary setup-btn-primary">
                 <i class="bi bi-person-fill"></i>
                 Complete Profile Now
             </a>
 
-            <!-- Setup later -->
             <a asp-controller="Dashboard"
                asp-action="Index"
-               class="btn-tp-secondary"
-               style="justify-content:center;
-                      padding:16px;font-size:15px;
-                      border-radius:var(--r-lg);
-                      color:var(--text-2)">
+               class="btn-tp-secondary setup-btn-secondary">
                 <i class="bi bi-skip-end"></i>
-                Skip for Now
+                Set Up Later
             </a>
         </div>
 
-        <p style="font-size:12px;color:var(--text-3);
-                  margin-top:20px">
-            You can complete your profile anytime
-            from the Profile page.
-            A complete profile is required to
-            create wallets and send money.
-        </p>
+        <div class="setup-footer">
+            <p>
+                ⚡ A complete profile is required to create wallets and send money.<br />
+                You can complete your profile anytime from the Profile page.
+            </p>
+        </div>
     </div>
 </div>
