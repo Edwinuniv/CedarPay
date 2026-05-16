@@ -17,14 +17,7 @@ namespace MoneyTransfer.Controllers
         private readonly IWalletRepository _walletRepository;
         private readonly ApplicationDbContext _context;
 
-        public FinanceController(
-            ITransactionRepository transactionRepository,
-            ITopUpRepository topUpRepository,
-            IWalletRepository walletRepository,
-            ApplicationDbContext context,
-            UserManager<User> userManager,
-            IUserRepository userRepository)
-            : base(userManager, userRepository)
+        public FinanceController(ITransactionRepository transactionRepository, ITopUpRepository topUpRepository, IWalletRepository walletRepository, ApplicationDbContext context, UserManager<User> userManager, IUserRepository userRepository): base(userManager, userRepository)
         {
             _transactionRepository = transactionRepository;
             _topUpRepository = topUpRepository;
@@ -104,7 +97,6 @@ namespace MoneyTransfer.Controllers
             return View(vm);
         }
 
-        // ✅ Excel export with native bar chart
         public async Task<IActionResult> ExportExcel(int? walletId)
         {
             var userId = _userManager.GetUserId(User);
@@ -125,7 +117,6 @@ namespace MoneyTransfer.Controllers
             var code = selectedWallet?.Currency?.Code ?? "USD";
             var sym = selectedWallet?.Currency?.Symbol ?? "$";
 
-            // Build last-6-months data
             var months = new List<(string Label, decimal Sent, decimal Received, decimal TopUp)>();
             for (int i = 5; i >= 0; i--)
             {
@@ -140,12 +131,8 @@ namespace MoneyTransfer.Controllers
 
             using var wb = new XLWorkbook();
 
-            // ──────────────────────────────────────────────────────────
-            // SHEET 1: Summary + Chart data
-            // ──────────────────────────────────────────────────────────
             var wsSum = wb.Worksheets.Add("Summary");
 
-            // Header
             wsSum.Cell("A1").Value = "CedarPay Financial Report";
             wsSum.Cell("A1").Style.Font.Bold = true;
             wsSum.Cell("A1").Style.Font.FontSize = 18;
@@ -157,7 +144,6 @@ namespace MoneyTransfer.Controllers
             wsSum.Cell("A3").Style.Font.FontColor = XLColor.Gray;
             wsSum.Cell("A3").Style.Font.FontSize = 10;
 
-            // Summary KPIs table
             wsSum.Cell("A5").Value = "Summary Statistics";
             wsSum.Cell("A5").Style.Font.Bold = true;
             wsSum.Cell("A5").Style.Font.FontSize = 13;
@@ -192,7 +178,6 @@ namespace MoneyTransfer.Controllers
             wsSum.Column("B").Width = 22;
             wsSum.Column("C").Width = 36;
 
-            // ── Chart data table (used by the chart) ──────────────────
             int chartDataRow = 16;
             wsSum.Cell(chartDataRow, 1).Value = "Month";
             wsSum.Cell(chartDataRow, 2).Value = "Sent";
@@ -209,16 +194,12 @@ namespace MoneyTransfer.Controllers
                 wsSum.Cell(chartDataRow + 1 + i, 4).Value = (double)months[i].TopUp;
             }
 
-            // ── Chart note for the user ───────────────────────────────
             int noteRow = chartDataRow + months.Count + 2;
             wsSum.Cell(noteRow, 1).Value = "💡 To create a chart: select the Monthly Activity table above → Insert → Recommended Charts → Clustered Column";
             wsSum.Cell(noteRow, 1).Style.Font.Italic = true;
             wsSum.Cell(noteRow, 1).Style.Font.FontColor = XLColor.Gray;
             wsSum.Range(noteRow, 1, noteRow, 4).Merge();
 
-            // ──────────────────────────────────────────────────────────
-            // SHEET 2: Wallet Balances
-            // ──────────────────────────────────────────────────────────
             var wsWal = wb.Worksheets.Add("Wallet Balances");
             wsWal.Cell("A1").Value = "Your Wallets";
             wsWal.Cell("A1").Style.Font.Bold = true; wsWal.Cell("A1").Style.Font.FontSize = 14;
@@ -239,9 +220,6 @@ namespace MoneyTransfer.Controllers
             }
             wsWal.Columns().AdjustToContents();
 
-            // ──────────────────────────────────────────────────────────
-            // SHEET 3: Sent Transactions
-            // ──────────────────────────────────────────────────────────
             var wsSent = wb.Worksheets.Add("Sent Transactions");
             wsSent.Cell("A1").Value = $"Sent Transactions — {code} Wallet";
             wsSent.Cell("A1").Style.Font.Bold = true; wsSent.Cell("A1").Style.Font.FontSize = 14;
@@ -267,9 +245,6 @@ namespace MoneyTransfer.Controllers
             }
             wsSent.Columns().AdjustToContents();
 
-            // ──────────────────────────────────────────────────────────
-            // SHEET 4: Received Transactions
-            // ──────────────────────────────────────────────────────────
             var wsRec = wb.Worksheets.Add("Received Transactions");
             wsRec.Cell("A1").Value = $"Received Transactions — {code} Wallet";
             wsRec.Cell("A1").Style.Font.Bold = true; wsRec.Cell("A1").Style.Font.FontSize = 14;
@@ -294,9 +269,6 @@ namespace MoneyTransfer.Controllers
             }
             wsRec.Columns().AdjustToContents();
 
-            // ──────────────────────────────────────────────────────────
-            // SHEET 5: Top Ups
-            // ──────────────────────────────────────────────────────────
             var wsTu = wb.Worksheets.Add("Top Ups");
             wsTu.Cell("A1").Value = $"Top Ups — {code} Wallet";
             wsTu.Cell("A1").Style.Font.Bold = true; wsTu.Cell("A1").Style.Font.FontSize = 14;

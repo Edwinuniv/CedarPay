@@ -1,0 +1,172 @@
+﻿@model MoneyTransfer.ViewModels.MonthlyReportViewModel
+@{
+    ViewData["Title"] = "Monthly Report";
+    ViewBag.PageClass = "page-admin";
+}
+
+<div class="page-header">
+    <div>
+        <h2>Monthly Report — @Model.MonthName</h2>
+        <p>Transaction breakdown for the current month</p>
+    </div>
+    <div style="display:flex;gap:8px;">
+        <button onclick="window.print()" class="btn-tp-secondary"><i class="bi bi-printer"></i> Print</button>
+        <a asp-action="Index" class="btn-tp-secondary"><i class="bi bi-arrow-left"></i> Back to Analytics</a>
+    </div>
+</div>
+
+<div class="stats-grid" style="margin-bottom:24px;">
+    <div class="stat-card">
+        <div class="stat-icon" style="background:var(--teal-light);color:var(--teal)"><i class="bi bi-arrow-left-right"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">@Model.TotalTransactions</div>
+            <div class="stat-label">Transactions This Month</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:var(--purple-light);color:#6c63ff"><i class="bi bi-currency-dollar"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">$@string.Format("{0:N2}", Model.TotalVolume)</div>
+            <div class="stat-label">Total Volume</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:var(--yellow-light);color:#f59e0b"><i class="bi bi-cash"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">$@string.Format("{0:N2}", Model.TotalFees)</div>
+            <div class="stat-label">Fee Revenue</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:var(--teal-light);color:var(--teal)"><i class="bi bi-people-fill"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">@Model.NewUsers</div>
+                <div class="stat-label">New Users</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:var(--purple-light);color:#6c63ff"><i class="bi bi-person-check-fill"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">@Model.ActiveUsers</div>
+                <div class="stat-label">Active Users</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:var(--yellow-light);color:#f59e0b"><i class="bi bi-star-fill"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">@string.Format("{0:N1}", Model.AverageRatingThisMonth)</div>
+                <div class="stat-label">Avg Rating</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:var(--teal-light);color:var(--teal)"><i class="bi bi-gift-fill"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">@Model.FreeTransactions</div>
+                <div class="stat-label">Free Transactions</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="tp-card" style="margin-bottom:20px;">
+    <div class="tp-card-header"><h3 class="tp-card-title">Daily Breakdown</h3></div>
+    <canvas id="dailyChart" height="80"></canvas>
+</div>
+
+<div class="tp-card">
+    <div class="tp-card-header"><h3 class="tp-card-title">All Transactions This Month</h3></div>
+    @if (Model.MonthlyTransactions == null || !Model.MonthlyTransactions.Any())
+    {
+        <div class="empty-state"><i class="bi bi-inbox"></i><p>No transactions this month.</p></div>
+    }
+    else
+    {
+        <table class="tp-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Sender</th>
+                    <th>Receiver</th>
+                    <th>Amount</th>
+                    <th>Fee</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var t in Model.MonthlyTransactions)
+                {
+                    <tr>
+                        <td style="font-size:12px;color:var(--text-3);">@t.CreatedAt.ToString("MMM dd, HH:mm")</td>
+                        <td>@t.SenderWallet?.User?.FirstName @t.SenderWallet?.User?.LastName</td>
+                        <td>@t.ReceiverWallet?.User?.FirstName @t.ReceiverWallet?.User?.LastName</td>
+                        <td style="font-weight:600;">@string.Format("{0:N2}", t.Amount) @t.SenderCurrency?.Code</td>
+                        <td style="color:var(--teal);">$@string.Format("{0:N2}", t.FeeAmount)</td>
+                        <td><span class="badge-tp @(t.Status == MoneyTransfer.Models.TransactionStatus.Completed ? "success" : "warning")">@t.Status</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        var dailyStatsData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DailyBreakdown ?? new System.Collections.Generic.List<MoneyTransfer.ViewModels.DailyBreakdownViewModel>()));
+
+        var daily = dailyStatsData.map(function(d) {
+            return { day: d.day, count: d.count || 0, fees: d.fees || 0 };
+        });
+
+        if (daily.length > 0) {
+            new Chart(document.getElementById('dailyChart'), {
+                type: 'line',
+                data: {
+                    labels: daily.map(function(d) { return 'Day ' + d.day; }),
+                    datasets: [
+                        {
+                            label: 'Transactions',
+                            data: daily.map(function(d) { return d.count; }),
+                            borderColor: 'rgba(0,212,170,1)',
+                            backgroundColor: 'rgba(0,212,170,0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Fees ($)',
+                            data: daily.map(function(d) { return d.fees; }),
+                            borderColor: 'rgba(108,99,255,1)',
+                            backgroundColor: 'rgba(108,99,255,0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            yAxisID: 'y2'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true },
+                        y2: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false } }
+                    }
+                }
+            });
+        } else {
+            document.getElementById('dailyChart').style.display = 'none';
+            var noDataMsg = document.createElement('div');
+            noDataMsg.className = 'empty-state';
+            noDataMsg.innerHTML = '<i class="bi bi-inbox"></i><p>No transaction data available for this period.</p>';
+            document.querySelector('.tp-card').appendChild(noDataMsg);
+        }
+    </script>
+}

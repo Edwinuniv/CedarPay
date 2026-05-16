@@ -1,6 +1,8 @@
 ﻿@{
     ViewData["Title"] = "Settings";
     ViewBag.PageClass = "page-settings";
+    var returnUrl = Context.Request.Path;
+    var fromSettings = true;
 }
 
 <div class="page-header">
@@ -12,7 +14,6 @@
 
 <div class="row g-3">
 
-    <!-- Tutorial Highlight Card -->
     <div class="col-12">
         <a asp-controller="Tutorial" asp-action="Index" class="settings-tutorial-link">
             <div>
@@ -104,6 +105,47 @@
         <div class="tp-card">
             <div class="tp-card-header">
                 <span class="tp-card-title">
+                    <i class="bi bi-envelope-paper"></i>
+                    Support & Legal
+                </span>
+            </div>
+            <div class="d-flex flex-column gap-2">
+                <a asp-controller="Home" asp-action="AboutUs" asp-route-returnUrl="@returnUrl" class="settings-card-link">
+                    <div>
+                        <div class="settings-link-title">About Us</div>
+                        <div class="settings-link-desc">Learn about CedarPay</div>
+                    </div>
+                    <i class="bi bi-chevron-right settings-link-icon"></i>
+                </a>
+                <a asp-controller="Home" asp-action="ContactUs" asp-route-returnUrl="@returnUrl" class="settings-card-link">
+                    <div>
+                        <div class="settings-link-title">Contact Us</div>
+                        <div class="settings-link-desc">Get in touch with support</div>
+                    </div>
+                    <i class="bi bi-chevron-right settings-link-icon"></i>
+                </a>
+                <a asp-controller="Home" asp-action="Privacy" asp-route-returnUrl="@returnUrl" class="settings-card-link">
+                    <div>
+                        <div class="settings-link-title">Privacy Policy</div>
+                        <div class="settings-link-desc">How we protect your data</div>
+                    </div>
+                    <i class="bi bi-chevron-right settings-link-icon"></i>
+                </a>
+                <a asp-controller="Home" asp-action="Terms" asp-route-returnUrl="@returnUrl" class="settings-card-link">
+                    <div>
+                        <div class="settings-link-title">Terms of Service</div>
+                        <div class="settings-link-desc">Terms and conditions</div>
+                    </div>
+                    <i class="bi bi-chevron-right settings-link-icon"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="tp-card">
+            <div class="tp-card-header">
+                <span class="tp-card-title">
                     <i class="bi bi-info-circle"></i>
                     About CedarPay
                 </span>
@@ -122,8 +164,8 @@
                     <span class="settings-about-value">Banque du Liban</span>
                 </div>
                 <div class="settings-about-row">
-                    <span class="settings-about-label">Support</span>
-                    <span class="settings-about-value-highlight">support@cedarpay.lb</span>
+                    <span class="settings-about-label">Email</span>
+                    <span class="settings-about-value-highlight">cedarpay.notifications@gmail.com</span>
                 </div>
             </div>
         </div>

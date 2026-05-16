@@ -4,14 +4,93 @@
     ViewBag.PageClass = "page-admin";
 }
 
+<style>
+    .announcement-details-border {
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        background: var(--bg-2);
+    }
+
+    .announcement-details-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--text-1);
+        margin-bottom: 8px;
+    }
+
+    .announcement-details-meta {
+        font-size: 13px;
+        color: var(--text-3);
+    }
+
+    .announcement-details-status-active {
+        color: #00b894;
+        font-weight: 500;
+    }
+
+    .announcement-details-status-inactive {
+        color: #dc3545;
+        font-weight: 500;
+    }
+
+    .announcement-details-content {
+        padding: 20px;
+        background: var(--bg-2);
+        border-radius: 12px;
+        margin-bottom: 20px;
+        font-size: 15px;
+        line-height: 1.6;
+        color: var(--text-2);
+    }
+
+    .announcement-details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        padding: 20px;
+        background: var(--bg-2);
+        border-radius: 12px;
+        margin-bottom: 20px;
+    }
+
+    .announcement-details-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        color: var(--text-3);
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .announcement-details-value {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-1);
+    }
+
+    .announcement-details-footer {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        padding-top: 20px;
+        border-top: 1px solid var(--border);
+    }
+
+    .btn-icon-group {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+</style>
+
 <div class="row justify-content-center">
     <div class="col-md-7">
         <div class="page-header">
-            <div><h2>Announcement Details</h2></div>
-            <div class="announcement-details-actions">
-                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-tp-primary">
-                    <i class="bi bi-pencil"></i> Edit
-                </a>
+            <div>
+                <h2>Announcement Details</h2>
+                <p>View and manage this announcement</p>
+            </div>
+            <div class="btn-icon-group">
                 <a asp-action="Manage" class="btn-tp-secondary">
                     <i class="bi bi-arrow-left"></i> Back
                 </a>
@@ -28,19 +107,21 @@
                 string bc = Model.Type switch
                 {
                     MoneyTransfer.Models.AnnouncementType.Warning => "#f59e0b",
-                    MoneyTransfer.Models.AnnouncementType.Success => "var(--teal)",
+                    MoneyTransfer.Models.AnnouncementType.Success => "#00b894",
                     MoneyTransfer.Models.AnnouncementType.Maintenance => "#ef4444",
                     _ => "#6366f1"
                 };
             }
-            <div class="announcement-details-border" style="border-left:4px solid @bc">
+            <div class="announcement-details-border" style="border-left: 4px solid @bc;">
                 <div class="announcement-details-title">@Model.Title</div>
                 <div class="announcement-details-meta">
-                    @Model.Type ·
+                    <span class="badge-tp" style="background: @bc; color: white;">@Model.Type</span>
+                    <span class="mx-2">•</span>
                     <span class="@(Model.IsActive ? "announcement-details-status-active" : "announcement-details-status-inactive")">
-                        @(Model.IsActive ? "Active" : "Inactive")
+                        @(Model.IsActive ? "● Active" : "○ Inactive")
                     </span>
-                    · @Model.CreatedAt.ToString("MMMM dd, yyyy HH:mm")
+                    <span class="mx-2">•</span>
+                    <span>@Model.CreatedAt.ToString("MMMM dd, yyyy HH:mm")</span>
                 </div>
             </div>
 
@@ -50,38 +131,38 @@
 
             <div class="announcement-details-grid">
                 <div>
-                    <span class="announcement-details-label">Show to all users:</span>
-                    <strong class="announcement-details-value">@(Model.ShowToAll ? "Yes" : "No")</strong>
+                    <span class="announcement-details-label">Show to all users</span>
+                    <strong class="announcement-details-value">@(Model.ShowToAll ? "✓ Yes" : "✗ No")</strong>
                 </div>
                 <div>
-                    <span class="announcement-details-label">Expires:</span>
+                    <span class="announcement-details-label">Expires</span>
                     <strong class="announcement-details-value">@(Model.ExpiresAt?.ToString("MMM dd, yyyy") ?? "Never")</strong>
                 </div>
                 <div>
-                    <span class="announcement-details-label">Created by:</span>
+                    <span class="announcement-details-label">Created by</span>
                     <strong class="announcement-details-value">@Model.CreatedBy?.FirstName @Model.CreatedBy?.LastName</strong>
                 </div>
                 <div>
-                    <span class="announcement-details-label">Type:</span>
+                    <span class="announcement-details-label">Type</span>
                     <strong class="announcement-details-value">@Model.Type</strong>
                 </div>
             </div>
 
             <div class="announcement-details-footer">
                 <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-tp-primary">
-                    <i class="bi bi-pencil"></i> Edit
+                    <i class="bi bi-pencil"></i> Edit Announcement
                 </a>
-                <form asp-action="Delete" asp-route-id="@Model.Id" method="post"
-                      onsubmit="return confirm('Delete this announcement?')">
+                <form asp-action="Toggle" asp-route-id="@Model.Id" method="post" style="display: inline;">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn-tp-warning">
+                        <i class="bi bi-@(Model.IsActive ? "pause-circle" : "play-circle")"></i>
+                        @(Model.IsActive ? "Deactivate" : "Activate")
+                    </button>
+                </form>
+                <form asp-action="Delete" asp-route-id="@Model.Id" method="post" style="display: inline;" onsubmit="return confirm('Delete this announcement permanently?')">
                     @Html.AntiForgeryToken()
                     <button type="submit" class="btn-tp-danger">
                         <i class="bi bi-trash"></i> Delete
-                    </button>
-                </form>
-                <form asp-action="Toggle" asp-route-id="@Model.Id" method="post">
-                    @Html.AntiForgeryToken()
-                    <button type="submit" class="btn-tp-secondary">
-                        @(Model.IsActive ? "⏸ Pause" : "▶ Activate")
                     </button>
                 </form>
             </div>

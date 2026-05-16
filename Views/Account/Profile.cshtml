@@ -43,10 +43,8 @@
                      style="@(ViewData.ModelState.ErrorCount > 0 ? "" : "display:none")"></div>
             }
 
-            <!-- ── PROFILE PICTURE CARD ── -->
             <div class="tp-card mb-3">
                 <div class="profile-avatar-wrapper">
-                    <!-- Avatar -->
                     <div class="profile-avatar-container">
                         @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
                         {
@@ -64,7 +62,6 @@
                         }
                     </div>
 
-                    <!-- Info + Buttons -->
                     <div class="profile-info-details">
                         <div class="profile-info-name">
                             @Model.FirstName @Model.LastName
@@ -99,7 +96,6 @@
                 </div>
             </div>
 
-            <!-- ── ACCOUNT TYPE ── -->
             <div class="tp-card mb-3">
                 <div class="section-header">
                     <i class="bi bi-person-badge"></i>
@@ -150,7 +146,6 @@
                 }
             </div>
 
-            <!-- Corporate Fields -->
             <div id="corporateFields" style="display:@(Model.AccountType == "Corporate" ? "block" : "none")">
                 <div class="tp-card mb-3">
                     <div class="section-header">
@@ -188,7 +183,6 @@
                 </div>
             </div>
 
-            <!-- ── PERSONAL INFORMATION ── -->
             <div class="tp-card mb-3">
                 <div class="section-header">
                     <i class="bi bi-person-fill"></i>
@@ -209,7 +203,7 @@
                             {
                                 <input asp-for="FirstName" class="form-control" placeholder="First name" />
                                 <span asp-validation-for="FirstName" class="text-danger" style="font-size:11px"></span>
- }
+                            }
                             else
                             {
                                 <div class="form-control form-control-readonly">@(Model.FirstName ?? "—")</div>
@@ -225,7 +219,6 @@
                             }
                             else
                             {
-
                                 <div class="form-control form-control-readonly">@(Model.FatherName ?? "—")</div>
                             }
                         </div>
@@ -240,7 +233,7 @@
                             {
                                 <input asp-for="LastName" class="form-control" placeholder="Last name" />
                                 <span asp-validation-for="LastName" class="text-danger" style="font-size:11px"></span>
- }
+                            }
                             else
                             {
                                 <div class="form-control form-control-readonly">@(Model.LastName ?? "—")</div>
@@ -256,7 +249,6 @@
                             }
                             else
                             {
-
                                 <div class="form-control form-control-readonly">@(Model.MotherName ?? "—")</div>
                             }
                         </div>
@@ -271,7 +263,7 @@
                             {
                                 <input asp-for="DateOfBirth" class="form-control" type="date" max="@DateTime.Now.AddYears(-18).ToString("yyyy-MM-dd")" />
                                 <span asp-validation-for="DateOfBirth" class="text-danger" style="font-size:11px"></span>
- }
+                            }
                             else
                             {
                                 <div class="form-control form-control-readonly">@(Model.DateOfBirth.Year > 1 ? Model.DateOfBirth.ToString("MMM dd, yyyy") : "—")</div>
@@ -287,7 +279,6 @@
                             }
                             else
                             {
-
                                 <div class="form-control form-control-readonly">@(Model.PlaceOfBirth ?? "—")</div>
                             }
                         </div>
@@ -302,7 +293,7 @@
                             {
                                 <select asp-for="Gender" class="form-select"><option value="">— Select —</option><option value="Male">Male</option><option value="Female">Female</option></select>
                                 <span asp-validation-for="Gender" class="text-danger" style="font-size:11px"></span>
- }
+                            }
                             else
                             {
                                 <div class="form-control form-control-readonly">@(Model.Gender ?? "—")</div>
@@ -318,7 +309,6 @@
                             }
                             else
                             {
-
                                 <div class="form-control form-control-readonly">@(Model.MaritalStatus ?? "—")</div>
                             }
                         </div>
@@ -333,7 +323,7 @@
                             {
                                 <input asp-for="Nationality" class="form-control" placeholder="e.g. Lebanese" />
                                 <span asp-validation-for="Nationality" class="text-danger" style="font-size:11px"></span>
- }
+                            }
                             else
                             {
                                 <div class="form-control form-control-readonly">@(Model.Nationality ?? "—")</div>
@@ -349,7 +339,6 @@
                             }
                             else
                             {
-
                                 <div class="form-control form-control-readonly">@(Model.OtherNationality ?? "—")</div>
                             }
                         </div>
@@ -364,10 +353,27 @@
                             {
                                 <input asp-for="PhoneNumber" class="form-control" placeholder="+961 XX XXX XXX" />
                                 <span asp-validation-for="PhoneNumber" class="text-danger" style="font-size:11px"></span>
- }
+                            }
                             else
                             {
                                 <div class="form-control form-control-readonly">@(Model.PhoneNumber ?? "—")</div>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Email @if (isEditMode) {
+                            <span class="text-danger">*</span>
+                                                        }
+</label>
+                            @if (isEditMode)
+                            {
+                                <input asp-for="Email" class="form-control" type="email" placeholder="you@example.com" />
+                                <span asp-validation-for="Email" class="text-danger" style="font-size:11px"></span>
+                            }
+                            else
+                            {
+                                <div class="form-control form-control-readonly">@(Model.Email ?? "—")</div>
                             }
                         </div>
                     </div>
@@ -380,10 +386,11 @@
                                     <span class="username-prefix">@@</span>
                                     <input name="UserUsername" value="@Model.UserUsername" class="username-input" placeholder="yourname" />
                                 </div>
+                                <small class="text-muted">Letters, numbers, and underscores only</small>
                             }
                             else
                             {
-                                <div class="form-control form-control-readonly">@($"@{Model.UserUsername ?? "—"}")</div>
+                                <div class="form-control form-control-readonly">@@@(Model.UserUsername ?? "—")</div>
                             }
                         </div>
                     </div>
@@ -396,7 +403,6 @@
                             }
                             else
                             {
-
                                 <div class="form-control form-control-readonly">@(Model.Description ?? "—")</div>
                             }
                         </div>
@@ -404,7 +410,6 @@
                 </div>
             </div>
 
-            <!-- ── CIVIL REGISTRY ── -->
             <div class="tp-card mb-3">
                 <div class="section-header">
                     <i class="bi bi-journal-bookmark"></i>
@@ -420,7 +425,6 @@
                             }
                             else
                             {
-
                                 <div class="form-control form-control-readonly">@(Model.RecordNumber ?? "—")</div>
                             }
                         </div>
@@ -434,7 +438,6 @@
                             }
                             else
                             {
-
                                 <div class="form-control form-control-readonly">@(Model.Governate ?? "—")</div>
                             }
                         </div>
@@ -448,7 +451,6 @@
                             }
                             else
                             {
-
                                 <div class="form-control form-control-readonly">@(Model.District ?? "—")</div>
                             }
                         </div>
@@ -462,7 +464,6 @@
                             }
                             else
                             {
-
                                 <div class="form-control form-control-readonly">@(Model.Village ?? "—")</div>
                             }
                         </div>
@@ -470,7 +471,6 @@
                 </div>
             </div>
 
-            <!-- ── ADDRESS ── -->
             <div class="tp-card mb-3">
                 <div class="section-header">
                     <i class="bi bi-geo-alt-fill"></i>
@@ -487,7 +487,7 @@
                             {
                                 <input asp-for="Country" class="form-control" placeholder="Lebanon" />
                                 <span asp-validation-for="Country" class="text-danger" style="font-size:11px"></span>
- }
+                            }
                             else
                             {
                                 <div class="form-control form-control-readonly">@(Model.Country ?? "—")</div>
@@ -504,7 +504,7 @@
                             {
                                 <input asp-for="City" class="form-control" placeholder="Beirut" />
                                 <span asp-validation-for="City" class="text-danger" style="font-size:11px"></span>
- }
+                            }
                             else
                             {
                                 <div class="form-control form-control-readonly">@(Model.City ?? "—")</div>
@@ -520,7 +520,6 @@
                             }
                             else
                             {
-
                                 <div class="form-control form-control-readonly">@(Model.Region ?? "—")</div>
                             }
                         </div>
@@ -534,7 +533,6 @@
                             }
                             else
                             {
-
                                 <div class="form-control form-control-readonly">@(Model.State ?? "—")</div>
                             }
                         </div>
@@ -548,7 +546,6 @@
                             }
                             else
                             {
-
                                 <div class="form-control form-control-readonly">@(Model.Street ?? "—")</div>
                             }
                         </div>
@@ -562,7 +559,6 @@
                             }
                             else
                             {
-
                                 <div class="form-control form-control-readonly">@(Model.BuildingName ?? "—")</div>
                             }
                         </div>
@@ -576,7 +572,6 @@
                             }
                             else
                             {
-
                                 <div class="form-control form-control-readonly">@(Model.BuildingNumber ?? "—")</div>
                             }
                         </div>
@@ -590,7 +585,6 @@
                             }
                             else
                             {
-
                                 <div class="form-control form-control-readonly">@(Model.PostalCode ?? "—")</div>
                             }
                         </div>
@@ -598,7 +592,6 @@
                 </div>
             </div>
 
-            <!-- ── PROFESSIONAL INFORMATION ── -->
             <div class="tp-card mb-3">
                 <div class="section-header">
                     <i class="bi bi-briefcase-fill"></i>
@@ -614,7 +607,6 @@
                             }
                             else
                             {
-
                                 <div class="form-control form-control-readonly">@(Model.Occupation ?? "—")</div>
                             }
                         </div>
@@ -628,7 +620,6 @@
                             }
                             else
                             {
-
                                 <div class="form-control form-control-readonly">@(Model.EmployerName ?? "—")</div>
                             }
                         </div>
@@ -653,7 +644,6 @@
                             }
                             else
                             {
-
                                 <div class="form-control form-control-readonly">@(Model.AnnualIncomeUSD ?? "—")</div>
                             }
                         </div>
@@ -667,7 +657,6 @@
                             }
                             else
                             {
-
                                 <div class="form-control form-control-readonly">@(Model.OtherIncomeSource ?? "—")</div>
                             }
                         </div>
@@ -675,7 +664,6 @@
                 </div>
             </div>
 
-            <!-- ── KYC STATUS CARD ── -->
             <div class="tp-card mb-3">
                 <div class="kyc-status-card">
                     <div class="kyc-status-content">
@@ -740,7 +728,6 @@
             }
         </form>
 
-        <!-- ── AGENT / ADMIN SECTION ── -->
         @if (isAgentUser)
         {
             <div class="tp-card mb-3 agent-card">
@@ -804,7 +791,6 @@
             }
         }
 
-        <!-- ── DELETE ACCOUNT ── -->
         <div class="tp-card delete-account-card">
             <div class="delete-account-content">
                 <div>
@@ -822,7 +808,6 @@
     </div>
 </div>
 
-<!-- Cropper Modal -->
 <div id="cropperModal" class="cropper-modal">
     <div class="cropper-modal-content">
         <div class="cropper-modal-header">
@@ -849,35 +834,33 @@
     <partial name="_ValidationScriptsPartial" />
     <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.js"></script>
     <script>
-        // Account type cards
-        const currentType = '@Model.AccountType';
-        document.querySelectorAll('.account-type-card').forEach(card => {
+        var currentType = '@Model.AccountType';
+        document.querySelectorAll('.account-type-card').forEach(function(card) {
             if (card.dataset.val === currentType) {
                 card.classList.add('active');
-                const radio = card.closest('label').querySelector('input[type="radio"]');
+                var radio = card.closest('label').querySelector('input[type="radio"]');
                 if (radio) radio.checked = true;
             }
         });
 
-        document.querySelectorAll('.acct-type-radio').forEach(radio => {
+        document.querySelectorAll('.acct-type-radio').forEach(function(radio) {
             radio.addEventListener('change', function () {
-                document.querySelectorAll('.account-type-card').forEach(c => c.classList.remove('active'));
-                const card = this.closest('label').querySelector('.account-type-card');
+                document.querySelectorAll('.account-type-card').forEach(function(c) { c.classList.remove('active'); });
+                var card = this.closest('label').querySelector('.account-type-card');
                 if (card) card.classList.add('active');
-                const corp = document.getElementById('corporateFields');
+                var corp = document.getElementById('corporateFields');
                 if (corp) corp.style.display = this.value === 'Corporate' ? 'block' : 'none';
             });
         });
 
-        // Cropper
-        let cropperInstance = null;
+        var cropperInstance = null;
 
         function openCropper(input) {
             if (!input.files || !input.files[0]) return;
-            const reader = new FileReader();
-            reader.onload = e => {
-                const img = document.getElementById('cropperImg');
-                const modal = document.getElementById('cropperModal');
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var img = document.getElementById('cropperImg');
+                var modal = document.getElementById('cropperModal');
                 img.src = e.target.result;
                 modal.style.display = 'flex';
                 if (cropperInstance) cropperInstance.destroy();
@@ -888,10 +871,10 @@
 
         function cropImage() {
             if (!cropperInstance) return;
-            const canvas = cropperInstance.getCroppedCanvas({ width: 300, height: 300, fillColor: '#fff', imageSmoothingEnabled: true, imageSmoothingQuality: 'high' });
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-            const preview = document.getElementById('avatarImg');
-            const initials = document.getElementById('avatarInitials');
+            var canvas = cropperInstance.getCroppedCanvas({ width: 300, height: 300, fillColor: '#fff', imageSmoothingEnabled: true, imageSmoothingQuality: 'high' });
+            var dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+            var preview = document.getElementById('avatarImg');
+            var initials = document.getElementById('avatarInitials');
             if (preview) { preview.src = dataUrl; preview.classList.remove('profile-avatar-hidden'); }
             if (initials) initials.classList.add('profile-avatar-hidden');
             document.getElementById('croppedPicData').value = dataUrl;
@@ -900,17 +883,17 @@
         }
 
         function closeCropper() {
-            const modal = document.getElementById('cropperModal');
+            var modal = document.getElementById('cropperModal');
             modal.style.display = 'none';
             if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
-            const input = document.getElementById('profilePicInput');
+            var input = document.getElementById('profilePicInput');
             if (input) input.value = '';
         }
 
         function removePicture() {
             if (!confirm('Remove your profile picture?')) return;
-            const img = document.getElementById('avatarImg');
-            const init = document.getElementById('avatarInitials');
+            var img = document.getElementById('avatarImg');
+            var init = document.getElementById('avatarInitials');
             if (img) img.classList.add('profile-avatar-hidden');
             if (init) init.classList.remove('profile-avatar-hidden');
             document.getElementById('removePicFlag').value = 'true';

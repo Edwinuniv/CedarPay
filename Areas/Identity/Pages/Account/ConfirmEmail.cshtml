@@ -5,7 +5,6 @@
     Layout = "/Views/Shared/_Layout.cshtml";
     ViewBag.PageClass = "page-dashboard";
 
-    // Determine status type for styling
     var isSuccess = Model.StatusMessage?.Contains("Thank you") == true ||
                     Model.StatusMessage?.Contains("confirmed") == true;
 }

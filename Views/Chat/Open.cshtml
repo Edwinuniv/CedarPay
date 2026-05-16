@@ -102,7 +102,6 @@
                     </div>
                     <div class="chat-profile-phone">
                         @other?.User?.PhoneNumber
-                        <span class="tap-to-view">tap to view profile</span>
                     </div>
                 </div>
             </button>
@@ -189,8 +188,8 @@
                                     <i class="bi bi-emoji-smile"></i>
                                 </button>
                                 <button class="msg-action-btn" title="Reply" onclick="setReply(@msg.Id,
-                                            '@Html.Raw((msg.Sender?.FirstName ?? other?.User?.FirstName ?? "User").Replace("'", "\\'"))',
-                                            '@Html.Raw(((msg.MessageType == MoneyTransfer.Models.MessageType.Text ? msg.Content : "📎 " + msg.MediaFileName) ?? "").Length > 40 ? ((msg.MessageType == MoneyTransfer.Models.MessageType.Text ? msg.Content : "📎 " + msg.MediaFileName) ?? "").Substring(0, 40) + "…" : ((msg.MessageType == MoneyTransfer.Models.MessageType.Text ? msg.Content : "📎 " + msg.MediaFileName) ?? "").Replace("'", "\\'"))')">
+                                                    '@Html.Raw((msg.Sender?.FirstName ?? other?.User?.FirstName ?? "User").Replace("'", "\\'"))',
+                                                    '@Html.Raw(((msg.MessageType == MoneyTransfer.Models.MessageType.Text ? msg.Content : "📎 " + msg.MediaFileName) ?? "").Length > 40 ? ((msg.MessageType == MoneyTransfer.Models.MessageType.Text ? msg.Content : "📎 " + msg.MediaFileName) ?? "").Substring(0, 40) + "…" : ((msg.MessageType == MoneyTransfer.Models.MessageType.Text ? msg.Content : "📎 " + msg.MediaFileName) ?? "").Replace("'", "\\'"))')">
                                     <i class="bi bi-reply-fill"></i>
                                 </button>
                                 @if (isMine && msg.MessageType == MoneyTransfer.Models.MessageType.Text)
@@ -331,7 +330,6 @@
         }
     </div>
 
-    <!-- Attach Bar -->
     <div class="attach-bar" id="attachBar">
         <i class="bi bi-paperclip attach-icon"></i>
         <div class="attach-info">
@@ -341,7 +339,6 @@
         <button onclick="clearAttach()" class="bar-clear"><i class="bi bi-x-lg"></i></button>
     </div>
 
-    <!-- Reply Bar -->
     <div class="reply-bar" id="replyBar">
         <i class="bi bi-reply-fill reply-icon"></i>
         <div class="reply-info">
@@ -351,7 +348,6 @@
         <button onclick="clearReply()" class="bar-clear"><i class="bi bi-x-lg"></i></button>
     </div>
 
-    <!-- Input Bar -->
     <div class="chat-input-bar">
         <div class="chat-input-row">
             @if (!isBotChat)
@@ -371,7 +367,7 @@
                                                 "👍","👎","❤️","🔥","🎉","🙏","💰","🌲",
                                                 "✅","❌","⭐","💯","🚀","💬","📱","🏦"})
                             {
-                                <button type="button" class="ep-btn" onclick="insertEmoji('@e')">@e</button>
+                                <button type="button" class="ep-btn" onclick="insertEmoji(event,'@e')">@e</button>
                             }
                         </div>
                     </div>
@@ -401,7 +397,6 @@
     </div>
 </div>
 
-<!-- Profile Panel -->
 <div class="profile-overlay" id="profileOverlay" onclick="closeProfile()"></div>
 <div class="profile-panel" id="profilePanel">
     <div class="profile-panel-header">
@@ -447,13 +442,11 @@
     </div>
 </div>
 
-<!-- Lightbox -->
 <div id="lightbox" class="lightbox">
     <button class="lb-close" onclick="closeLightbox()"><i class="bi bi-x-lg"></i></button>
     <img id="lbImg" src="" alt="" />
 </div>
 
-<!-- Context Menu -->
 <div id="ctxMenu" class="ctx-menu">
     <div class="ctx-item danger" onclick="deleteMsg(ctxId,'me')">
         <i class="bi bi-eye-slash-fill"></i> Delete for Me
@@ -463,7 +456,6 @@
     </div>
 </div>
 
-<!-- Edit Modal -->
 <div id="editOverlay" class="edit-overlay">
     <div class="edit-modal">
         <div class="edit-modal-header">
@@ -583,13 +575,13 @@
             document.getElementById('inputEmojiPicker').classList.toggle('open');
         }
 
-        function insertEmoji(em) {
+        function insertEmoji(event, em) {
+            event.stopPropagation();
             const inp = document.getElementById('msgInput');
             const s = inp.selectionStart, en = inp.selectionEnd;
             inp.value = inp.value.slice(0, s) + em + inp.value.slice(en);
             inp.selectionStart = inp.selectionEnd = s + em.length;
             inp.focus();
-            document.getElementById('inputEmojiPicker').classList.remove('open');
         }
 
         function setReply(msgId, name, preview) {
@@ -700,9 +692,11 @@
                 if (res.ok) {
                     const data = await res.json();
                     if (data.success) {
+                        const rName = document.getElementById('replyToName').textContent;
+                        const rText = document.getElementById('replyToContent').textContent;
                         inp.value = '';
                         clearReply();
-                        appendOwnBubble(content, data.sentAt, data.messageId);
+                        appendOwnBubble(content, data.sentAt, data.messageId, rName || null, rText || null);
                     }
                 } else {
                     console.error('Send failed:', res.status);
@@ -717,20 +711,26 @@
             }
         }
 
-        function appendOwnBubble(content, sentAt, msgId) {
+        function appendOwnBubble(content, sentAt, msgId, replyName, replyText) {
+            const id = msgId || Date.now();
+            const replyHtml = replyName
+                ? '<div class="reply-preview mine-reply"><strong>' + escHtml(replyName) + '</strong>' + escHtml(replyText || '') + '</div>'
+                : '';
+
             const row = document.createElement('div');
-            row.id = 'msg-' + (msgId || Date.now());
+            row.id = 'msg-' + id;
             row.className = 'msg-wrapper mine';
 
             row.innerHTML = `
                 <div class="msg-bubble">
+                    ${replyHtml}
                     <div class="bubble-wrapper">
-                        <div id="bubble-${msgId || Date.now()}" class="bubble-inner bubble-mine">${escHtml(content)}</div>
+                        <div id="bubble-${id}" class="bubble-inner bubble-mine">${escHtml(content)}</div>
                         <div class="msg-time mine">
                             ${sentAt || new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}
                             <span class="read-tick">✓</span>
                         </div>
-                        <div class="reactions-strip" id="reactions-${msgId || Date.now()}"></div>
+                        <div class="reactions-strip" id="reactions-${id}"></div>
                     </div>
                 </div>`;
 

@@ -2,12 +2,18 @@
 @{
     ViewData["Title"] = "Beneficiaries";
     ViewBag.PageClass = "page-beneficiary";
+    var favorites = Model.Where(b => b.IsFavorite).ToList();
+    var others = Model.Where(b => !b.IsFavorite).ToList();
+}
+
+@functions {
+    string SafeName(string nickname) => nickname?.Replace("'", "\\'") ?? "";
 }
 
 <div class="page-header">
     <div>
         <h2>Beneficiaries</h2>
-        <p>Your saved recipients</p>
+        <p>@Model.Count saved contact@(Model.Count != 1 ? "s" : "")</p>
     </div>
     <a asp-action="Create" class="btn-tp-primary">
         <i class="bi bi-person-plus"></i> Add Beneficiary
@@ -17,75 +23,267 @@
 @if (!Model.Any())
 {
     <div class="tp-card">
-        <div class="empty-state">
-            <i class="bi bi-people"></i>
-            <p>No beneficiaries yet. Add someone to send money faster!</p>
-            <a asp-action="Create" class="btn-tp-primary">
-                <i class="bi bi-person-plus"></i> Add Beneficiary
+        <div class="empty-state" style="padding:60px 20px;text-align:center">
+            <i class="bi bi-people" style="font-size:40px;color:var(--text-3);display:block;margin-bottom:12px"></i>
+            <p>No beneficiaries saved yet.</p>
+            <a asp-action="Create" class="btn-tp-primary mt-2">
+                <i class="bi bi-person-plus"></i> Add Your First Beneficiary
             </a>
         </div>
     </div>
 }
-else
+
+@if (favorites.Any())
 {
-    <div class="tp-card">
-        <table class="tp-table">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Wallet / Phone</th>
-                    <th>Country</th>
-                    <th>Added</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var b in Model)
-                {
-                    <tr>
-                        <td>
-                            <div class="beneficiary-user-info">
-                                <div class="ben-avatar beneficiary-avatar-small">
-                                    @b.Nickname.Substring(0, 1).ToUpper()
-                                </div>
-                                <div class="beneficiary-details">
-                                    <div class="beneficiary-nickname">@b.Nickname</div>
-                                    <div class="beneficiary-name">@b.ReceiverName</div>
-                                </div>
+    <div class="tp-card mb-3">
+        <div class="tp-card-header">
+            <span class="tp-card-title">
+                <i class="bi bi-star-fill" style="color:#f4a820"></i> Favorites
+            </span>
+            <span class="badge-tp warning">@favorites.Count</span>
+        </div>
+        <div class="benef-grid">
+            @foreach (var b in favorites)
+            {
+                <div class="benef-card favorite">
+                    <div class="benef-card-top">
+                        <div class="benef-avatar">
+                            @if (!string.IsNullOrEmpty(b.ReceiverProfilePictureUrl))
+                            {
+                                <img src="@b.ReceiverProfilePictureUrl" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt="@b.ReceiverName" />
+                            }
+                            else
+                            {
+                                <span>@b.Nickname.Substring(0, 1).ToUpper()</span>
+                            }
+                        </div>
+                        <div class="benef-info">
+                            <div class="benef-nickname">
+                                @b.Nickname <i class="bi bi-star-fill" style="color:#f4a820;font-size:11px"></i>
                             </div>
-                        </td>
-                        <td>
-                            <span class="badge-tp @(b.TransferType == "WalletTransfer" ? "info" : "default")">
-                                @b.TransferType
-                            </span>
-                        </td>
-                        <td class="beneficiary-identifier">
-                            @(b.ReceiverWalletSerial ?? b.ReceiverPhoneNumber ?? "—")
-                        </td>
-                        <td class="beneficiary-country">
-                            @(b.ReceiverCountry ?? "—")
-                        </td>
-                        <td class="beneficiary-date">
-                            @b.CreatedAt.ToString("MMM dd, yyyy")
-                        </td>
-                        <td>
-                            <div class="beneficiary-actions">
-                                <a asp-controller="Transfer" asp-action="Create" class="ben-action">Send</a>
-                                <a asp-action="Edit" asp-route-id="@b.Id" class="btn-tp-secondary beneficiary-edit-btn">
-                                    Edit
-                                </a>
-                                <form asp-action="Delete" asp-route-id="@b.Id" method="post" style="display:inline">
-                                    <button type="submit" class="btn-tp-danger beneficiary-delete-btn"
-                                            onclick="return confirm('Remove this beneficiary?')">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+                            <div class="benef-name">@b.ReceiverName</div>
+                        </div>
+                        <form asp-action="ToggleFavorite" method="post" style="margin:0">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@b.Id" />
+                            <button type="submit" class="benef-fav-btn active" title="Remove from favorites">
+                                <i class="bi bi-star-fill"></i>
+                            </button>
+                        </form>
+                    </div>
+                    <div class="benef-meta">
+                        <span class="badge-tp @(b.TransferType == "WalletTransfer" ? "default" : "success")">
+                            <i class="bi @(b.TransferType == "WalletTransfer" ? "bi-wallet2" : "bi-phone")"></i>
+                            @(b.TransferType == "WalletTransfer" ? "Wallet" : "Mobile")
+                        </span>
+                        @if (!string.IsNullOrEmpty(b.ReceiverCountry))
+                        {
+                            <span style="font-size:11px;color:var(--text-3)"><i class="bi bi-geo-alt"></i> @b.ReceiverCountry</span>
+                        }
+                    </div>
+                    @if (!string.IsNullOrEmpty(b.ReceiverWalletSerial))
+                    {
+                        <div style="font-size:11px;color:var(--text-3);font-family:monospace;margin-top:4px">@b.ReceiverWalletSerial</div>
+                    }
+                    @if (!string.IsNullOrEmpty(b.ReceiverPhoneNumber))
+                    {
+                        <div style="font-size:11px;color:var(--text-3);margin-top:4px"><i class="bi bi-telephone"></i> @b.ReceiverPhoneNumber</div>
+                    }
+                    <div class="benef-actions">
+                        <a asp-controller="Transfer" asp-action="Create" class="btn-tp-primary" style="flex:1;font-size:12px;padding:6px 12px;text-align:center">
+                            <i class="bi bi-send-fill"></i> Send
+                        </a>
+                        <a asp-action="Edit" asp-route-id="@b.Id" class="btn-tp-secondary" style="font-size:12px;padding:6px 12px">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form asp-action="Delete" method="post" style="margin:0"
+                              onsubmit="return confirm('Remove @SafeName(b.Nickname) from your beneficiaries?')">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@b.Id" />
+                            <button type="submit" class="btn-tp-secondary" style="font-size:12px;padding:6px 12px;color:var(--red)">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
     </div>
 }
+
+@if (others.Any())
+{
+    <div class="tp-card">
+        <div class="tp-card-header">
+            <span class="tp-card-title">
+                <i class="bi bi-people-fill"></i> All Beneficiaries
+            </span>
+            <span class="badge-tp default">@others.Count</span>
+        </div>
+        <div class="benef-grid">
+            @foreach (var b in others)
+            {
+                <div class="benef-card">
+                    <div class="benef-card-top">
+                        <div class="benef-avatar">
+                            @if (!string.IsNullOrEmpty(b.ReceiverProfilePictureUrl))
+                            {
+                                <img src="@b.ReceiverProfilePictureUrl" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt="@b.ReceiverName" />
+                            }
+                            else
+                            {
+                                <span>@b.Nickname.Substring(0, 1).ToUpper()</span>
+                            }
+                        </div>
+                        <div class="benef-info">
+                            <div class="benef-nickname">@b.Nickname</div>
+                            <div class="benef-name">@b.ReceiverName</div>
+                        </div>
+                        <form asp-action="ToggleFavorite" method="post" style="margin:0">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@b.Id" />
+                            <button type="submit" class="benef-fav-btn" title="Add to favorites">
+                                <i class="bi bi-star"></i>
+                            </button>
+                        </form>
+                    </div>
+                    <div class="benef-meta">
+                        <span class="badge-tp @(b.TransferType == "WalletTransfer" ? "default" : "success")">
+                            <i class="bi @(b.TransferType == "WalletTransfer" ? "bi-wallet2" : "bi-phone")"></i>
+                            @(b.TransferType == "WalletTransfer" ? "Wallet" : "Mobile")
+                        </span>
+                        @if (!string.IsNullOrEmpty(b.ReceiverCountry))
+                        {
+                            <span style="font-size:11px;color:var(--text-3)"><i class="bi bi-geo-alt"></i> @b.ReceiverCountry</span>
+                        }
+                    </div>
+                    @if (!string.IsNullOrEmpty(b.ReceiverWalletSerial))
+                    {
+                        <div style="font-size:11px;color:var(--text-3);font-family:monospace;margin-top:4px">@b.ReceiverWalletSerial</div>
+                    }
+                    @if (!string.IsNullOrEmpty(b.ReceiverPhoneNumber))
+                    {
+                        <div style="font-size:11px;color:var(--text-3);margin-top:4px"><i class="bi bi-telephone"></i> @b.ReceiverPhoneNumber</div>
+                    }
+                    <div class="benef-actions">
+                        <a asp-controller="Transfer" asp-action="Create" class="btn-tp-primary" style="flex:1;font-size:12px;padding:6px 12px;text-align:center">
+                            <i class="bi bi-send-fill"></i> Send
+                        </a>
+                        <a asp-action="Edit" asp-route-id="@b.Id" class="btn-tp-secondary" style="font-size:12px;padding:6px 12px">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form asp-action="Delete" method="post" style="margin:0"
+                              onsubmit="return confirm('Remove @SafeName(b.Nickname) from your beneficiaries?')">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@b.Id" />
+                            <button type="submit" class="btn-tp-secondary" style="font-size:12px;padding:6px 12px;color:var(--red)">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+<style>
+    .benef-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 12px;
+        padding: 0 20px 20px;
+    }
+
+    .benef-card {
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px;
+        transition: all 0.3s ease;
+    }
+
+        .benef-card:hover {
+            border-color: var(--teal);
+            transform: translateY(-1px);
+        }
+
+        .benef-card.favorite {
+            border-color: rgba(244,168,32,0.3);
+            background: rgba(244,168,32,0.04);
+        }
+
+    .benef-card-top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .benef-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--teal-light);
+        color: var(--teal-dark);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 16px;
+        flex-shrink: 0;
+        overflow: hidden;
+    }
+
+    .benef-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .benef-nickname {
+        font-weight: 700;
+        font-size: 14px;
+        color: var(--text-1);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .benef-name {
+        font-size: 12px;
+        color: var(--text-3);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .benef-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+    }
+
+    .benef-actions {
+        display: flex;
+        gap: 6px;
+        margin-top: 12px;
+    }
+
+    .benef-fav-btn {
+        background: transparent;
+        border: none;
+        color: var(--text-3);
+        cursor: pointer;
+        padding: 4px 6px;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        flex-shrink: 0;
+    }
+
+        .benef-fav-btn:hover, .benef-fav-btn.active {
+            color: #f4a820;
+        }
+</style>

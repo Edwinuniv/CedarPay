@@ -35,13 +35,7 @@ namespace MoneyTransfer.Areas.Identity.Pages.Account
         private readonly IEmailSender _emailSender;
         private readonly ApplicationDbContext _context;
 
-        public RegisterModel(
-            UserManager<User> userManager,
-            IUserStore<User> userStore,
-            SignInManager<User> signInManager,
-            ILogger<RegisterModel> logger,
-            IEmailSender emailSender,
-            ApplicationDbContext context)
+        public RegisterModel(UserManager<User> userManager, IUserStore<User> userStore, SignInManager<User> signInManager, ILogger<RegisterModel> logger, IEmailSender emailSender, ApplicationDbContext context)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -118,7 +112,7 @@ namespace MoneyTransfer.Areas.Identity.Pages.Account
                 user.LastName = Input.LastName;
                 user.CreatedAt = DateTime.Now;
                 user.IsActive = true;
-                user.ProfileCompleted = false;  // ← ADD THIS - Profile not completed yet
+                user.ProfileCompleted = false;
 
                 var result = await _userManager.CreateAsync(user, Input.Password);
 
@@ -130,13 +124,26 @@ namespace MoneyTransfer.Areas.Identity.Pages.Account
                     user.LastName = Input.LastName;
                     user.CreatedAt = DateTime.Now;
                     user.IsActive = true;
-                    user.ProfileCompleted = false;  
-                    await _userManager.UpdateAsync(user);
+                    user.ProfileCompleted = false;
 
+                    var random = new Random();
+                    var sixDigitCode = random.Next(100000, 999999).ToString();
+
+                    user.EmailVerificationCode = sixDigitCode;
+                    user.EmailVerificationCodeExpiry = DateTime.UtcNow.AddMinutes(15);
+
+                    await _userManager.UpdateAsync(user);
                     await _userManager.AddToRoleAsync(user, Roles.User);
 
-                    await _signInManager.SignInAsync(user, isPersistent: false);
-                    return LocalRedirect("/Account/SetUpChoice");
+                    await _emailSender.SendEmailAsync(Input.Email,
+                        "Your CedarPay Verification Code",
+                        $"<h2>Welcome to CedarPay!</h2>" +
+                        $"<p>Your verification code is:</p>" +
+                        $"<h1 style='font-size:48px;letter-spacing:8px;color:#00b894;text-align:center;'>{sixDigitCode}</h1>" +
+                        $"<p>Enter this code on the verification page to activate your account.</p>" +
+                        $"<p style='color:#888;'>This code expires in 15 minutes.</p>");
+
+                    return RedirectToPage("./VerifyCode", new { email = Input.Email });
                 }
 
                 foreach (var error in result.Errors)

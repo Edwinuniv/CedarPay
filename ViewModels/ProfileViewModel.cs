@@ -79,6 +79,9 @@ namespace MoneyTransfer.ViewModels
         [Required(ErrorMessage = "Employer name is required")]
         public string EmployerName { get; set; } = "";
 
+        [EmailAddress(ErrorMessage = "Please enter a valid email address")]
+        public string? Email { get; set; }
+
         public string? UserUsername { get; set; }
         public string? Description { get; set; }
         public string? ProfilePictureUrl { get; set; }
@@ -89,7 +92,7 @@ namespace MoneyTransfer.ViewModels
         public string? OtherNationality { get; set; }
 
         public string? KYCStatus { get; set; }
-        
+
         public string? CompanyName { get; set; }
         public string? BusinessRegNumber { get; set; }
     }

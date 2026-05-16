@@ -35,6 +35,11 @@
             </span>
         </div>
         <div class="public-nav-links">
+            <a asp-controller="Home" asp-action="Index" class="btn-login">Home</a>
+            <a asp-controller="Home" asp-action="Features" class="btn-login">Features</a>
+            <a asp-controller="Home" asp-action="AboutUs" class="btn-login">About</a>
+            <a asp-controller="Home" asp-action="SecurityPolicy" class="btn-login">Security</a>
+            <a asp-controller="Home" asp-action="ContactUs" class="btn-login">Contact</a>
             <a asp-area="Identity" asp-page="/Account/Login" class="btn-login">Login</a>
             <a asp-area="Identity" asp-page="/Account/Register" class="btn-register">Register</a>
         </div>
@@ -105,11 +110,19 @@
 
         <div class="home-footer">
             <div class="home-footer-links">
-                <a asp-controller="Home" asp-action="Privacy" class="home-footer-link">Privacy Policy</a>
+                <a asp-controller="Home" asp-action="Index" class="home-footer-link">Home</a>
                 <span class="home-footer-separator">•</span>
-                <a href="#" class="home-footer-link">Terms of Service</a>
+                <a asp-controller="Home" asp-action="Features" class="home-footer-link">Features</a>
                 <span class="home-footer-separator">•</span>
-                <a href="#" class="home-footer-link">Contact</a>
+                <a asp-controller="Home" asp-action="AboutUs" class="home-footer-link">About</a>
+                <span class="home-footer-separator">•</span>
+                <a asp-controller="Home" asp-action="SecurityPolicy" class="home-footer-link">Security</a>
+                <span class="home-footer-separator">•</span>
+                <a asp-controller="Home" asp-action="ContactUs" class="home-footer-link">Contact</a>
+                <span class="home-footer-separator">•</span>
+                <a asp-controller="Home" asp-action="Privacy" class="home-footer-link">Privacy</a>
+                <span class="home-footer-separator">•</span>
+                <a asp-controller="Home" asp-action="Terms" class="home-footer-link">Terms</a>
             </div>
             <p class="home-footer-copyright">© @DateTime.Now.Year CedarPay — Licensed by Banque du Liban</p>
         </div>

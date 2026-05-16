@@ -156,7 +156,7 @@
                                                 "✅","❌","⭐","💯","🚀","💬","📱","🏦"
                                                 })
                         {
-                            <button type="button" class="ep-btn" onclick="insertEmoji('@e')">
+                            <button type="button" class="ep-btn" onclick="insertEmoji(event, '@e')">
                                 @e
                             </button>
                         }
@@ -188,7 +188,6 @@
         }
         scrollBot();
 
-        // Emoji picker
         document.getElementById('emojiBtn').addEventListener('click', e => {
             e.stopPropagation();
             document.getElementById('emojiPicker').classList.toggle('open');
@@ -198,13 +197,13 @@
                 document.getElementById('emojiPicker').classList.remove('open');
         });
 
-        function insertEmoji(em) {
+        function insertEmoji(event, em) {
+            event.stopPropagation();
             const s = input.selectionStart;
             const en = input.selectionEnd;
             input.value = input.value.slice(0,s) + em + input.value.slice(en);
             input.selectionStart = input.selectionEnd = s + em.length;
             input.focus();
-            document.getElementById('emojiPicker').classList.remove('open');
         }
 
         function formatBotMessage(text) {

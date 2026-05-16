@@ -30,6 +30,10 @@ namespace MoneyTransfer.Data
         public DbSet<ConversationParticipant> ConversationParticipants { get; set; }
         public DbSet<MessageReaction> MessageReactions { get; set; }
         public DbSet<Announcement> Announcements { get; set; }
+        public DbSet<ActivityLog> ActivityLogs { get; set; }
+        public DbSet<ScheduledTransfer> ScheduledTransfers { get; set; }
+        public DbSet<ReferralCode> ReferralCodes { get; set; }
+        public DbSet<ReferralUse> ReferralUses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -204,53 +208,60 @@ namespace MoneyTransfer.Data
                 .HasForeignKey(cp => cp.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Wallet>()
-                .Property(w => w.Balance)
-                .HasPrecision(18, 4);
+            modelBuilder.Entity<ActivityLog>()
+                .HasOne(a => a.User)
+                .WithMany()
+                .HasForeignKey(a => a.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<Transaction>()
-                .Property(t => t.Amount)
-                .HasPrecision(18, 4);
+            modelBuilder.Entity<ScheduledTransfer>()
+                .HasOne(s => s.User)
+                .WithMany()
+                .HasForeignKey(s => s.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<Transaction>()
-                .Property(t => t.ConvertedAmount)
-                .HasPrecision(18, 4);
+            modelBuilder.Entity<ScheduledTransfer>()
+                .HasOne(s => s.SenderWallet)
+                .WithMany()
+                .HasForeignKey(s => s.SenderWalletId)
+                .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Transaction>()
-                .Property(t => t.FeeAmount)
-                .HasPrecision(18, 4);
+            modelBuilder.Entity<ReferralCode>()
+                .HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<Transaction>()
-                .Property(t => t.ExchangeRateUsed)
-                .HasPrecision(18, 6);
+            modelBuilder.Entity<ReferralCode>()
+                .HasIndex(r => r.Code)
+                .IsUnique();
 
-            modelBuilder.Entity<TopUp>()
-                .Property(t => t.Amount)
-                .HasPrecision(18, 4);
+            modelBuilder.Entity<ReferralUse>()
+                .HasOne(r => r.ReferralCode)
+                .WithMany(rc => rc.Uses)
+                .HasForeignKey(r => r.ReferralCodeId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<Commission>()
-                .Property(c => c.Amount)
-                .HasPrecision(18, 4);
+            modelBuilder.Entity<ReferralUse>()
+                .HasOne(r => r.ReferredUser)
+                .WithMany()
+                .HasForeignKey(r => r.ReferredUserId)
+                .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Currency>()
-                .Property(c => c.ExchangeRateToUSD)
-                .HasPrecision(18, 6);
-
-            modelBuilder.Entity<FeePolicy>()
-                .Property(f => f.FeePercentage)
-                .HasPrecision(5, 4);
-
-            modelBuilder.Entity<FeePolicy>()
-                .Property(f => f.FixedFee)
-                .HasPrecision(18, 4);
-
-            modelBuilder.Entity<Agent>()
-                .Property(a => a.CommissionRate)
-                .HasPrecision(5, 4);
-
-            modelBuilder.Entity<Commission>()
-                .Property(c => c.Percentage)
-                .HasPrecision(5, 4);
+            modelBuilder.Entity<Wallet>().Property(w => w.Balance).HasPrecision(18, 4);
+            modelBuilder.Entity<Transaction>().Property(t => t.Amount).HasPrecision(18, 4);
+            modelBuilder.Entity<Transaction>().Property(t => t.ConvertedAmount).HasPrecision(18, 4);
+            modelBuilder.Entity<Transaction>().Property(t => t.FeeAmount).HasPrecision(18, 4);
+            modelBuilder.Entity<Transaction>().Property(t => t.ExchangeRateUsed).HasPrecision(18, 6);
+            modelBuilder.Entity<TopUp>().Property(t => t.Amount).HasPrecision(18, 4);
+            modelBuilder.Entity<Commission>().Property(c => c.Amount).HasPrecision(18, 4);
+            modelBuilder.Entity<Currency>().Property(c => c.ExchangeRateToUSD).HasPrecision(18, 6);
+            modelBuilder.Entity<FeePolicy>().Property(f => f.FeePercentage).HasPrecision(5, 4);
+            modelBuilder.Entity<FeePolicy>().Property(f => f.FixedFee).HasPrecision(18, 4);
+            modelBuilder.Entity<FeePolicy>().Property(f => f.DefaultCommissionRate).HasPrecision(5, 4);
+            modelBuilder.Entity<Agent>().Property(a => a.CommissionRate).HasPrecision(5, 4);
+            modelBuilder.Entity<Commission>().Property(c => c.Percentage).HasPrecision(5, 4);
+            modelBuilder.Entity<ScheduledTransfer>().Property(s => s.Amount).HasPrecision(18, 4);
 
             modelBuilder.Entity<AgentApplication>()
                 .HasOne(a => a.User)
@@ -276,7 +287,17 @@ namespace MoneyTransfer.Data
             );
 
             modelBuilder.Entity<FeePolicy>().HasData(
-                new FeePolicy { Id = 1, Name = "Standard", FeePercentage = 0.02m, FixedFee = 0.50m, FreeTransactionThreshold = 10, IsActive = true, CreatedAt = new DateTime(2026, 1, 1) }
+                new FeePolicy
+                {
+                    Id = 1,
+                    Name = "Standard",
+                    FeePercentage = 0.02m,
+                    FixedFee = 0.50m,
+                    FreeTransactionThreshold = 10,
+                    DefaultCommissionRate = 0.02m,
+                    IsActive = true,
+                    CreatedAt = new DateTime(2026, 1, 1)
+                }
             );
         }
     }

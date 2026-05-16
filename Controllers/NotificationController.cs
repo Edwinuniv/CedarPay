@@ -12,7 +12,6 @@ namespace MoneyTransfer.Controllers
     public class NotificationController : BaseController
     {
         private readonly INotificationRepository _notificationRepository;
-        private readonly UserManager<User> _userManager;
         private readonly IEmailService _emailService;
 
         public NotificationController(
@@ -22,7 +21,6 @@ namespace MoneyTransfer.Controllers
             IEmailService emailService) : base(userManager, userRepository)
         {
             _notificationRepository = notificationRepository;
-            _userManager = userManager;
             _emailService = emailService;
         }
 

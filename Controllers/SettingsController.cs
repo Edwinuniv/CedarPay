@@ -11,21 +11,12 @@ namespace MoneyTransfer.Controllers
     [Authorize]
     public class SettingsController : BaseController
     {
-        private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
-        private readonly IUserRepository _userRepository;
         private readonly IEmailService _emailService;
 
-        public SettingsController(
-            UserManager<User> userManager,
-            SignInManager<User> signInManager,
-            IUserRepository userRepository,
-            IEmailService emailService)
-            : base(userManager, userRepository)
+        public SettingsController(UserManager<User> userManager, SignInManager<User> signInManager, IUserRepository userRepository,IEmailService emailService): base(userManager, userRepository)
         {
-            _userManager = userManager;
             _signInManager = signInManager;
-            _userRepository = userRepository;
             _emailService = emailService;
         }
 
@@ -63,7 +54,6 @@ namespace MoneyTransfer.Controllers
             await _signInManager.RefreshSignInAsync(user);
             TempData["Success"] = "Password changed!";
 
-            // Send email notification about password change
             if (user.Email != null)
             {
                 _ = Task.Run(async () =>

@@ -41,6 +41,9 @@ namespace MoneyTransfer.Models
 
         public string AccountType { get; set; } = "Individual";
 
+        public string? EmailVerificationCode { get; set; }
+        public DateTime? EmailVerificationCodeExpiry { get; set; }
+
         public bool IsVerified { get; set; }
         public bool IsActive { get; set; }
         public bool ProfileCompleted { get; set; }

@@ -2,126 +2,401 @@
 @{
     ViewData["Title"] = "Transactions";
     ViewBag.PageClass = "page-transactions";
+    var search = ViewBag.Search as string;
+    var minAmount = ViewBag.MinAmount as decimal?;
+    var maxAmount = ViewBag.MaxAmount as decimal?;
+    var filterType = ViewBag.FilterType as string;
+    var filterStatus = ViewBag.FilterStatus as string;
+    bool hasFilter = !string.IsNullOrEmpty(search) || minAmount.HasValue || maxAmount.HasValue
+                     || (!string.IsNullOrEmpty(filterType) && filterType != "All")
+                     || (!string.IsNullOrEmpty(filterStatus) && filterStatus != "All");
+    var totalCashInMonth = ViewBag.TotalCashInThisMonth as decimal? ?? 0;
+    var totalCashInAll = ViewBag.TotalCashInAllTime as decimal? ?? 0;
 }
+
+<style>
+    .stat-card {
+        background: var(--bg-1);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        transition: all 0.3s ease;
+    }
+
+        .stat-card:hover {
+            border-color: var(--cedar-gold);
+            transform: translateY(-2px);
+        }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+
+        .stat-icon.received {
+            background: rgba(0, 184, 148, 0.1);
+            color: #00b894;
+        }
+
+        .stat-icon.sent {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+
+        .stat-icon.beneficiaries {
+            background: rgba(108, 99, 255, 0.1);
+            color: #6c63ff;
+        }
+
+    .stat-info {
+        flex: 1;
+    }
+
+    .stat-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--text-1);
+    }
+
+    .stat-label {
+        font-size: 13px;
+        color: var(--text-3);
+        margin-top: 4px;
+    }
+
+    .stat-sub {
+        font-size: 11px;
+        margin-top: 4px;
+    }
+
+    .stat-sub-teal {
+        color: var(--teal);
+    }
+
+    .text-success {
+        color: #00b894 !important;
+    }
+
+    .tx-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .tx-item {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px;
+        background: var(--bg-1);
+        border-radius: 12px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: 1px solid var(--border);
+    }
+
+        .tx-item:hover {
+            border-color: var(--cedar-gold);
+            transform: translateX(4px);
+        }
+
+    .tx-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+
+        .tx-avatar.sent {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+
+        .tx-avatar.received {
+            background: rgba(0, 184, 148, 0.1);
+            color: #00b894;
+        }
+
+    .tx-info {
+        flex: 1;
+    }
+
+    .tx-name {
+        font-weight: 600;
+        color: var(--text-1);
+        margin-bottom: 4px;
+    }
+
+    .tx-meta {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .tx-right {
+        text-align: right;
+        flex-shrink: 0;
+    }
+
+    .tx-amount {
+        font-weight: 700;
+        font-size: 18px;
+    }
+
+        .tx-amount.sent {
+            color: #dc3545;
+        }
+
+        .tx-amount.received {
+            color: #00b894;
+        }
+
+    .tx-status {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-size: 10px;
+        font-weight: 500;
+    }
+
+        .tx-status.completed {
+            background: rgba(0, 184, 148, 0.1);
+            color: #00b894;
+        }
+
+        .tx-status.pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+        }
+
+        .tx-status.failed {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+
+    .tx-status-row {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        justify-content: flex-end;
+        margin-top: 4px;
+    }
+
+    .tp-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+</style>
 
 <div class="page-header">
     <div>
         <h2>Transaction History</h2>
-        <p>All your transfers and payments</p>
+        <p>@Model.Count transaction@(Model.Count != 1 ? "s" : "") @(hasFilter ? "matched" : "total")</p>
     </div>
     <a asp-controller="Transfer" asp-action="Create" class="btn-tp-primary">
-        <i class="bi bi-send"></i> Send Money
+        <i class="bi bi-send-fill"></i> Send Money
     </a>
 </div>
 
-<div class="tp-card tx-search-container">
-    <input type="text"
-           id="txSearch"
-           class="form-control"
-           placeholder="Search by name or wallet serial (WAL-2026-XXXXX)..."
-           oninput="filterTx(this.value)" />
-</div>
-
-@if (!Model.Any())
-{
-    <div class="tp-card">
-        <div class="empty-state">
-            <i class="bi bi-receipt"></i>
-            <p>No transactions yet.</p>
-            <a asp-controller="Transfer" asp-action="Create" class="btn-tp-primary">
-                <i class="bi bi-send"></i> Make Your First Transfer
-            </a>
+<div class="row g-3 mb-3">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon received"><i class="bi bi-arrow-down-left"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">@Model.Count(t => !t.IsSent && t.TransactionType == "Transfer")</div>
+                <div class="stat-label">Received</div>
+                <div class="stat-sub stat-sub-teal">transfers in</div>
+            </div>
         </div>
     </div>
-}
-else
-{
-    <div class="tp-card">
-        <table class="tp-table" id="txTable">
-            <thead>
-                <tr>
-                    <th>Transaction</th>
-                    <th>Type</th>
-                    <th>Amount</th>
-                    <th>Fee</th>
-                    <th>Status</th>
-                    <th>Date</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var tx in Model)
-                {
-                    <tr class="tx-row"
-                        data-name="@tx.OtherPartyName.ToLower()"
-                        data-tx-serial="@tx.SerialNumber.ToLower()"
-                        data-wallet-serial="@(tx.SenderWalletSerial?.ToLower() ?? "") @(tx.ReceiverWalletSerial?.ToLower() ?? "")">
-                        <td>
-                            <div class="tx-user-info">
-                                <div class="tx-avatar @(tx.IsSent ? "sent" : "received") @(!string.IsNullOrEmpty(tx.OtherPartyPictureUrl) ? "tx-avatar-with-img" : "")">
-                                    @if (!string.IsNullOrEmpty(tx.OtherPartyPictureUrl))
-                                    {
-                                        <img src="@tx.OtherPartyPictureUrl" class="tx-avatar-img" />
-                                    }
-                                    else
-                                    {
-                                        @tx.OtherPartyInitials
-                                    }
-                                </div>
-                                <div class="tx-user-details">
-                                    <div class="tx-user-name">@tx.OtherPartyName</div>
-                                    <div class="tx-user-serial">@tx.SerialNumber</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <span class="badge-tp default">@tx.Type</span>
-                        </td>
-                        <td>
-                            <span class="tx-amount @(tx.IsSent ? "sent" : "received")">
-                                @(tx.IsSent ? "−" : "+")@tx.CurrencySymbol@tx.Amount.ToString("N2")
-                            </span>
-                        </td>
-                        <td>
-                            @if (tx.FeeWaived)
-                            {
-                                <span class="badge-tp success">Free 🎉</span>
-                            }
-                            else
-                            {
-                                <span class="tx-fee-text">$@tx.FeeAmount.ToString("N2")</span>
-                            }
-                        </td>
-                        <td>
-                            <span class="tx-status @tx.Status.ToLower()">@tx.Status</span>
-                        </td>
-                        <td class="tx-date-cell">@tx.CreatedAt.ToString("MMM dd, yyyy")</td>
-                        <td>
-                            <a asp-action="Details" asp-route-id="@tx.Id" class="tp-card-link">View</a>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-            <td>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon sent"><i class="bi bi-arrow-up-right"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">@Model.Count(t => t.IsSent && t.TransactionType == "Transfer")</div>
+                <div class="stat-label">Sent</div>
+                <div class="stat-sub stat-sub-teal">transfers out</div>
+            </div>
+        </div>
     </div>
-}
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon beneficiaries"><i class="bi bi-cash-coin"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">$@totalCashInMonth.ToString("N0")</div>
+                <div class="stat-label">Cash In This Month</div>
+                <div class="stat-sub">$@totalCashInAll.ToString("N0") all time</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon sent"><i class="bi bi-gift"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">@Model.Count(t => t.FeeWaived)</div>
+                <div class="stat-label">Free Transfers Used</div>
+                <div class="stat-sub stat-sub-teal">fee waived 🎉</div>
+            </div>
+        </div>
+    </div>
+</div>
 
-@section Scripts {
-    <script>
-        function filterTx(q) {
-            const lower = q.toLowerCase();
-            document.querySelectorAll('.tx-row').forEach(row => {
-                const name = row.dataset.name || '';
-                const walletSerial = row.dataset.walletSerial || '';
-                const txSerial = row.dataset.txSerial || '';
+<div class="tp-card mb-3">
+    <form method="get" asp-action="Index" class="tp-form" style="padding:20px">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Search</label>
+                <input type="text" name="search" class="form-control"
+                       placeholder="Name, ID, description, category…"
+                       value="@search" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Min Amount</label>
+                <input type="number" name="minAmount" class="form-control"
+                       step="0.01" min="0" placeholder="0.00"
+                       value="@(minAmount.HasValue? minAmount.Value.ToString("F2") : "")" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Max Amount</label>
+                <input type="number" name="maxAmount" class="form-control"
+                       step="0.01" min="0" placeholder="Any"
+                       value="@(maxAmount.HasValue? maxAmount.Value.ToString("F2") : "")" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Type</label>
+                <select name="type" class="form-select">
+                    <option value="All" selected="@(string.IsNullOrEmpty(filterType) || filterType == "All")">All Types</option>
+                    <option value="Transfer" selected="@(filterType == "Transfer")">Transfers</option>
+                    <option value="CashIn" selected="@(filterType == "CashIn")">Cash In</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="All" selected="@(string.IsNullOrEmpty(filterStatus) || filterStatus == "All")">All</option>
+                    <option value="Completed" selected="@(filterStatus == "Completed")">Completed</option>
+                    <option value="Pending" selected="@(filterStatus == "Pending")">Pending</option>
+                    <option value="Failed" selected="@(filterStatus == "Failed")">Failed</option>
+                </select>
+            </div>
+        </div>
+        <div class="d-flex gap-2 mt-3">
+            <button type="submit" class="btn-tp-primary">
+                <i class="bi bi-search"></i> Search
+            </button>
+            @if (hasFilter)
+            {
+                <a asp-action="Index" class="btn-tp-secondary">
+                    <i class="bi bi-x-circle"></i> Clear Filters
+                </a>
+            }
+        </div>
+    </form>
+</div>
 
-                const show = !q ||
-                    name.includes(lower) ||
-                    walletSerial.includes(lower) ||
-                    txSerial.includes(lower);
+<div class="tp-card">
+    <div class="tp-card-header">
+        <span class="tp-card-title">
+            <i class="bi bi-list-check"></i>
+            @if (hasFilter)
+            {
+                <text>Filtered Results</text>
+            }
+            else
+            {
+                <text>All Transactions</text>
+            }
+        </span>
+        <span class="badge-tp @(hasFilter ? "warning" : "default")">
+            @Model.Count item@(Model.Count != 1 ? "s" : "")
+        </span>
+    </div>
 
-                row.style.display = show ? '' : 'none';
-            });
-        }
-    </script>
-}
+    @if (!Model.Any())
+    {
+        <div class="empty-state" style="padding:60px 20px;text-align:center">
+            <i class="bi bi-receipt" style="font-size:40px;color:var(--text-3);display:block;margin-bottom:12px"></i>
+            @if (hasFilter)
+            {
+                <p>No transactions match your filters.</p>
+                <a asp-action="Index" class="btn-tp-secondary mt-2">Clear Filters</a>
+            }
+            else
+            {
+                <p>No transactions yet.</p>
+                <a asp-controller="Transfer" asp-action="Create" class="btn-tp-primary mt-2">
+                    <i class="bi bi-send-fill"></i> Send Money
+                </a>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="tx-list">
+            @foreach (var t in Model)
+            {
+                var isCashIn = t.TransactionType == "CashIn";
+                <a asp-action="Details" asp-route-id="@t.Id" class="tx-item">
+                    <div class="tx-avatar @(t.IsSent && !isCashIn ? "sent" : "received")">
+                        @if (!string.IsNullOrEmpty(t.OtherPartyPictureUrl))
+                        {
+                            <img src="@t.OtherPartyPictureUrl" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />
+                        }
+                        else
+                        {
+                            @t.OtherPartyInitials
+                        }
+                    </div>
+                    <div class="tx-info">
+                        <div class="tx-name">@t.OtherPartyName</div>
+                        <div class="tx-meta">
+                            <span class="badge-tp default" style="font-size:10px">@t.Type</span>
+                            @if (!string.IsNullOrEmpty(t.Category) && t.Category != "General")
+                            {
+                                <span class="badge-tp default" style="font-size:10px;background:var(--teal-light);color:var(--teal-dark)">
+                                    <i class="bi bi-tag"></i> @t.Category
+                                </span>
+                            }
+                            <span style="color:var(--text-3);font-size:11px">@t.CreatedAt.ToString("MMM dd, yyyy HH:mm")</span>
+                        </div>
+                        @if (!string.IsNullOrEmpty(t.Description))
+                        {
+                            <div style="font-size:11px;color:var(--text-3);margin-top:2px">@t.Description</div>
+                        }
+                    </div>
+                    <div class="tx-right">
+                        <div class="tx-amount @(t.IsSent && !isCashIn ? "sent" : "received")">
+                            @(t.IsSent && !isCashIn ? "−" : "+")@t.CurrencySymbol@t.Amount.ToString("N2")
+                        </div>
+                        <div class="tx-status-row">
+                            <span class="tx-status @t.Status.ToLower()">@t.Status</span>
+                            @if (t.FeeWaived)
+                            {
+                                <span style="font-size:10px;color:var(--teal)">Free 🎉</span>
+                            }
+                        </div>
+                        <div style="font-size:10px;color:var(--text-3);font-family:monospace">@t.SerialNumber</div>
+                    </div>
+                </a>
+            }
+        </div>
+    }
+</div>

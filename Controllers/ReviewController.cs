@@ -18,10 +18,7 @@ namespace MoneyTransfer.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IServiceProvider _sp;
 
-        public ReviewController(IReviewRepository reviewRepository, UserManager<User> userManager,
-            IUserRepository userRepository, IEmailService emailService,
-            ApplicationDbContext context, IServiceProvider sp)
-            : base(userManager, userRepository)
+        public ReviewController(IReviewRepository reviewRepository, UserManager<User> userManager, IUserRepository userRepository, IEmailService emailService, ApplicationDbContext context, IServiceProvider sp): base(userManager, userRepository)
         {
             _reviewRepository = reviewRepository;
             _emailService = emailService;

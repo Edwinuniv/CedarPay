@@ -4,66 +4,199 @@
     ViewBag.PageClass = "page-admin";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="page-header">
-            <div>
-                <h2>Fee Settings</h2>
-                <p>Configure transfer fees platform-wide</p>
-            </div>
-            <a asp-action="Index" class="btn-tp-secondary">
-                <i class="bi bi-arrow-left"></i> Back
-            </a>
+<style>
+    .fee-settings-container {
+        max-width: 700px;
+        margin: 0 auto;
+    }
+
+    .current-rates-box {
+        background: var(--bg-2);
+        border-radius: 12px;
+        padding: 16px;
+        margin: 20px 0;
+        border-left: 4px solid var(--cedar-gold);
+    }
+
+        .current-rates-box strong {
+            color: var(--cedar-gold);
+            display: block;
+            margin-bottom: 8px;
+        }
+
+    .rate-preview {
+        background: rgba(0, 184, 148, 0.1);
+        border-radius: 8px;
+        padding: 12px;
+        margin-top: 16px;
+        text-align: center;
+    }
+
+        .rate-preview span {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--teal);
+        }
+
+    .form-hint {
+        font-size: 11px;
+        color: var(--text-3);
+        margin-left: 8px;
+        font-weight: normal;
+    }
+
+    .example-box {
+        background: var(--bg-2);
+        border-radius: 10px;
+        padding: 12px;
+        margin-top: 16px;
+        font-size: 13px;
+    }
+
+        .example-box i {
+            color: var(--teal);
+            margin-right: 6px;
+        }
+
+    .input-group-custom {
+        position: relative;
+    }
+
+        .input-group-custom .currency-symbol {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-3);
+            font-weight: 500;
+        }
+
+        .input-group-custom input {
+            padding-left: 28px;
+        }
+</style>
+
+<div class="fee-settings-container">
+    <div class="page-header">
+        <div>
+            <h2><i class="bi bi-percent" style="color: var(--cedar-gold);"></i> Fee Settings</h2>
+            <p>Configure transfer fees platform-wide</p>
         </div>
+        <a asp-action="Index" class="btn-tp-secondary">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
 
-        <div class="tp-card">
-            <form asp-action="FeeSettings" method="post" class="tp-form">
-                @Html.AntiForgeryToken()
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert-tp success mb-3">
+            <i class="bi bi-check-circle-fill"></i> @TempData["Success"]
+        </div>
+    }
 
-                <div class="form-group">
-                    <label class="form-label">
-                        Fee Percentage
-                        <span class="form-hint">(e.g. 0.02 = 2%)</span>
-                    </label>
+    <div class="tp-card">
+        <form asp-action="FeeSettings" method="post">
+            @Html.AntiForgeryToken()
+
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="bi bi-percent"></i> Fee Percentage
+                    <span class="form-hint">(Enter as decimal: 0.02 = 2%)</span>
+                </label>
+                <div class="input-group-custom">
                     <input asp-for="FeePercentage"
                            class="form-control"
                            type="number"
-                           step="0.001" min="0" max="1" />
+                           step="0.001" min="0" max="1"
+                           oninput="updatePreview()" />
                 </div>
+                <span asp-validation-for="FeePercentage" class="text-danger"></span>
+            </div>
 
-                <div class="form-group">
-                    <label class="form-label">
-                        Fixed Fee (USD)
-                    </label>
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="bi bi-cash"></i> Fixed Fee (USD)
+                    <span class="form-hint">(Added to every transaction)</span>
+                </label>
+                <div class="input-group-custom">
+                    <span class="currency-symbol">$</span>
                     <input asp-for="FixedFee"
                            class="form-control"
                            type="number"
-                           step="0.01" min="0" />
+                           step="0.01" min="0"
+                           style="padding-left: 28px;"
+                           oninput="updatePreview()" />
                 </div>
+                <span asp-validation-for="FixedFee" class="text-danger"></span>
+            </div>
 
-                <div class="form-group">
-                    <label class="form-label">
-                        Free Transaction Every N Transfers
-                        <span class="form-hint">(e.g. 10 = every 10th is free)</span>
-                    </label>
-                    <input asp-for="FreeTransactionThreshold"
-                           class="form-control"
-                           type="number" min="1" />
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="bi bi-gift-fill"></i> Free Transaction Every N Transfers
+                    <span class="form-hint">(e.g., 10 = every 10th transfer is free)</span>
+                </label>
+                <input asp-for="FreeTransactionThreshold"
+                       class="form-control"
+                       type="number" min="1"
+                       oninput="updatePreview()" />
+                <span asp-validation-for="FreeTransactionThreshold" class="text-danger"></span>
+            </div>
+
+            <div class="current-rates-box">
+                <strong><i class="bi bi-info-circle-fill"></i> Current Configuration</strong>
+                <div class="row mt-2">
+                    <div class="col-6">
+                        <small>Fee Percentage:</small>
+                        <div><strong>@((Model.FeePercentage * 100).ToString("F2"))%</strong></div>
+                    </div>
+                    <div class="col-6">
+                        <small>Fixed Fee:</small>
+                        <div><strong>$@Model.FixedFee.ToString("F2")</strong></div>
+                    </div>
+                    <div class="col-12 mt-2">
+                        <small>Free Transaction Every:</small>
+                        <div><strong>@Model.FreeTransactionThreshold transfers</strong></div>
+                    </div>
                 </div>
+            </div>
 
-                <div class="current-rates-box">
-                    <strong>Current rates:</strong><br />
-                    Fee = @((Model.FeePercentage * 100).ToString("F1"))%
-                    + $@Model.FixedFee.ToString("F2") fixed<br />
-                    Free every @Model.FreeTransactionThreshold
-                    transactions
-                </div>
+            <div class="rate-preview" id="previewBox">
+                <i class="bi bi-calculator-fill"></i> Fee Calculation Preview:<br>
+                <span id="previewAmount">$0.00</span>
+                <small style="display: block; margin-top: 4px;">on a $100 transfer</small>
+            </div>
 
+            <div class="example-box">
+                <i class="bi bi-lightbulb-fill"></i> <strong>How it works:</strong><br>
+                Total Fee = (Amount × Fee Percentage) + Fixed Fee<br>
+                Example: $100 transfer at @((Model.FeePercentage * 100).ToString("F1"))% + $@Model.FixedFee.ToString("F2") =
+                <strong>$@((100 * Model.FeePercentage + Model.FixedFee).ToString("F2"))</strong>
+            </div>
+
+            <div class="d-flex gap-2 mt-3">
                 <button type="submit" class="btn-tp-primary">
-                    <i class="bi bi-check-lg"></i>
-                    Save Fee Settings
+                    <i class="bi bi-check-lg"></i> Save Fee Settings
                 </button>
-            </form>
-        </div>
+                <a asp-action="Index" class="btn-tp-secondary">Cancel</a>
+            </div>
+        </form>
     </div>
 </div>
+
+<script>
+    function updatePreview() {
+        const percentage = parseFloat(document.querySelector('[name="FeePercentage"]').value) || 0;
+        const fixedFee = parseFloat(document.querySelector('[name="FixedFee"]').value) || 0;
+        const amount = 100;
+        const totalFee = (amount * percentage) + fixedFee;
+        document.getElementById('previewAmount').innerHTML = '$' + totalFee.toFixed(2);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        updatePreview();
+    });
+</script>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

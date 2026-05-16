@@ -7,6 +7,7 @@ namespace MoneyTransfer.Models
         WalletTransfer,
         MobileTransfer,
     }
+
     public class Beneficiary
     {
         public int Id { get; set; }
@@ -20,6 +21,7 @@ namespace MoneyTransfer.Models
         public string? ReceiverCity { get; set; }
         public string? ReceiverBankName { get; set; }
         public BeneficiaryType Type { get; set; }
+        public bool IsFavorite { get; set; }
         public DateTime CreatedAt { get; set; }
 
         public string? ReceiverUserId { get; set; }

@@ -1,5 +1,5 @@
 ﻿@{
-    ViewData["Title"] = "Earnings Report";
+    ViewData["Title"] = "Platform Earnings Report";
     ViewBag.PageClass = "page-admin";
     var feePolicy = ViewBag.FeePolicy as MoneyTransfer.Models.FeePolicy;
     var agentEarnings = ViewBag.AgentEarnings as dynamic;
@@ -10,12 +10,19 @@
         <h2>Platform Earnings Report</h2>
         <p>Fees collected and agent commissions</p>
     </div>
-    <a asp-action="Index" class="btn-tp-secondary">
-        <i class="bi bi-arrow-left"></i> Back
-    </a>
+    <div style="display: flex; gap: 8px;">
+        <button onclick="exportCommissions()" class="btn-tp-primary">
+            <i class="bi bi-file-earmark-excel"></i> Export Commissions
+        </button>
+        <a asp-action="Reports" class="btn-tp-secondary">
+            <i class="bi bi-bar-chart"></i> Reports Dashboard
+        </a>
+        <a asp-action="Index" class="btn-tp-secondary">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
 </div>
 
-<!-- Fee Policy Summary -->
 <div class="tp-card mb-3 fee-policy-card">
     <div class="tp-card-header">
         <span class="tp-card-title">
@@ -41,7 +48,6 @@
     </div>
 </div>
 
-<!-- Platform Stats -->
 <div class="row g-3 mb-4">
     <div class="col-md-4">
         <div class="stat-card">
@@ -88,7 +94,6 @@
     </div>
 </div>
 
-<!-- Agent Earnings Table -->
 <div class="tp-card">
     <div class="tp-card-header">
         <span class="tp-card-title">
@@ -116,7 +121,9 @@
                         <td class="agent-store-cell">
                             @e.StoreName
                         </td>
-                        <td>@e.AgentName</td>
+                        <td class="agent-name-cell">
+                            @e.AgentName
+                        </td>
                         <td class="agent-city-cell">
                             @e.City
                         </td>
@@ -129,10 +136,20 @@
                         <td class="agent-unpaid-cell">
                             $@(((decimal)e.UnpaidCommissions).ToString("N2"))
                         </td>
-                        <td>@e.CommissionCount</td>
+                        <td class="agent-count-cell">
+                            @e.CommissionCount
+                        </td>
                     </tr>
                 }
             }
         </tbody>
     </table>
 </div>
+
+@section Scripts {
+    <script>
+        function exportCommissions() {
+            window.location.href = '/Admin/ExportCommissions';
+        }
+    </script>
+}

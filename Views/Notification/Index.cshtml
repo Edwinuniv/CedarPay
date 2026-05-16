@@ -2,16 +2,19 @@
 @{
     ViewData["Title"] = "Notifications";
     ViewBag.PageClass = "page-notifications";
+    var unread = Model.Where(n => !n.IsRead).ToList();
+    var read = Model.Where(n => n.IsRead).ToList();
 }
 
 <div class="page-header">
     <div>
         <h2>Notifications</h2>
-        <p>Your recent alerts and updates</p>
+        <p>@unread.Count unread of @Model.Count total</p>
     </div>
-    @if (Model.Any(n => !n.IsRead))
+    @if (unread.Any())
     {
         <form asp-action="MarkAllAsRead" method="post">
+            @Html.AntiForgeryToken()
             <button type="submit" class="btn-tp-secondary">
                 <i class="bi bi-check-all"></i> Mark All Read
             </button>
@@ -22,57 +25,230 @@
 @if (!Model.Any())
 {
     <div class="tp-card">
-        <div class="empty-state">
-            <i class="bi bi-bell-slash"></i>
+        <div class="empty-state" style="padding:60px 20px;text-align:center">
+            <i class="bi bi-bell" style="font-size:40px;color:var(--text-3);display:block;margin-bottom:12px"></i>
             <p>No notifications yet.</p>
         </div>
     </div>
 }
 else
 {
-    <div class="tp-card">
-        @foreach (var n in Model)
-        {
-            <div class="notification-item @(!n.IsRead ? "unread" : "")">
-                <div class="notification-icon">
-                    @switch (n.Type)
-                    {
-                        case "TransactionSent":
-                            <text>↑</text>
-                            break;
-                        case "TransactionReceived":
-                            <text>↓</text>
-                            break;
-                        case "TopUpCompleted":
-                            <text>+</text>
-                            break;
-                        default:
-                            <text>🔔</text>
-                            break;
-                    }
-                </div>
-                <div class="notification-content">
-                    <div class="notification-title @(!n.IsRead ? "unread" : "read")">
-                        @n.Title
-                        @if (!n.IsRead)
-                        {
-                            <span class="notification-unread-dot"></span>
-                        }
-                    </div>
-                    <div class="notification-message">@n.Message</div>
-                    <div class="notification-date">
-                        @n.CreatedAt.ToString("MMM dd, yyyy HH:mm")
-                    </div>
-                </div>
-                @if (!n.IsRead)
+    @if (unread.Any())
+    {
+        <div class="tp-card mb-3">
+            <div class="tp-card-header">
+                <span class="tp-card-title">
+                    <i class="bi bi-bell-fill" style="color:var(--teal)"></i> Unread
+                </span>
+                <span class="badge-tp warning">@unread.Count</span>
+            </div>
+            <div class="notif-list">
+                @foreach (var n in unread.OrderByDescending(n => n.CreatedAt))
                 {
-                    <form asp-action="MarkAsRead" asp-route-id="@n.Id" method="post">
-                        <button type="submit" class="btn-tp-secondary notification-mark-read-btn">
-                            Mark Read
-                        </button>
-                    </form>
+                    var icon = n.Type switch
+                    {
+                        "TransactionReceived" => "bi-arrow-down-circle-fill",
+                        "TransactionSent" => "bi-send-fill",
+                        "TopUpCompleted" => "bi-plus-circle-fill",
+                        "KYCApproved" => "bi-shield-check",
+                        "KYCRejected" => "bi-x-circle-fill",
+                        _ => "bi-bell-fill"
+                    };
+                    var iconColor = n.Type switch
+                    {
+                        "TransactionReceived" => "var(--teal)",
+                        "TopUpCompleted" => "var(--teal)",
+                        "KYCApproved" => "var(--teal)",
+                        "TransactionSent" => "var(--red)",
+                        "KYCRejected" => "var(--red)",
+                        _ => "var(--text-2)"
+                    };
+
+                    <div class="notif-item unread">
+                        <div class="notif-icon-wrap" style="background:rgba(0,184,148,0.1)">
+                            <i class="bi @icon" style="color:@iconColor;font-size:18px"></i>
+                        </div>
+                        <div class="notif-body">
+                            <div class="notif-title">@n.Title</div>
+                            <div class="notif-message">@n.Message</div>
+                            <div class="notif-time">
+                                <i class="bi bi-clock"></i>
+                                @n.CreatedAt.ToString("MMM dd, yyyy · HH:mm")
+                            </div>
+                        </div>
+                        <div class="notif-actions">
+                            <form asp-action="MarkAsRead" method="post" style="margin:0">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@n.Id" />
+                                <button type="submit" class="notif-read-btn" title="Mark as read">
+                                    <i class="bi bi-check-lg"></i>
+                                </button>
+                            </form>
+                            @if (!string.IsNullOrEmpty(n.RedirectUrl))
+                            {
+                                <a href="@n.RedirectUrl" class="notif-link-btn" title="View">
+                                    <i class="bi bi-arrow-right"></i>
+                                </a>
+                            }
+                        </div>
+                    </div>
                 }
             </div>
-        }
-    </div>
+        </div>
+    }
+
+    @if (read.Any())
+    {
+        <div class="tp-card">
+            <div class="tp-card-header">
+                <span class="tp-card-title">
+                    <i class="bi bi-bell"></i> Earlier
+                </span>
+                <span class="badge-tp default">@read.Count</span>
+            </div>
+            <div class="notif-list">
+                @foreach (var n in read.OrderByDescending(n => n.CreatedAt).Take(30))
+                {
+                    var icon = n.Type switch
+                    {
+                        "TransactionReceived" => "bi-arrow-down-circle-fill",
+                        "TransactionSent" => "bi-send-fill",
+                        "TopUpCompleted" => "bi-plus-circle-fill",
+                        "KYCApproved" => "bi-shield-check",
+                        "KYCRejected" => "bi-x-circle-fill",
+                        _ => "bi-bell-fill"
+                    };
+
+                    <div class="notif-item read">
+                        <div class="notif-icon-wrap" style="background:var(--surface-2)">
+                            <i class="bi @icon" style="color:var(--text-3);font-size:18px"></i>
+                        </div>
+                        <div class="notif-body">
+                            <div class="notif-title read">@n.Title</div>
+                            <div class="notif-message">@n.Message</div>
+                            <div class="notif-time">
+                                <i class="bi bi-clock"></i>
+                                @n.CreatedAt.ToString("MMM dd, yyyy · HH:mm")
+                            </div>
+                        </div>
+                        @if (!string.IsNullOrEmpty(n.RedirectUrl))
+                        {
+                            <div class="notif-actions">
+                                <a href="@n.RedirectUrl" class="notif-link-btn" title="View">
+                                    <i class="bi bi-arrow-right"></i>
+                                </a>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
 }
+
+<style>
+    .notif-list {
+        padding: 0 4px 4px;
+    }
+
+    .notif-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--border);
+        transition: var(--transition);
+    }
+
+        .notif-item:last-child {
+            border-bottom: none;
+        }
+
+        .notif-item.unread {
+            background: rgba(0,184,148,0.03);
+        }
+
+        .notif-item:hover {
+            background: var(--surface-2);
+        }
+
+    .notif-icon-wrap {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .notif-body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .notif-title {
+        font-weight: 700;
+        font-size: 14px;
+        color: var(--text-1);
+        margin-bottom: 3px;
+    }
+
+        .notif-title.read {
+            font-weight: 500;
+            color: var(--text-2);
+        }
+
+    .notif-message {
+        font-size: 13px;
+        color: var(--text-2);
+        margin-bottom: 5px;
+    }
+
+    .notif-time {
+        font-size: 11px;
+        color: var(--text-3);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .notif-actions {
+        display: flex;
+        gap: 6px;
+        flex-shrink: 0;
+    }
+
+    .notif-read-btn {
+        background: var(--teal-light);
+        border: none;
+        color: var(--teal);
+        padding: 6px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: var(--transition);
+    }
+
+        .notif-read-btn:hover {
+            background: var(--teal);
+            color: white;
+        }
+
+    .notif-link-btn {
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        color: var(--text-2);
+        padding: 6px 10px;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+    }
+
+        .notif-link-btn:hover {
+            border-color: var(--teal);
+            color: var(--teal);
+        }
+</style>

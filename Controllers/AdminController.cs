@@ -24,12 +24,7 @@ namespace MoneyTransfer.Controllers
         private readonly ICurrencyExchangeService _exchangeService;
         private readonly IEmailService _emailService;
 
-        public AdminController(IUserRepository userRepository, IAgentRepository agentRepository,
-            ITransactionRepository transactionRepository, IReviewRepository reviewRepository,
-            IAgentApplicationRepository applicationRepository,
-            UserManager<User> userManager, ApplicationDbContext context,
-            IAccountRepository accountRepository, IWalletRepository walletRepository,
-            ICurrencyExchangeService currencyExchangeService, IEmailService emailService) : base(userManager, userRepository)
+        public AdminController(IUserRepository userRepository, IAgentRepository agentRepository, ITransactionRepository transactionRepository, IReviewRepository reviewRepository, IAgentApplicationRepository applicationRepository,  UserManager<User> userManager, ApplicationDbContext context, IAccountRepository accountRepository, IWalletRepository walletRepository, ICurrencyExchangeService currencyExchangeService, IEmailService emailService) : base(userManager, userRepository)
         {
             _agentRepository = agentRepository;
             _transactionRepository = transactionRepository;
@@ -172,7 +167,6 @@ namespace MoneyTransfer.Controllers
             };
             await _agentRepository.AddAsync(agent);
 
-            // Send email notification for approval
             if (user?.Email != null)
             {
                 _ = Task.Run(async () =>
@@ -202,7 +196,6 @@ namespace MoneyTransfer.Controllers
 
             var user = await _userManager.FindByIdAsync(application.UserId);
 
-            // Send email notification for rejection
             if (user?.Email != null)
             {
                 _ = Task.Run(async () =>
@@ -270,7 +263,6 @@ namespace MoneyTransfer.Controllers
 
             await _context.SaveChangesAsync();
 
-            // Send email notification for KYC approval
             if (user?.Email != null)
             {
                 _ = Task.Run(async () =>
@@ -302,7 +294,6 @@ namespace MoneyTransfer.Controllers
 
             await _context.SaveChangesAsync();
 
-            // Send email notification for KYC rejection
             if (user?.Email != null)
             {
                 _ = Task.Run(async () =>
@@ -382,7 +373,6 @@ namespace MoneyTransfer.Controllers
             await _walletRepository.AddAsync(wallet);
             await _context.SaveChangesAsync();
 
-            // Send email notification for wallet approval
             var user = request.User;
             if (user?.Email != null)
             {
@@ -414,7 +404,6 @@ namespace MoneyTransfer.Controllers
             _context.WalletRequests.Update(request);
             await _context.SaveChangesAsync();
 
-            // Send email notification for wallet rejection
             var user = request.User;
             if (user?.Email != null)
             {
@@ -752,6 +741,272 @@ namespace MoneyTransfer.Controllers
             }
 
             return RedirectToAction("Users");
+        }
+
+        public async Task<IActionResult> Reports()
+        {
+            var totalFees = await _context.Transactions
+                .Where(t => t.Status == TransactionStatus.Completed && !t.FeeWaived)
+                .SumAsync(t => (decimal?)t.FeeAmount) ?? 0;
+
+            var totalCommissions = await _context.Commissions.SumAsync(c => (decimal?)c.Amount) ?? 0;
+
+            var totalVolume = await _context.Transactions
+                .Where(t => t.Status == TransactionStatus.Completed)
+                .SumAsync(t => (decimal?)t.Amount) ?? 0;
+
+            ViewBag.TotalFees = totalFees;
+            ViewBag.TotalCommissions = totalCommissions;
+            ViewBag.TotalVolume = totalVolume;
+            ViewBag.TotalUsers = await _context.Users.CountAsync();
+            ViewBag.TotalAgents = await _context.Agents.CountAsync(a => a.Status == AgentStatus.Approved);
+            ViewBag.TotalTransactions = await _context.Transactions.CountAsync();
+
+            return View();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExportUsers(string role = "", DateTime? fromDate = null, DateTime? toDate = null)
+        {
+            var users = await _userRepository.GetAllAsync();
+            var userList = users.AsQueryable();
+
+            if (!string.IsNullOrEmpty(role))
+            {
+                var userIdsInRole = new List<string>();
+                foreach (var user in userList)
+                {
+                    var userRoles = await _userManager.GetRolesAsync(user);
+                    if (userRoles.Contains(role, StringComparer.OrdinalIgnoreCase))
+                        userIdsInRole.Add(user.Id);
+                }
+                userList = userList.Where(u => userIdsInRole.Contains(u.Id));
+            }
+
+            if (fromDate.HasValue)
+                userList = userList.Where(u => u.CreatedAt >= fromDate.Value);
+            if (toDate.HasValue)
+                userList = userList.Where(u => u.CreatedAt <= toDate.Value);
+
+            var data = userList.ToList();
+
+            using var wb = new ClosedXML.Excel.XLWorkbook();
+            var ws = wb.Worksheets.Add("Users");
+
+            ws.Cell(1, 1).Value = "Created At";
+            ws.Cell(1, 2).Value = "Name";
+            ws.Cell(1, 3).Value = "Email";
+            ws.Cell(1, 4).Value = "Phone";
+            ws.Cell(1, 5).Value = "Nationality";
+            ws.Cell(1, 6).Value = "Account Type";
+            ws.Cell(1, 7).Value = "KYC Verified";
+            ws.Cell(1, 8).Value = "Status";
+            ws.Cell(1, 9).Value = "Roles";
+
+            var headerRow = ws.Row(1);
+            headerRow.Style.Font.Bold = true;
+            headerRow.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.FromHtml("#00b894");
+            headerRow.Style.Font.FontColor = ClosedXML.Excel.XLColor.White;
+
+            int row = 2;
+            foreach (var u in data)
+            {
+                var userRoles = await _userManager.GetRolesAsync(u);
+                ws.Cell(row, 1).Value = u.CreatedAt.ToString("yyyy-MM-dd HH:mm");
+                ws.Cell(row, 2).Value = $"{u.FirstName} {u.LastName}";
+                ws.Cell(row, 3).Value = u.Email ?? "";
+                ws.Cell(row, 4).Value = u.PhoneNumber ?? "";
+                ws.Cell(row, 5).Value = u.Nationality ?? "";
+                ws.Cell(row, 6).Value = u.AccountType ?? "Individual";
+                ws.Cell(row, 7).Value = u.IsVerified ? "Yes" : "No";
+                ws.Cell(row, 8).Value = u.IsActive ? "Active" : "Disabled";
+                ws.Cell(row, 9).Value = string.Join(", ", userRoles);
+                row++;
+            }
+
+            ws.Columns().AdjustToContents();
+            using var ms = new MemoryStream();
+            wb.SaveAs(ms);
+            var filename = $"Users_Export_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+            return File(ms.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExportTransactions(DateTime? fromDate = null, DateTime? toDate = null, string status = "")
+        {
+            var transactions = _context.Transactions
+                .Include(t => t.SenderWallet).ThenInclude(w => w.User)
+                .Include(t => t.ReceiverWallet).ThenInclude(w => w.User)
+                .Include(t => t.SenderCurrency)
+                .Include(t => t.ReceiverCurrency)
+                .AsQueryable();
+
+            if (fromDate.HasValue)
+                transactions = transactions.Where(t => t.CreatedAt >= fromDate.Value);
+            if (toDate.HasValue)
+                transactions = transactions.Where(t => t.CreatedAt <= toDate.Value);
+            if (!string.IsNullOrEmpty(status))
+                transactions = transactions.Where(t => t.Status.ToString() == status);
+
+            var data = await transactions.OrderByDescending(t => t.CreatedAt).ToListAsync();
+
+            using var wb = new ClosedXML.Excel.XLWorkbook();
+            var ws = wb.Worksheets.Add("Transactions");
+
+            ws.Cell(1, 1).Value = "Date";
+            ws.Cell(1, 2).Value = "Serial Number";
+            ws.Cell(1, 3).Value = "Sender";
+            ws.Cell(1, 4).Value = "Receiver";
+            ws.Cell(1, 5).Value = "Amount";
+            ws.Cell(1, 6).Value = "Currency";
+            ws.Cell(1, 7).Value = "Fee";
+            ws.Cell(1, 8).Value = "Fee Waived";
+            ws.Cell(1, 9).Value = "Status";
+            ws.Cell(1, 10).Value = "Type";
+
+            var headerRow = ws.Row(1);
+            headerRow.Style.Font.Bold = true;
+            headerRow.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.FromHtml("#00b894");
+            headerRow.Style.Font.FontColor = ClosedXML.Excel.XLColor.White;
+
+            int row = 2;
+            foreach (var t in data)
+            {
+                ws.Cell(row, 1).Value = t.CreatedAt.ToString("yyyy-MM-dd HH:mm");
+                ws.Cell(row, 2).Value = t.SerialNumber ?? "";
+                ws.Cell(row, 3).Value = t.SenderWallet?.User != null ? $"{t.SenderWallet.User.FirstName} {t.SenderWallet.User.LastName}" : "";
+                ws.Cell(row, 4).Value = t.ReceiverWallet?.User != null ? $"{t.ReceiverWallet.User.FirstName} {t.ReceiverWallet.User.LastName}" : t.ReceiverName ?? "";
+                ws.Cell(row, 5).Value = (double)t.Amount;
+                ws.Cell(row, 6).Value = t.SenderCurrency?.Code ?? "";
+                ws.Cell(row, 7).Value = (double)t.FeeAmount;
+                ws.Cell(row, 8).Value = t.FeeWaived ? "Yes" : "No";
+                ws.Cell(row, 9).Value = t.Status.ToString();
+                ws.Cell(row, 10).Value = t.Type.ToString();
+                row++;
+            }
+
+            ws.Columns().AdjustToContents();
+            using var ms = new MemoryStream();
+            wb.SaveAs(ms);
+            var filename = $"Transactions_Export_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+            return File(ms.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExportCommissions(DateTime? fromDate = null, DateTime? toDate = null, bool? isPaid = null)
+        {
+            var commissions = _context.Commissions
+                .Include(c => c.Agent)
+                .Include(c => c.Transaction)
+                .AsQueryable();
+
+            if (fromDate.HasValue)
+                commissions = commissions.Where(c => c.EarnedAt >= fromDate.Value);
+            if (toDate.HasValue)
+                commissions = commissions.Where(c => c.EarnedAt <= toDate.Value);
+            if (isPaid.HasValue)
+                commissions = commissions.Where(c => c.IsPaid == isPaid.Value);
+
+            var data = await commissions.OrderByDescending(c => c.EarnedAt).ToListAsync();
+
+            using var wb = new ClosedXML.Excel.XLWorkbook();
+            var ws = wb.Worksheets.Add("Commissions");
+
+            ws.Cell(1, 1).Value = "Earned Date";
+            ws.Cell(1, 2).Value = "Agent Store";
+            ws.Cell(1, 3).Value = "Agent Name";
+            ws.Cell(1, 4).Value = "Transaction ID";
+            ws.Cell(1, 5).Value = "Transaction Amount";
+            ws.Cell(1, 6).Value = "Commission Rate (%)";
+            ws.Cell(1, 7).Value = "Commission Amount";
+            ws.Cell(1, 8).Value = "Status";
+            ws.Cell(1, 9).Value = "Paid Date";
+
+            var headerRow = ws.Row(1);
+            headerRow.Style.Font.Bold = true;
+            headerRow.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.FromHtml("#00b894");
+            headerRow.Style.Font.FontColor = ClosedXML.Excel.XLColor.White;
+
+            int row = 2;
+            foreach (var c in data)
+            {
+                ws.Cell(row, 1).Value = c.EarnedAt.ToString("yyyy-MM-dd HH:mm");
+                ws.Cell(row, 2).Value = c.Agent?.StoreName ?? "";
+                ws.Cell(row, 3).Value = c.Agent?.AgentName ?? "";
+                ws.Cell(row, 4).Value = c.Transaction?.SerialNumber ?? "";
+                ws.Cell(row, 5).Value = (double)(c.Transaction?.Amount ?? 0);
+                ws.Cell(row, 6).Value = (double)(c.Percentage * 100);
+                ws.Cell(row, 7).Value = (double)c.Amount;
+                ws.Cell(row, 8).Value = c.IsPaid ? "Paid" : "Pending";
+                ws.Cell(row, 9).Value = c.PaidAt?.ToString("yyyy-MM-dd") ?? "";
+                row++;
+            }
+
+            ws.Columns().AdjustToContents();
+            using var ms = new MemoryStream();
+            wb.SaveAs(ms);
+            var filename = $"Commissions_Export_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+            return File(ms.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename);
+        }
+
+        public async Task<IActionResult> ManageCommissions()
+        {
+            var agents = await _context.Agents
+                .Where(a => a.Status == AgentStatus.Approved)
+                .OrderBy(a => a.StoreName)
+                .ToListAsync();
+
+            var feePolicy = await _context.FeePolicies.FirstOrDefaultAsync();
+            ViewBag.DefaultCommissionRate = feePolicy?.DefaultCommissionRate ?? 0.02m;
+
+            return View(agents);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateCommissionRate(int agentId, decimal commissionRate)
+        {
+            var agent = await _agentRepository.GetByIdAsync(agentId);
+            if (agent == null)
+            {
+                return NotFound();
+            }
+
+            if (commissionRate < 0 || commissionRate > 1)
+            {
+                TempData["Error"] = "Commission rate must be between 0% and 100%.";
+                return RedirectToAction("ManageCommissions");
+            }
+
+            agent.CommissionRate = commissionRate;
+            await _agentRepository.UpdateAsync(agent);
+
+            TempData["Success"] = $"Commission rate for {agent.StoreName} updated to {(commissionRate * 100).ToString("F1")}%";
+            return RedirectToAction("ManageCommissions");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateDefaultCommissionRate(decimal defaultRate)
+        {
+            if (defaultRate < 0 || defaultRate > 1)
+            {
+                TempData["Error"] = "Default commission rate must be between 0% and 100%.";
+                return RedirectToAction("ManageCommissions");
+            }
+
+            var feePolicy = await _context.FeePolicies.FirstOrDefaultAsync();
+            if (feePolicy == null)
+            {
+                feePolicy = new FeePolicy();
+                await _context.FeePolicies.AddAsync(feePolicy);
+            }
+
+            feePolicy.DefaultCommissionRate = defaultRate;
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"Default commission rate updated to {(defaultRate * 100).ToString("F1")}%";
+            return RedirectToAction("ManageCommissions");
         }
     }
 }

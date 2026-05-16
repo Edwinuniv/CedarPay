@@ -9,9 +9,14 @@
         <h2>All Transactions</h2>
         <p>Platform-wide transaction log (last 100)</p>
     </div>
-    <a asp-action="Index" class="btn-tp-secondary">
-        <i class="bi bi-arrow-left"></i> Back
-    </a>
+    <div style="display: flex; gap: 8px;">
+        <button onclick="exportTransactions()" class="btn-tp-primary">
+            <i class="bi bi-file-earmark-excel"></i> Export All Transactions
+        </button>
+        <a asp-action="Index" class="btn-tp-secondary">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
 </div>
 
 <div class="tp-card search-container">
@@ -107,6 +112,10 @@
                 const data = row.dataset.search || '';
                 row.style.display = (!q || data.includes(lower)) ? '' : 'none';
             });
+        }
+
+        function exportTransactions() {
+            window.location.href = '/Admin/ExportTransactions';
         }
     </script>
 }

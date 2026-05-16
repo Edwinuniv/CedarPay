@@ -2,8 +2,18 @@
 
 namespace MoneyTransfer.Models
 {
-    public enum KYCStatus { Pending, Approved, Rejected }
-    public enum DocumentType { Passport, NationalID, DriverLicense }
+    public enum KYCStatus
+    { 
+        Pending, 
+        Approved, 
+        Rejected
+    }
+    public enum DocumentType 
+    {
+        Passport,
+        NationalID, 
+        DriverLicense
+    }
 
     public class KYCDocument
     {

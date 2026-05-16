@@ -41,7 +41,6 @@
         </button>
     </div>
 
-    <!-- Header -->
     <div class="report-header">
         <div>
             <div class="report-brand">Cedar<span>Pay</span></div>
@@ -64,7 +63,6 @@
         </div>
     </div>
 
-    <!-- Account Information -->
     <h2 class="report-section-title">👤 Account Information</h2>
     <table class="report-table">
         <tbody>
@@ -113,7 +111,6 @@
         </tbody>
     </table>
 
-    <!-- Summary Statistics -->
     <h2 class="report-section-title">📊 Summary Statistics</h2>
     @{
         var totalSent = sent.Where(t => t.Status == MoneyTransfer.Models.TransactionStatus.Completed).Sum(t => t.Amount);
@@ -146,7 +143,6 @@
         </div>
     </div>
 
-    <!-- Monthly Breakdown Chart -->
     <h2 class="report-section-title">📅 Monthly Breakdown (Last 6 Months)</h2>
     @{
         var monthlyData = new List<(string Month, decimal Sent, decimal Received, decimal TopUp)>();
@@ -213,7 +209,6 @@
         </tbody>
     </table>
 
-    <!-- Per-Wallet Sections -->
     <h2 class="report-section-title">💳 Wallets — Individual Reports</h2>
     @foreach (var wallet in wallets)
     {

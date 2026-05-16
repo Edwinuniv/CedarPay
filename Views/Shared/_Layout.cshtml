@@ -5,17 +5,142 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@ViewData["Title"] — CedarPay</title>
 
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
-    <!-- CedarPay CSS -->
-    <link rel="stylesheet"
-          href="~/css/transferpay.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/transferpay.css" asp-append-version="true" />
 
     @await RenderSectionAsync("Styles", required: false)
+
+    <style>
+        @@keyframes skeleton-shimmer {
+            0% {
+                background-position: -600px 0;
+            }
+
+            100% {
+                background-position: 600px 0;
+            }
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, var(--surface-2) 25%, var(--border) 50%, var(--surface-2) 75%);
+            background-size: 600px 100%;
+            animation: skeleton-shimmer 1.4s infinite linear;
+            border-radius: 6px;
+        }
+
+        .skeleton-text {
+            height: 14px;
+            margin-bottom: 8px;
+        }
+
+        .skeleton-title {
+            height: 22px;
+            margin-bottom: 10px;
+            width: 60%;
+        }
+
+        .skeleton-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .skeleton-card {
+            height: 80px;
+            border-radius: 12px;
+        }
+
+        #pageLoadBar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            width: 0;
+            background: linear-gradient(90deg, var(--teal), var(--teal-mid));
+            z-index: 99999;
+            transition: width 0.3s ease;
+            pointer-events: none;
+        }
+
+        #backToTop {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            width: 44px;
+            height: 44px;
+            background: var(--teal);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 16px rgba(0,184,148,0.4);
+            opacity: 0;
+            transform: translateY(12px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            z-index: 9000;
+        }
+
+            #backToTop.visible {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            #backToTop:hover {
+                background: var(--teal-dark);
+                transform: translateY(-2px);
+            }
+
+        .fx-ticker {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-size: 12px;
+            color: var(--text-2);
+            padding: 6px 14px;
+            background: var(--surface-2);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .fx-ticker-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .fx-ticker-code {
+            font-weight: 700;
+            color: var(--text-1);
+            font-size: 11px;
+        }
+
+        .fx-ticker-rate {
+            color: var(--teal);
+            font-weight: 600;
+        }
+
+        .fx-ticker-sep {
+            color: var(--border-md);
+        }
+
+        @@media (max-width: 768px) {
+            .fx-ticker {
+                display: none;
+            }
+
+            #backToTop {
+                bottom: 16px;
+                right: 16px;
+            }
+        }
+    </style>
 
     <script>
         (function() {
@@ -36,11 +161,11 @@
         bool isAgent = User.IsInRole("Agent");
         var userIdHash = User.Identity?.IsAuthenticated == true ? User.Identity.Name?.GetHashCode() ?? 0 : 0;
         var avatarColorNumber = (Math.Abs(userIdHash) % 8) + 1;
+        var pendingCount = ViewBag.PendingAgentsCount as int? ?? 0;
     }
 
     @if (!isAuth)
     {
-        <!-- Public layout - no sidebar -->
         <nav class="public-nav">
             <div class="sidebar-brand public-nav-brand">
                 <div class="brand-icon">
@@ -63,8 +188,6 @@
     {
         <div class="app-wrapper">
             <aside class="sidebar" id="sidebar">
-
-                <!-- Brand / Toggle -->
                 <div class="sidebar-brand">
                     <button onclick="toggleSidebar()" class="sidebar-brand-btn">
                         <div class="brand-icon">
@@ -76,230 +199,180 @@
                     </button>
                 </div>
 
-                <!-- ─── MAIN (all users) ─── -->
                 <div class="sidebar-section-label">MAIN</div>
                 <nav class="sidebar-nav">
-                    <a asp-controller="Dashboard"
-                       asp-action="Index"
-                       class="nav-item @(ctrl == "Dashboard" ? "active" : "")">
+                    <a asp-controller="Dashboard" asp-action="Index" class="nav-item @(ctrl == "Dashboard" ? "active" : "")">
                         <i class="bi bi-grid-1x2-fill"></i>
                         <span class="brand-text">Dashboard</span>
                     </a>
-                    <a asp-controller="Transaction"
-                       asp-action="Index"
-                       class="nav-item @(ctrl == "Transaction" ? "active" : "")">
+                    <a asp-controller="Transaction" asp-action="Index" class="nav-item @(ctrl == "Transaction" ? "active" : "")">
                         <i class="bi bi-receipt"></i>
                         <span class="brand-text">Transactions</span>
                     </a>
-                    <a asp-controller="Beneficiary"
-                       asp-action="Index"
-                       class="nav-item @(ctrl == "Beneficiary" ? "active" : "")">
+                    <a asp-controller="Beneficiary" asp-action="Index" class="nav-item @(ctrl == "Beneficiary" ? "active" : "")">
                         <i class="bi bi-people-fill"></i>
                         <span class="brand-text">Beneficiaries</span>
                     </a>
                 </nav>
 
-                <!-- ─── TOOLS (all users) ─── -->
-                <div class="sidebar-section-label">TOOLS</div>
-                <nav class="sidebar-nav">
-                    <a asp-controller="Transfer"
-                       asp-action="Create"
-                       class="nav-item @(ctrl == "Transfer" ? "active" : "")">
-                        <i class="bi bi-send-fill"></i>
-                        <span class="brand-text">Send Money</span>
-                    </a>
-                    <a asp-controller="TopUp"
-                       asp-action="Create"
-                       class="nav-item @(ctrl == "TopUp" ? "active" : "")">
-                        <i class="bi bi-plus-circle-fill"></i>
-                        <span class="brand-text">Top Up</span>
-                    </a>
-                    <a asp-controller="Wallet"
-                       asp-action="Index"
-                       class="nav-item @(ctrl == "Wallet" ? "active" : "")">
-                        <i class="bi bi-wallet2"></i>
-                        <span class="brand-text">Wallets</span>
-                    </a>
-                    <a asp-controller="Finance"
-                       asp-action="Index"
-                       class="nav-item @(ctrl == "Finance" ? "active" : "")">
-                        <i class="bi bi-bar-chart-fill"></i>
-                        <span class="brand-text">Finance</span>
-                    </a>
-                    <a asp-controller="Review"
-                       asp-action="MyReviews"
-                       class="nav-item @(ctrl == "Review" ? "active" : "")">
-                        <i class="bi bi-star-fill"></i>
-                        <span class="brand-text">Reviews</span>
-                    </a>
-                    <!-- User-facing Announcements - shows to ALL users -->
-                    <a asp-controller="Announcement"
-                       asp-action="Index"
-                       class="nav-item @(ctrl == "Announcement" && action != "Manage" ? "active" : "")">
-                        <i class="bi bi-megaphone-fill"></i>
-                        <span class="brand-text">Announcements</span>
-                        <span id="annSidebarBadge" style="display:none;background:#ef4444;color:#fff;border-radius:20px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:auto"></span>
-                    </a>
-                    <a asp-controller="Map"
-                       asp-action="Index"
-                       class="nav-item @(ctrl == "Map" ? "active" : "")">
-                        <i class="bi bi-geo-alt-fill"></i>
-                        <span class="brand-text">Agent Map</span>
-                    </a>
-                    <!-- My Report (above Settings) -->
-                    <a asp-controller="Account"
-                       asp-action="Report"
-                       target="_blank"
-                       class="nav-item">
-                        <i class="bi bi-file-earmark-text"></i>
-                        <span class="brand-text">My Report</span>
-                    </a>
-                    <!-- Settings (above Profile) -->
-                    <a asp-controller="Settings"
-                       asp-action="Index"
-                       class="nav-item @(ctrl == "Settings" ? "active" : "")">
-                        <i class="bi bi-gear-fill"></i>
-                        <span class="brand-text">Settings</span>
-                    </a>
-                    <!-- Profile (Last) -->
-                    <a asp-controller="Account"
-                       asp-action="Profile"
-                       class="nav-item @(ctrl == "Account" && action != "Report" ? "active" : "")">
-                        <i class="bi bi-person-fill"></i>
-                        <span class="brand-text">Profile</span>
-                    </a>
-                </nav>
+                @if (isAdmin)
+                {
+                    <div class="sidebar-section-label">ADMIN</div>
+                    <nav class="sidebar-nav">
+                        <a asp-controller="Admin" asp-action="Index" class="nav-item @(ctrl == "Admin" && action == "Index" ? "active" : "")">
+                            <i class="bi bi-shield-fill"></i>
+                            <span class="brand-text">Control Center</span>
+                        </a>
+                        <a asp-controller="Admin" asp-action="Users" class="nav-item @(action == "Users" || action == "UserDetails" ? "active" : "")">
+                            <i class="bi bi-people-fill"></i>
+                            <span class="brand-text">Manage Users</span>
+                        </a>
+                        <a asp-controller="Admin" asp-action="AgentApplications" class="nav-item @(action == "AgentApplications" ? "active" : "")">
+                            <i class="bi bi-person-check-fill"></i>
+                            <span class="brand-text">Applications</span>
+                            @if (pendingCount > 0)
+                            {
+                                <span class="nav-badge">@pendingCount</span>
+                            }
+                        </a>
+                        <a asp-controller="Admin" asp-action="KYCReview" class="nav-item @(action == "KYCReview" ? "active" : "")">
+                            <i class="bi bi-shield-check"></i>
+                            <span class="brand-text">KYC Review</span>
+                        </a>
+                        <a asp-controller="Admin" asp-action="WalletRequests" class="nav-item @(action == "WalletRequests" ? "active" : "")">
+                            <i class="bi bi-wallet2"></i>
+                            <span class="brand-text">Wallet Approvals</span>
+                        </a>
+                        <a asp-controller="Admin" asp-action="AllTransactions" class="nav-item @(action == "AllTransactions" ? "active" : "")">
+                            <i class="bi bi-list-check"></i>
+                            <span class="brand-text">All Transactions</span>
+                        </a>
+                        <a asp-controller="Admin" asp-action="EarningsReport" class="nav-item @(action == "EarningsReport" ? "active" : "")">
+                            <i class="bi bi-graph-up-arrow"></i>
+                            <span class="brand-text">Earnings Report</span>
+                        </a>
+                        <a asp-controller="Admin" asp-action="ManageCommissions" class="nav-item @(action == "ManageCommissions" ? "active" : "")">
+                            <i class="bi bi-percent"></i>
+                            <span class="brand-text">Commissions</span>
+                        </a>
+                        <a asp-controller="Admin" asp-action="Reports" class="nav-item @(action == "Reports" ? "active" : "")">
+                            <i class="bi bi-file-earmark-bar-graph"></i>
+                            <span class="brand-text">Reports</span>
+                        </a>
+                        <a asp-controller="Admin" asp-action="FeeSettings" class="nav-item @(action == "FeeSettings" ? "active" : "")">
+                            <i class="bi bi-percent"></i>
+                            <span class="brand-text">Fee Settings</span>
+                        </a>
+                        <a asp-controller="Admin" asp-action="ExchangeRates" class="nav-item @(action == "ExchangeRates" ? "active" : "")">
+                            <i class="bi bi-currency-exchange"></i>
+                            <span class="brand-text">Exchange Rates</span>
+                        </a>
+                        <a asp-controller="AdminAnalytics" asp-action="Index" class="nav-item @(ctrl == "AdminAnalytics" ? "active" : "")">
+                            <i class="bi bi-graph-up-arrow"></i>
+                            <span class="brand-text">Analytics</span>
+                        </a>
+                        <a asp-controller="Announcement" asp-action="Manage" class="nav-item @(ctrl == "Announcement" && action == "Manage" ? "active" : "")">
+                            <i class="bi bi-megaphone-fill"></i>
+                            <span class="brand-text">Manage Announcements</span>
+                        </a>
+                    </nav>
+                }
 
-                <!-- ─── AGENT SECTION ─── -->
                 @if (isAgent || isAdmin)
                 {
                     <div class="sidebar-section-label">AGENT</div>
                     <nav class="sidebar-nav">
-                        <a asp-controller="Agent"
-                           asp-action="Dashboard"
-                           class="nav-item @(ctrl == "Agent" && action == "Dashboard" ? "active" : "")">
+                        <a asp-controller="Agent" asp-action="Dashboard" class="nav-item @(ctrl == "Agent" && action == "Dashboard" ? "active" : "")">
                             <i class="bi bi-speedometer2"></i>
                             <span class="brand-text">Agent Dashboard</span>
                         </a>
-                        <a asp-controller="Agent"
-                           asp-action="CashIn"
-                           class="nav-item @(action == "CashIn" ? "active" : "")">
+                        <a asp-controller="Agent" asp-action="CashIn" class="nav-item @(action == "CashIn" ? "active" : "")">
                             <i class="bi bi-cash-coin"></i>
                             <span class="brand-text">Cash In</span>
                         </a>
-                        <a asp-controller="Agent"
-                           asp-action="CashOut"
-                           class="nav-item @(action == "CashOut" ? "active" : "")">
+                        <a asp-controller="Agent" asp-action="CashOut" class="nav-item @(action == "CashOut" ? "active" : "")">
                             <i class="bi bi-cash-stack"></i>
                             <span class="brand-text">Cash Out</span>
                         </a>
-                        <a asp-controller="Agent"
-                           asp-action="Commissions"
-                           class="nav-item @(action == "Commissions" ? "active" : "")">
+                        <a asp-controller="Agent" asp-action="Commissions" class="nav-item @(action == "Commissions" ? "active" : "")">
                             <i class="bi bi-percent"></i>
                             <span class="brand-text">Commissions</span>
                         </a>
-                        <a asp-controller="Agent"
-                           asp-action="SetLocation"
-                           class="nav-item @(action == "SetLocation" ? "active" : "")">
+                        <a asp-controller="Agent" asp-action="CashHistory" class="nav-item @(action == "CashHistory" ? "active" : "")">
+                            <i class="bi bi-clock-history"></i>
+                            <span class="brand-text">Cash History</span>
+                        </a>
+                        <a asp-controller="Agent" asp-action="SetLocation" class="nav-item @(action == "SetLocation" ? "active" : "")">
                             <i class="bi bi-pin-map-fill"></i>
                             <span class="brand-text">Set Map Location</span>
                         </a>
-                        <a asp-controller="Agent"
-                           asp-action="Register"
-                           class="nav-item @(ctrl == "Agent" && action == "Register" ? "active" : "")">
+                        <a asp-controller="Agent" asp-action="Register" class="nav-item @(ctrl == "Agent" && action == "Register" ? "active" : "")">
                             <i class="bi bi-shop-window"></i>
                             <span class="brand-text">+ New Store</span>
                         </a>
                     </nav>
                 }
 
-                <!-- ─── ADMIN SECTION ─── -->
-                @if (isAdmin)
-                {
-                    <div class="sidebar-section-label">ADMIN</div>
-                    <nav class="sidebar-nav">
-                        <a asp-controller="Admin"
-                           asp-action="Index"
-                           class="nav-item @(ctrl == "Admin" && action == "Index" ? "active" : "")">
-                            <i class="bi bi-shield-fill"></i>
-                            <span class="brand-text">Control Center</span>
-                        </a>
-                        <a asp-controller="Admin"
-                           asp-action="Users"
-                           class="nav-item @(action == "Users" || action == "UserDetails" ? "active" : "")">
-                            <i class="bi bi-people-fill"></i>
-                            <span class="brand-text">Manage Users</span>
-                        </a>
-                        <a asp-controller="Admin"
-                           asp-action="AgentApplications"
-                           class="nav-item @(action=="AgentApplications" ? "active" : "")">
-                            <i class="bi bi-person-check-fill"></i>
-                            <span class="brand-text">Applications</span>
-                            @{
-                                var pendingCount = ViewBag.PendingAgentsCount as int? ?? 0;
-                            }
-                            @if (pendingCount > 0)
-                            {
-                                <span class="nav-badge">@pendingCount</span>
-                            }
-                        </a>
-                        <a asp-controller="Admin"
-                           asp-action="KYCReview"
-                           class="nav-item @(action == "KYCReview" ? "active" : "")">
-                            <i class="bi bi-shield-check"></i>
-                            <span class="brand-text">KYC Review</span>
-                        </a>
-                        <a asp-controller="Admin"
-                           asp-action="WalletRequests"
-                           class="nav-item @(action == "WalletRequests" ? "active" : "")">
-                            <i class="bi bi-wallet2"></i>
-                            <span class="brand-text">Wallet Approvals</span>
-                        </a>
-                        <a asp-controller="Admin"
-                           asp-action="AllTransactions"
-                           class="nav-item @(action == "AllTransactions" ? "active" : "")">
-                            <i class="bi bi-list-check"></i>
-                            <span class="brand-text">All Transactions</span>
-                        </a>
-                        <a asp-controller="Admin"
-                           asp-action="EarningsReport"
-                           class="nav-item @(action == "EarningsReport" ? "active" : "")">
-                            <i class="bi bi-graph-up-arrow"></i>
-                            <span class="brand-text">Earnings Report</span>
-                        </a>
-                        <a asp-controller="Admin"
-                           asp-action="FeeSettings"
-                           class="nav-item @(action == "FeeSettings" ? "active" : "")">
-                            <i class="bi bi-percent"></i>
-                            <span class="brand-text">Fee Settings</span>
-                        </a>
-                        <a asp-controller="Admin"
-                           asp-action="ExchangeRates"
-                           class="nav-item @(action == "ExchangeRates" ? "active" : "")">
-                            <i class="bi bi-currency-exchange"></i>
-                            <span class="brand-text">Exchange Rates</span>
-                        </a>
-                        <!-- ADMIN Announcements Management - only for Admin -->
-                        <a asp-controller="Announcement"
-                           asp-action="Manage"
-                           class="nav-item @(ctrl == "Announcement" && action == "Manage" ? "active" : "")">
-                            <i class="bi bi-megaphone-fill"></i>
-                            <span class="brand-text">Manage Announcements</span>
-                        </a>
-                        <a asp-controller="AdminAnalytics" asp-action="Index" class="nav-item @(ctrl == "AdminAnalytics" ? "active" : "")">
-                            <i class="bi bi-graph-up-arrow"></i>
-                            <span class="brand-text">Analytics</span>
-                        </a>
-                        <a asp-controller="Admin"
-                           asp-action="InstantAgent"
-                           onclick="return confirmInstantAgent()"
-                           class="nav-item @(isAgent ? "active" : "")">
-                            <i class="bi bi-shop"></i>
-                            <span class="brand-text">@(isAgent ? "Agent Active ✓" : "Become Agent")</span>
-                        </a>
-                    </nav>
-                }
+                <div class="sidebar-section-label">TOOLS</div>
+                <nav class="sidebar-nav">
+                    <a asp-controller="Transfer" asp-action="Create" class="nav-item @(ctrl == "Transfer" ? "active" : "")">
+                        <i class="bi bi-send-fill"></i>
+                        <span class="brand-text">Send Money</span>
+                    </a>
+                    <a asp-controller="TopUp" asp-action="Create" class="nav-item @(ctrl == "TopUp" ? "active" : "")">
+                        <i class="bi bi-plus-circle-fill"></i>
+                        <span class="brand-text">Top Up</span>
+                    </a>
+                    <a asp-controller="Wallet" asp-action="Index" class="nav-item @(ctrl == "Wallet" ? "active" : "")">
+                        <i class="bi bi-wallet2"></i>
+                        <span class="brand-text">Wallets</span>
+                    </a>
+                    <a asp-controller="Finance" asp-action="Index" class="nav-item @(ctrl == "Finance" ? "active" : "")">
+                        <i class="bi bi-bar-chart-fill"></i>
+                        <span class="brand-text">Finance</span>
+                    </a>
+                    <a asp-controller="ScheduledTransfer" asp-action="Index" class="nav-item @(ctrl == "ScheduledTransfer" ? "active" : "")">
+                        <i class="bi bi-calendar-check-fill"></i>
+                        <span class="brand-text">Scheduled Transfers</span>
+                    </a>
+                    <a asp-controller="Review" asp-action="MyReviews" class="nav-item @(ctrl == "Review" ? "active" : "")">
+                        <i class="bi bi-star-fill"></i>
+                        <span class="brand-text">Reviews</span>
+                    </a>
+                    <a asp-controller="Announcement" asp-action="Index" class="nav-item @(ctrl == "Announcement" && action != "Manage" ? "active" : "")">
+                        <i class="bi bi-megaphone-fill"></i>
+                        <span class="brand-text">Announcements</span>
+                        <span id="annSidebarBadge" class="ann-sidebar-badge"></span>
+                    </a>
+                    <a asp-controller="Map" asp-action="Index" class="nav-item @(ctrl == "Map" ? "active" : "")">
+                        <i class="bi bi-geo-alt-fill"></i>
+                        <span class="brand-text">Agent Map</span>
+                    </a>
+                    <a asp-controller="Settings" asp-action="Index" class="nav-item @(ctrl == "Settings" ? "active" : "")">
+                        <i class="bi bi-gear-fill"></i>
+                        <span class="brand-text">Settings</span>
+                    </a>
+                </nav>
+
+                <div class="sidebar-section-label">PERSONAL</div>
+                <nav class="sidebar-nav">
+                    <a asp-controller="Account" asp-action="Profile" class="nav-item @(ctrl == "Account" && action != "Report" ? "active" : "")">
+                        <i class="bi bi-person-fill"></i>
+                        <span class="brand-text">My Profile</span>
+                    </a>
+                    <a asp-controller="Account" asp-action="Report" target="_blank" class="nav-item">
+                        <i class="bi bi-file-earmark-text"></i>
+                        <span class="brand-text">My Report</span>
+                    </a>
+                    <a asp-controller="Referral" asp-action="Index" class="nav-item @(ctrl == "Referral" ? "active" : "")">
+                        <i class="bi bi-gift-fill"></i>
+                        <span class="brand-text">Referral Program</span>
+                    </a>
+                    <a asp-controller="ActivityLog" asp-action="Index" class="nav-item @(ctrl == "ActivityLog" ? "active" : "")">
+                        <i class="bi bi-shield-check"></i>
+                        <span class="brand-text">Activity Log</span>
+                    </a>
+                </nav>
 
                 <div class="sidebar-bottom">
                     <div class="sidebar-user">
@@ -320,7 +393,7 @@
                             <div class="sidebar-user-role">
                                 @if (isAdmin)
                                 {
-                                    <span>Admin</span>
+                                    <span>Administrator</span>
                                 }
                                 else if (isAgent)
                                 {
@@ -335,13 +408,10 @@
                     </div>
 
                     <nav class="sidebar-nav">
-                        <form asp-area="Identity"
-                              asp-page="/Account/Logout"
-                              asp-route-returnUrl="/"
-                              method="post">
+                        <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="/" method="post">
                             <button type="submit" class="nav-item logout-btn logout-btn-full">
                                 <i class="bi bi-box-arrow-left"></i>
-                                <span class="brand-text">Logout</span>
+                                <span class="brand-text">Sign Out</span>
                             </button>
                         </form>
                     </nav>
@@ -359,35 +429,32 @@
                         </div>
                     </div>
 
+                    <div class="fx-ticker" id="fxTicker" title="Live exchange rates">
+                        <i class="bi bi-currency-exchange" style="color:var(--teal)"></i>
+                        <span id="fxItems" style="display:flex;gap:14px;align-items:center">
+                            <span style="color:var(--text-3);font-size:11px">Loading rates…</span>
+                        </span>
+                    </div>
+
                     <div class="topbar-right">
-                        <a asp-controller="Chat"
-                           asp-action="Index"
-                           class="topbar-btn"
-                           title="Messages">
+                        <a asp-controller="Chat" asp-action="Index" class="topbar-btn" title="Messages">
                             <i class="bi bi-chat-dots-fill"></i>
-                            <span id="chatBadge" class="chat-badge">0</span>
+                            <span id="chatBadge" class="notification-dot" style="display:none">0</span>
                         </a>
 
-                        <a asp-controller="Notification"
-                           asp-action="Index"
-                           class="topbar-btn"
-                           id="notifBtn"
-                           title="Notifications">
+                        <a asp-controller="Notification" asp-action="Index" class="topbar-btn" id="notifBtn" title="Notifications">
                             <i class="bi bi-bell-fill"></i>
-                            <span class="notification-dot" id="notifBadge">0</span>
+                            <span class="notification-dot" id="notifBadge" style="display:none">0</span>
                         </a>
 
-                        <a asp-controller="Account"
-                           asp-action="Profile"
-                           class="user-avatar topbar-user-avatar"
-                           title="Profile">
+                        <a asp-controller="Account" asp-action="Profile" class="user-avatar" title="Profile">
                             @if (!string.IsNullOrEmpty(ViewBag.ProfilePictureUrl as string))
                             {
                                 <img src="@ViewBag.ProfilePictureUrl" class="user-avatar-img" />
                             }
                             else
                             {
-                                <div class="avatar-initials avatar-color-@avatarColorNumber" style="width:36px;height:36px;font-size:12px;">
+                                <div class="avatar-initials avatar-color-@avatarColorNumber">
                                     @(ViewBag.UserInitials ?? "?")
                                 </div>
                             }
@@ -395,24 +462,22 @@
                     </div>
                 </header>
 
-                @if (TempData["Success"] != null)
-                {
-                    <div class="alerts-container">
+                <div class="alerts-container">
+                    @if (TempData["Success"] != null)
+                    {
                         <div class="alert-tp success">
                             <i class="bi bi-check-circle-fill"></i>
                             @TempData["Success"]
                         </div>
-                    </div>
-                }
-                @if (TempData["Error"] != null)
-                {
-                    <div class="alerts-container">
+                    }
+                    @if (TempData["Error"] != null)
+                    {
                         <div class="alert-tp error">
                             <i class="bi bi-exclamation-circle-fill"></i>
                             @TempData["Error"]
                         </div>
-                    </div>
-                }
+                    }
+                </div>
 
                 <div id="annBannerContainer" class="ann-banner-container"></div>
                 <main class="page-content">
@@ -422,8 +487,7 @@
         </div>
     }
 
-    <!-- Lebanese Cedar Background SVG (embedded for reliability) -->
-    <svg class="cedar-bg-svg" style="position: fixed; bottom: 0; left: 0; width: 100%; height: 260px; z-index: 0; pointer-events: none; opacity: 0.04;">
+    <svg style="position: fixed; bottom: 0; left: 0; width: 100%; height: 260px; z-index: 0; pointer-events: none; opacity: 0.04;">
         <defs>
             <g id="cedar-tree-simple">
                 <polygon points="20,50 35,15 50,50" />
@@ -442,6 +506,12 @@
         <use href="#cedar-tree-simple" x="1220" y="170" transform="scale(1.05)" />
     </svg>
 
+    <div id="pageLoadBar"></div>
+    <button id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">
+        <i class="bi bi-chevron-up"></i>
+    </button>
+    <div id="inAppToast"></div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     @if (isAuth)
@@ -456,181 +526,234 @@
                     document.body.classList.remove('dark-mode');
                 }
             }
-
             applyDarkMode(localStorage.getItem('darkMode') === '1');
 
-            function toggleDarkMode(cb) {
-                const on = cb.checked;
-                localStorage.setItem('darkMode', on ? '1' : '0');
-                applyDarkMode(on);
-            }
-
-            function confirmInstantAgent() {
-                return confirm('Become an agent? This will add the Agent role to your account.');
-            }
-
             function toggleSidebar() {
-                const sidebar = document.getElementById('sidebar');
-                const main = document.getElementById('mainContent');
-                const isMini = sidebar.classList.toggle('mini');
+                var sidebar = document.getElementById('sidebar');
+                var main = document.getElementById('mainContent');
+                var isMini = sidebar.classList.toggle('mini');
                 main.classList.toggle('sidebar-mini', isMini);
                 localStorage.setItem('sidebarMini', isMini ? '1' : '0');
                 updateSidebarText(isMini);
             }
 
             function updateSidebarText(isMini) {
-                document.querySelectorAll('.brand-text').forEach(el => {
+                document.querySelectorAll('.brand-text').forEach(function(el) {
                     el.style.display = isMini ? 'none' : '';
                 });
-                document.querySelectorAll('.sidebar-section-label').forEach(el => {
+                document.querySelectorAll('.sidebar-section-label').forEach(function(el) {
                     el.style.display = isMini ? 'none' : '';
                 });
             }
 
-            document.addEventListener('DOMContentLoaded', () => {
-                const isMini = localStorage.getItem('sidebarMini') === '1';
+            document.addEventListener('DOMContentLoaded', function() {
+                var isMini = localStorage.getItem('sidebarMini') === '1';
                 if (isMini) {
-                    const sidebar = document.getElementById('sidebar');
-                    const main = document.getElementById('mainContent');
+                    var sidebar = document.getElementById('sidebar');
+                    var main = document.getElementById('mainContent');
                     if (sidebar) sidebar.classList.add('mini');
                     if (main) main.classList.add('sidebar-mini');
                     updateSidebarText(true);
                 }
             });
 
+            async function loadExchangeRates() {
+                try {
+                    const response = await fetch('/api/CurrencyApi/live-rates');
+                    const data = await response.json();
+                    if (data && data.rates) {
+                        const tickerDiv = document.getElementById('fxItems');
+                        const pairs = ['USD/LBP', 'EUR/USD', 'EUR/LBP', 'AED/USD'];
+                        let html = '';
+                        for (const pair of pairs) {
+                            const [from, to] = pair.split('/');
+                            let rate = 0;
+                            if (to === 'USD') {
+                                rate = data.rates[from] || 0;
+                            } else if (from === 'USD') {
+                                rate = 1 / (data.rates[to] || 1);
+                            } else {
+                                const fromRate = data.rates[from] || 1;
+                                const toRate = data.rates[to] || 1;
+                                rate = fromRate / toRate;
+                            }
+                            html += `<div class="fx-ticker-item">
+                                        <span class="fx-ticker-code">${pair}</span>
+                                        <span class="fx-ticker-rate">${rate.toFixed(4)}</span>
+                                        <span class="fx-ticker-sep">|</span>
+                                    </div>`;
+                        }
+                        tickerDiv.innerHTML = html;
+                    }
+                } catch (error) {
+                    console.log('Exchange rate fetch failed');
+                }
+            }
+            loadExchangeRates();
+            setInterval(loadExchangeRates, 60000);
+
+            window.addEventListener('beforeunload', function() {
+                document.getElementById('pageLoadBar').style.width = '0%';
+            });
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(function() {
+                    document.getElementById('pageLoadBar').style.width = '100%';
+                    setTimeout(function() {
+                        document.getElementById('pageLoadBar').style.width = '0%';
+                    }, 300);
+                }, 100);
+            });
+
+            window.addEventListener('scroll', function() {
+                const btn = document.getElementById('backToTop');
+                if (window.scrollY > 300) {
+                    btn.classList.add('visible');
+                } else {
+                    btn.classList.remove('visible');
+                }
+            });
+
             function loadNotificationCount() {
                 fetch('/api/NotificationApi/unread-count')
-                    .then(r => r.json())
-                    .then(data => {
-                        const badge = document.getElementById('notifBadge');
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        var badge = document.getElementById('notifBadge');
                         if (badge) {
-                            const count = data.unreadCount || data.UnreadCount || 0;
-                            badge.textContent = count;
+                            var count = data.unreadCount || data.UnreadCount || 0;
+                            badge.textContent = count > 9 ? '9+' : count;
                             badge.style.display = count > 0 ? 'flex' : 'none';
                         }
                     })
-                    .catch(() => {});
+                    .catch(function() {});
             }
 
             function loadChatCount() {
                 fetch('/Chat/UnreadCount')
-                    .then(r => r.json())
-                    .then(data => {
-                        const badge = document.getElementById('chatBadge');
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        var badge = document.getElementById('chatBadge');
                         if (badge) {
-                            const count = data.count || 0;
-                            badge.textContent = count;
+                            var count = data.count || 0;
+                            badge.textContent = count > 9 ? '9+' : count;
                             badge.style.display = count > 0 ? 'flex' : 'none';
                         }
                     })
-                    .catch(() => {});
+                    .catch(function() {});
             }
 
             if ('Notification' in window && Notification.permission === 'default') {
-                setTimeout(() => Notification.requestPermission(), 3000);
+                setTimeout(function() { Notification.requestPermission(); }, 3000);
             }
 
             function showPushNotification(title, body, icon) {
                 if (Notification.permission === 'granted') {
-                    const notif = new Notification(title, {
+                    var notif = new Notification(title, {
                         body: body,
                         icon: icon || '/favicon.ico',
                         badge: '/favicon.ico',
                         tag: 'cedarpay-notif',
                         requireInteraction: false
                     });
-                    notif.onclick = () => { window.focus(); notif.close(); };
-                    setTimeout(() => notif.close(), 5000);
+                    notif.onclick = function() { window.focus(); notif.close(); };
+                    setTimeout(function() { notif.close(); }, 5000);
                 }
             }
 
-            let lastNotifCount = 0;
+            var lastNotifCount = 0;
             function checkNewNotifications() {
                 fetch('/api/NotificationApi/unread-count')
-                    .then(r => r.json())
-                    .then(data => {
-                        const count = data.unreadCount || data.UnreadCount || 0;
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        var count = data.unreadCount || data.UnreadCount || 0;
                         if (count > lastNotifCount && lastNotifCount > 0) {
-                            showPushNotification('CedarPay', `You have ${count} new notification${count > 1 ? 's' : ''}`, '/cedar-icon.svg');
+                            showPushNotification('CedarPay', 'You have ' + count + ' new notification' + (count > 1 ? 's' : ''), '/cedar-icon.svg');
                         }
                         lastNotifCount = count;
-                        const badge = document.getElementById('notifBadge');
+                        var badge = document.getElementById('notifBadge');
                         if (badge) {
-                            badge.textContent = count;
+                            badge.textContent = count > 9 ? '9+' : count;
                             badge.style.display = count > 0 ? 'flex' : 'none';
                         }
                     })
-                    .catch(() => {});
+                    .catch(function() {});
             }
 
             (function() {
                 fetch('/Announcement/Active')
-                    .then(r => r.json())
-                    .then(list => {
-                        const seen = (() => { try { return JSON.parse(localStorage.getItem('cp_seen_announcements') || '[]'); } catch { return []; } })();
-                        const unread = list.filter(a => !seen.includes(a.id)).length;
-                        const badge = document.getElementById('annSidebarBadge');
-                        if (badge) { badge.textContent = unread; badge.style.display = unread > 0 ? 'inline-flex' : 'none'; }
-                    }).catch(() => {});
+                    .then(function(r) { return r.json(); })
+                    .then(function(list) {
+                        var seen = (function() { try { return JSON.parse(localStorage.getItem('cp_seen_announcements') || '[]'); } catch(e) { return []; } })();
+                        var unread = list.filter(function(a) { return !seen.includes(a.id); }).length;
+                        var badge = document.getElementById('annSidebarBadge');
+                        if (badge) {
+                            badge.textContent = unread > 9 ? '9+' : unread;
+                            badge.style.display = unread > 0 ? 'inline-flex' : 'none';
+                        }
+                    }).catch(function() {});
             })();
 
             loadNotificationCount();
             loadChatCount();
 
             function showToast(title, message, url, type) {
-                const container = document.getElementById('inAppToast');
+                var container = document.getElementById('inAppToast');
                 if (!container) return;
-                const toast = document.createElement('div');
+                var toast = document.createElement('div');
                 toast.className = 'toast-notif';
-                const icons = { TransactionReceived:'bi-arrow-down-circle-fill', TransactionSent:'bi-send-fill', TopUpCompleted:'bi-plus-circle-fill', KYCApproved:'bi-shield-check', KYCRejected:'bi-x-circle-fill', General:'bi-bell-fill' };
-                const icon = icons[type] || 'bi-bell-fill';
-                toast.innerHTML = `<div class="toast-icon"><i class="bi ${icon}" style="color:var(--teal)"></i></div><div class="toast-body"><div class="toast-title">${title}</div><div class="toast-msg">${message}</div></div><button class="toast-close-btn">×</button>`;
-                if (url) toast.addEventListener('click', () => { window.location.href = url; });
+                var icons = { TransactionReceived:'bi-arrow-down-circle-fill', TransactionSent:'bi-send-fill', TopUpCompleted:'bi-plus-circle-fill', KYCApproved:'bi-shield-check', KYCRejected:'bi-x-circle-fill', General:'bi-bell-fill' };
+                var icon = icons[type] || 'bi-bell-fill';
+                toast.innerHTML = '<div class="toast-icon"><i class="bi ' + icon + '" style="color:var(--teal)"></i></div><div class="toast-body"><div class="toast-title">' + title + '</div><div class="toast-msg">' + message + '</div></div><button class="toast-close-btn">×</button>';
+                if (url) toast.addEventListener('click', function() { window.location.href = url; });
                 container.appendChild(toast);
-                setTimeout(() => { toast.classList.add('fade-out'); setTimeout(() => toast.remove(), 300); }, 6000);
+                setTimeout(function() { toast.classList.add('fade-out'); setTimeout(function() { toast.remove(); }, 300); }, 6000);
             }
 
             function loadAnnouncements() {
                 fetch('/Announcement/Active')
-                    .then(r => r.json())
-                    .then(list => {
-                        const c = document.getElementById('annBannerContainer');
+                    .then(function(r) { return r.json(); })
+                    .then(function(list) {
+                        var c = document.getElementById('annBannerContainer');
                         if (!c || !list.length) return;
-                        c.innerHTML = list.map(a => `
-                            <div class="ann-banner ${a.type}" id="ann-${a.id}">
-                                <span>${a.title} — ${a.content}</span>
-                                <button class="ann-banner-close" onclick="document.getElementById('ann-${a.id}').remove()">×</button>
-                            </div>`).join('');
-                    }).catch(() => {});
+                        c.innerHTML = list.map(function(a) {
+                            return '<div class="ann-banner ' + a.type + '" id="ann-' + a.id + '">' +
+                                '<span>' + a.title + ' — ' + a.content + '</span>' +
+                                '<button class="ann-banner-close" onclick="document.getElementById(\'ann-' + a.id + '\').remove()">×</button>' +
+                                '</div>';
+                        }).join('');
+                    }).catch(function() {});
             }
             loadAnnouncements();
 
-            let lastNotifIds = new Set();
+            var lastNotifIds = new Set();
             function pollNotifications() {
                 fetch('/api/NotificationApi')
-                    .then(r => r.json())
-                    .then(list => {
-                        const unread = list.filter(n => !n.isRead);
-                        const badge = document.getElementById('notifBadge');
-                        if (badge) { badge.textContent = unread.length; badge.style.display = unread.length > 0 ? 'flex' : 'none'; }
-                        unread.forEach(n => {
+                    .then(function(r) { return r.json(); })
+                    .then(function(list) {
+                        var unread = list.filter(function(n) { return !n.isRead; });
+                        var badge = document.getElementById('notifBadge');
+                        if (badge) {
+                            badge.textContent = unread.length > 9 ? '9+' : unread.length;
+                            badge.style.display = unread.length > 0 ? 'flex' : 'none';
+                        }
+                        unread.forEach(function(n) {
                             if (!lastNotifIds.has(n.id)) {
                                 if (lastNotifIds.size > 0) {
                                     showToast(n.title, n.message, n.redirectUrl || '/Notification/Index', n.type);
                                     if (Notification.permission === 'granted') {
-                                        const osn = new Notification('CedarPay — ' + n.title, { body: n.message, icon: '/images/cedarpay-logo.png', tag: 'cedarpay-' + n.id });
-                                        osn.onclick = () => { window.focus(); if (n.redirectUrl) window.location.href = n.redirectUrl; osn.close(); };
-                                        setTimeout(() => osn.close(), 5000);
+                                        var notif = new Notification('CedarPay — ' + n.title, { body: n.message, icon: '/images/cedarpay-logo.png', tag: 'cedarpay-' + n.id });
+                                        notif.onclick = function() { window.focus(); if (n.redirectUrl) window.location.href = n.redirectUrl; notif.close(); };
+                                        setTimeout(function() { notif.close(); }, 5000);
                                     }
                                 }
                                 lastNotifIds.add(n.id);
                             }
                         });
-                    }).catch(() => {});
+                    }).catch(function() {});
             }
 
-            if ('Notification' in window && Notification.permission === 'default')
-                setTimeout(() => Notification.requestPermission(), 3000);
+            if ('Notification' in window && Notification.permission === 'default') {
+                setTimeout(function() { Notification.requestPermission(); }, 3000);
+            }
 
             pollNotifications();
             loadChatCount();
@@ -638,8 +761,6 @@
             setInterval(loadChatCount, 30000);
         </script>
     }
-
-    <div id="inAppToast"></div>
 
     @await RenderSectionAsync("Scripts", required: false)
 

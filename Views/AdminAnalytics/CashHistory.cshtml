@@ -1,0 +1,56 @@
+﻿@{
+    ViewData["Title"] = "Cash History";
+    ViewBag.PageClass = "page-admin";
+    var transactions = Model as IEnumerable<MoneyTransfer.Models.Transaction> ?? Enumerable.Empty<MoneyTransfer.Models.Transaction>();
+}
+
+<div class="page-header">
+    <div>
+        <h2>Cash History — @ViewBag.CurrentMonth</h2>
+        <p>@ViewBag.TotalTransactions transactions | $@string.Format("{0:N2}", ViewBag.TotalVolume) volume | $@string.Format("{0:N2}", ViewBag.TotalFees) fees</p>
+    </div>
+    <div>
+        <a asp-action="Index" class="btn-tp-secondary"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
+    </div>
+</div>
+
+<div class="tp-card">
+    <div class="tp-card-header">
+        <h3 class="tp-card-title">Cash Transactions</h3>
+    </div>
+    @if (!transactions.Any())
+    {
+        <div class="empty-state">
+            <i class="bi bi-inbox"></i>
+            <p>No cash transactions this month.</p>
+        </div>
+    }
+    else
+    {
+        <table class="tp-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Sender</th>
+                    <th>Receiver</th>
+                    <th>Amount</th>
+                    <th>Fee</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var t in transactions)
+                {
+                    <tr>
+                        <td style="font-size:12px;color:var(--text-3);">@t.CreatedAt.ToString("MMM dd, HH:mm")</td>
+                        <td>@t.SenderWallet?.User?.FirstName @t.SenderWallet?.User?.LastName</td>
+                        <td>@t.ReceiverWallet?.User?.FirstName @t.ReceiverWallet?.User?.LastName</td>
+                        <td style="font-weight:600;">@string.Format("{0:N2}", t.Amount) @t.SenderCurrency?.Code</td>
+                        <td style="color:var(--teal);">$@string.Format("{0:N2}", t.FeeAmount)</td>
+                        <td><span class="badge-tp @(t.Status == MoneyTransfer.Models.TransactionStatus.Completed ? "success" : "warning")">@t.Status</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

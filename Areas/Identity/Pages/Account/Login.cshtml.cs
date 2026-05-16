@@ -25,10 +25,7 @@ namespace MoneyTransfer.Areas.Identity.Pages.Account
         private readonly UserManager<User> _userManager;
         private readonly ILogger<LoginModel> _logger;
 
-        public LoginModel(
-            SignInManager<User> signInManager,
-            UserManager<User> userManager,
-            ILogger<LoginModel> logger)
+        public LoginModel(SignInManager<User> signInManager, UserManager<User> userManager, ILogger<LoginModel> logger)
         {
             _signInManager = signInManager;
             _userManager = userManager;
@@ -88,7 +85,13 @@ namespace MoneyTransfer.Areas.Identity.Pages.Account
                 if (user == null)
                 {
                     _logger.LogWarning($"User not found with email: {Input.Email}");
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                    ModelState.AddModelError(string.Empty, "Account not found. Please register first.");
+                    return Page();
+                }
+
+                if (_userManager.Options.SignIn.RequireConfirmedEmail && !await _userManager.IsEmailConfirmedAsync(user))
+                {
+                    ModelState.AddModelError(string.Empty, "You must confirm your email before logging in. Check your inbox or resend confirmation.");
                     return Page();
                 }
 
@@ -123,8 +126,8 @@ namespace MoneyTransfer.Areas.Identity.Pages.Account
                 }
                 else
                 {
-                    _logger.LogWarning($"Invalid login attempt for {user.Email}");
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                    _logger.LogWarning($"Invalid password for {user.Email}");
+                    ModelState.AddModelError(string.Empty, "Incorrect password. Please try again.");
                     return Page();
                 }
             }

@@ -1,6 +1,7 @@
 ﻿@{
     ViewData["Title"] = "Admin Control Center";
     ViewBag.PageClass = "page-admin";
+    var announcements = ViewBag.RecentAnnouncements as IEnumerable<MoneyTransfer.Models.Announcement> ?? Enumerable.Empty<MoneyTransfer.Models.Announcement>();
 }
 
 <div class="admin-welcome">
@@ -41,18 +42,43 @@
             <div class="stat-value">
                 @(ViewBag.PendingAgents ?? 0)
             </div>
-            <div class="stat-label">Pending Apps</div>
+            <div class="stat-label">Pending Applications</div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="stat-card">
             <div class="stat-icon beneficiaries">
-                <i class="bi bi-currency-exchange"></i>
+                <i class="bi bi-wallet2"></i>
+            </div>
+            <div class="stat-value">
+                @(ViewBag.PendingWallets ?? 0)
+            </div>
+            <div class="stat-label">Wallet Requests</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon received">
+                <i class="bi bi-arrow-left-right"></i>
             </div>
             <div class="stat-value">
                 @(ViewBag.TotalTransactions ?? 0)
             </div>
-            <div class="stat-label">Transactions</div>
+            <div class="stat-label">Total Transactions</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon sent">
+                <i class="bi bi-star-fill"></i>
+            </div>
+            <div class="stat-value">
+                @string.Format("{0:N1}", ViewBag.AverageRating ?? 0) / 5
+            </div>
+            <div class="stat-label">App Rating</div>
         </div>
     </div>
 </div>
@@ -61,34 +87,38 @@
     @{
         var adminCards = new[]
         {
-        ("Users", "Manage Users", "View, sort, disable accounts", "bi-people-fill", "beneficiaries", (int)(ViewBag.TotalUsers ?? 0), "info"),
-        ("AgentApplications", "Agent Applications", "Approve or reject requests", "bi-person-check-fill", "sent", (int)(ViewBag.PendingAgents ?? 0), "warning"),
-        ("KYCReview", "KYC Review", "Verify identity documents", "bi-shield-check", "received", 0, ""),
-        ("WalletRequests", "Wallet Approvals", "Approve wallet creation", "bi-wallet2", "sent", (int)(ViewBag.PendingWallets ?? 0), "warning"),
-        ("AllTransactions", "All Transactions", "Platform-wide log", "bi-list-check", "beneficiaries", 0, ""),
-        ("EarningsReport", "Earnings Report", "Fees collected & agent commissions", "bi-graph-up-arrow", "received", 0, ""),
-        ("FeeSettings", "Fee Settings", "Configure transfer fees", "bi-percent", "received", 0, ""),
-        ("ExchangeRates", "Exchange Rates", "View live currency rates", "bi-currency-exchange", "received", 0, ""),
+        new { Title = "Manage Users", Description = "View, sort, disable accounts", Icon = "bi-people-fill", IconClass = "beneficiaries", Badge = (int)(ViewBag.TotalUsers ?? 0), BadgeClass = "info", Url = "/Admin/Users" },
+        new { Title = "Agent Applications", Description = "Approve or reject requests", Icon = "bi-person-check-fill", IconClass = "sent", Badge = (int)(ViewBag.PendingAgents ?? 0), BadgeClass = "warning", Url = "/Admin/AgentApplications" },
+        new { Title = "KYC Review", Description = "Verify identity documents", Icon = "bi-shield-check", IconClass = "received", Badge = 0, BadgeClass = "", Url = "/Admin/KYCReview" },
+        new { Title = "Wallet Approvals", Description = "Approve wallet creation", Icon = "bi-wallet2", IconClass = "sent", Badge = (int)(ViewBag.PendingWallets ?? 0), BadgeClass = "warning", Url = "/Admin/WalletRequests" },
+        new { Title = "All Transactions", Description = "Platform-wide log", Icon = "bi-list-check", IconClass = "beneficiaries", Badge = 0, BadgeClass = "", Url = "/Admin/AllTransactions" },
+        new { Title = "Earnings Report", Description = "Fees collected & agent commissions", Icon = "bi-graph-up-arrow", IconClass = "received", Badge = 0, BadgeClass = "", Url = "/Admin/EarningsReport" },
+        new { Title = "Manage Commissions", Description = "Set agent commission rates", Icon = "bi-percent", IconClass = "beneficiaries", Badge = 0, BadgeClass = "", Url = "/Admin/ManageCommissions" },
+        new { Title = "Fee Settings", Description = "Configure transfer fees", Icon = "bi-percent", IconClass = "received", Badge = 0, BadgeClass = "", Url = "/Admin/FeeSettings" },
+        new { Title = "Exchange Rates", Description = "View live currency rates", Icon = "bi-currency-exchange", IconClass = "received", Badge = 0, BadgeClass = "", Url = "/Admin/ExchangeRates" },
+        new { Title = "Analytics Dashboard", Description = "Platform insights and analytics", Icon = "bi-bar-chart-fill", IconClass = "sent", Badge = 0, BadgeClass = "", Url = "/AdminAnalytics/Index" },
+        new { Title = "Cash History", Description = "Cash transaction history", Icon = "bi-cash-stack", IconClass = "beneficiaries", Badge = 0, BadgeClass = "", Url = "/AdminAnalytics/CashHistory" },
+        new { Title = "Monthly Report", Description = "Detailed monthly statistics", Icon = "bi-calendar3", IconClass = "beneficiaries", Badge = 0, BadgeClass = "", Url = "/AdminAnalytics/MonthlyReport" },
+        new { Title = "Reports", Description = "Export platform data", Icon = "bi-file-earmark-bar-graph", IconClass = "sent", Badge = 0, BadgeClass = "", Url = "/Admin/Reports" },
+        new { Title = "Announcements", Description = "Manage platform announcements", Icon = "bi-megaphone-fill", IconClass = "sent", Badge = 0, BadgeClass = "", Url = "/Announcement/Manage" },
         };
     }
 
     @foreach (var card in adminCards)
     {
         <div class="col-md-4">
-            <a asp-controller="Admin"
-               asp-action="@card.Item1"
-               class="tp-card admin-card-link">
+            <a href="@card.Url" class="tp-card admin-card-link">
                 <div class="admin-card-content">
-                    <div class="stat-icon @card.Item5 admin-card-icon">
-                        <i class="bi @card.Item4"></i>
+                    <div class="stat-icon @card.IconClass admin-card-icon">
+                        <i class="bi @card.Icon"></i>
                     </div>
                     <div class="admin-card-info">
-                        <div class="tp-card-title">@card.Item2</div>
-                        <div class="admin-card-description">@card.Item3</div>
+                        <div class="tp-card-title">@card.Title</div>
+                        <div class="admin-card-description">@card.Description</div>
                     </div>
-                    @if (card.Item6 > 0)
+                    @if (card.Badge > 0)
                     {
-                        <span class="badge-tp @card.Item7">@card.Item6</span>
+                        <span class="badge-tp @card.BadgeClass">@card.Badge</span>
                     }
                     else
                     {
@@ -99,3 +129,87 @@
         </div>
     }
 </div>
+
+@if (announcements.Any())
+{
+    <div class="tp-card mt-3">
+        <div class="tp-card-header">
+            <span class="tp-card-title">
+                <i class="bi bi-megaphone-fill" style="margin-right:6px;color:var(--teal);"></i>Recent Announcements
+            </span>
+            <a href="/Announcement/Manage" class="tp-card-link">Manage All →</a>
+        </div>
+        @foreach (var a in announcements)
+        {
+            <div class="announcement-list-item">
+                <div class="announcement-list-title">@a.Title</div>
+                <div class="announcement-list-date">@a.CreatedAt.ToString("MMM dd, yyyy")</div>
+            </div>
+        }
+        <div class="mt-3">
+            <a href="/Announcement/Create" class="btn-tp-primary" style="font-size:13px;padding:8px 16px">
+                <i class="bi bi-plus-lg"></i> New Announcement
+            </a>
+        </div>
+    </div>
+}
+
+<style>
+    .admin-card-link {
+        transition: var(--transition);
+        text-decoration: none;
+        display: block;
+        cursor: pointer;
+    }
+
+        .admin-card-link:hover {
+            transform: translateY(-2px);
+            border-color: var(--cedar-gold);
+        }
+
+    .admin-card-content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .admin-card-icon {
+        margin-bottom: 0;
+        flex-shrink: 0;
+    }
+
+    .admin-card-info {
+        flex: 1;
+    }
+
+    .admin-card-description {
+        font-size: 12px;
+        color: var(--text-3);
+        margin-top: 2px;
+    }
+
+    .admin-card-chevron {
+        color: var(--text-3);
+    }
+
+    .announcement-list-item {
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border);
+    }
+
+        .announcement-list-item:last-child {
+            border-bottom: none;
+        }
+
+    .announcement-list-title {
+        font-weight: 600;
+        color: var(--text-1);
+    }
+
+    .announcement-list-date {
+        font-size: 12px;
+        color: var(--text-3);
+        margin-top: 2px;
+    }
+</style>
+<partial name="_CultureTip" />

@@ -4,9 +4,98 @@
     ViewBag.PageClass = "page-dashboard";
 }
 
+<style>
+    .announcements-container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .announcement-card-modern {
+        padding: 24px;
+        border-radius: 16px;
+        border-left: 4px solid;
+        transition: all 0.3s ease;
+    }
+
+        .announcement-card-modern:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+    .announcement-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+        gap: 8px;
+    }
+
+    .announcement-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+        .announcement-badge.info {
+            background: rgba(99,102,241,0.1);
+            color: #6366f1;
+        }
+
+        .announcement-badge.warning {
+            background: rgba(245,158,11,0.1);
+            color: #f59e0b;
+        }
+
+        .announcement-badge.success {
+            background: rgba(0,184,148,0.1);
+            color: #00b894;
+        }
+
+        .announcement-badge.maintenance {
+            background: rgba(239,68,68,0.1);
+            color: #ef4444;
+        }
+
+    .announcement-expiry-badge {
+        font-size: 11px;
+        color: var(--text-3);
+    }
+
+    .announcement-card-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 12px;
+        color: var(--text-1);
+    }
+
+    .announcement-card-content {
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--text-2);
+        margin-bottom: 16px;
+    }
+
+    .announcement-card-footer {
+        font-size: 12px;
+        color: var(--text-3);
+    }
+
+    .announcement-unread-dot {
+        display: none;
+        width: 8px;
+        height: 8px;
+        background-color: var(--teal);
+        border-radius: 50%;
+        margin-left: 8px;
+    }
+</style>
+
 <div class="page-header">
     <div>
-        <h2><i class="bi bi-megaphone-fill announcement-header-icon"></i>Announcements</h2>
+        <h2><i class="bi bi-megaphone-fill" style="color: var(--teal); margin-right: 8px;"></i>Announcements</h2>
         <p>Latest updates and news from CedarPay</p>
     </div>
 </div>
@@ -15,8 +104,8 @@
 {
     <div class="tp-card">
         <div class="empty-state">
-            <i class="bi bi-megaphone"></i>
-            <p>No announcements at this time.</p>
+            <i class="bi bi-megaphone" style="font-size: 48px; color: var(--text-3);"></i>
+            <p style="margin-top: 16px;">No announcements at this time.</p>
         </div>
     </div>
 }
@@ -28,18 +117,11 @@ else
             string borderColor = a.Type switch
             {
                 MoneyTransfer.Models.AnnouncementType.Warning => "#f59e0b",
-                MoneyTransfer.Models.AnnouncementType.Success => "var(--teal)",
+                MoneyTransfer.Models.AnnouncementType.Success => "#00b894",
                 MoneyTransfer.Models.AnnouncementType.Maintenance => "#ef4444",
                 _ => "#6366f1"
             };
-            string bgGradient = a.Type switch
-            {
-                MoneyTransfer.Models.AnnouncementType.Warning => "linear-gradient(135deg, rgba(245,158,11,0.08), rgba(245,158,11,0.03))",
-                MoneyTransfer.Models.AnnouncementType.Success => "linear-gradient(135deg, rgba(0,184,148,0.08), rgba(0,184,148,0.03))",
-                MoneyTransfer.Models.AnnouncementType.Maintenance => "linear-gradient(135deg, rgba(239,68,68,0.08), rgba(239,68,68,0.03))",
-                _ => "linear-gradient(135deg, rgba(99,102,241,0.08), rgba(99,102,241,0.03))"
-            };
-            <div class="announcement-card-modern" data-id="@a.Id" style="border-left-color: @borderColor; background: @bgGradient">
+            <div class="announcement-card-modern" data-id="@a.Id" style="border-left-color: @borderColor;">
                 <div class="announcement-card-header">
                     <div class="announcement-badge-wrapper">
                         <span class="announcement-badge @a.Type.ToString().ToLower()">@a.Type</span>
@@ -55,9 +137,7 @@ else
                 <h3 class="announcement-card-title">@a.Title</h3>
                 <p class="announcement-card-content">@a.Content</p>
                 <div class="announcement-card-footer">
-                    <span class="announcement-date">
-                        <i class="bi bi-clock"></i> @a.CreatedAt.ToString("MMMM dd, yyyy · HH:mm")
-                    </span>
+                    <i class="bi bi-clock"></i> @a.CreatedAt.ToString("MMMM dd, yyyy · HH:mm")
                 </div>
             </div>
         }

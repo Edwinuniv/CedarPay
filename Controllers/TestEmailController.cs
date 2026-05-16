@@ -1,5 +1,4 @@
-﻿// Controllers/TestEmailController.cs
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using MoneyTransfer.Services.Interfaces;
 
 [Route("api/test-email")]
@@ -73,7 +72,7 @@ public class TestEmailController : ControllerBase
 
             var message = new MimeKit.MimeMessage();
             message.From.Add(new MimeKit.MailboxAddress("CedarPay Test", username));
-            message.To.Add(new MimeKit.MailboxAddress("Test", "your-personal-email@gmail.com")); // Change this
+            message.To.Add(new MimeKit.MailboxAddress("Test", "edwinmouawad82@gmail.com")); 
             message.Subject = "Direct SMTP Test";
             message.Body = new MimeKit.TextPart("plain") { Text = "This is a direct SMTP test" };
 

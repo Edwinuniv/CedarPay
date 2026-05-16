@@ -15,7 +15,6 @@
     </a>
 </div>
 
-<!-- Bot Assistant Card -->
 <div class="tp-card chat-bot-card">
     <div class="chat-bot-content">
         <div class="chat-bot-info">
@@ -31,7 +30,6 @@
     </div>
 </div>
 
-<!-- Search conversations -->
 <div class="tp-card mb-3">
     <div class="chat-search-bar">
         <i class="bi bi-search chat-search-icon"></i>
@@ -152,14 +150,12 @@ else
                     </div>
                 </a>
 
-                <!-- Delete button -->
                 <button onclick="confirmDelete(@c.Id, '@Html.Raw(otherName.Replace("'", "\\'"))', event)"
                         class="delete-conv-btn"
                         title="Delete conversation">
                     <i class="bi bi-trash"></i>
                 </button>
 
-                <!-- Hidden delete form -->
                 <form id="delForm-@c.Id" asp-action="DeleteConversation" method="post" style="display:none">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@c.Id" />
@@ -184,7 +180,6 @@ else
                 if (show) anyVisible = true;
             });
 
-            // Show/hide empty state for search
             let noResult = document.getElementById('noSearchResult');
             if (!noResult) {
                 noResult = document.createElement('div');

@@ -46,7 +46,6 @@ else
                     </div>
                 </div>
 
-                <!-- Document Images -->
                 <div class="kyc-images">
                     @if (!string.IsNullOrEmpty(kyc.FrontImageUrl))
                     {
@@ -68,7 +67,6 @@ else
                     }
                 </div>
 
-                <!-- Actions -->
                 <div class="kyc-actions">
                     <form asp-action="ApproveKYC" asp-route-id="@kyc.Id" method="post">
                         <button type="submit" class="btn-tp-success kyc-approve-btn">

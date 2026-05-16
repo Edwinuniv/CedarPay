@@ -19,8 +19,7 @@ namespace MoneyTransfer.Controllers
         private readonly IEmailService _emailService;
         private readonly IFileUploadService _fileUploadService;
 
-        public ChatController(ApplicationDbContext context, UserManager<User> userManager, IUserRepository userRepository,
-            IHubContext<ChatHub> hubContext, IEmailService emailService, IFileUploadService fileUploadService) : base(userManager, userRepository)
+        public ChatController(ApplicationDbContext context, UserManager<User> userManager, IUserRepository userRepository, IHubContext<ChatHub> hubContext, IEmailService emailService, IFileUploadService fileUploadService): base(userManager, userRepository)
         {
             _context = context;
             _hubContext = hubContext;
@@ -33,22 +32,15 @@ namespace MoneyTransfer.Controllers
             var userId = _userManager.GetUserId(User)!;
 
             var convs = await _context.Conversations
-                .Include(c => c.Participants)
-                    .ThenInclude(p => p.User)
-                .Include(c => c.Messages
-                    .OrderByDescending(m => m.SentAt).Take(1))
-                    .ThenInclude(m => m.Sender)
-                .Where(c => c.Participants
-                    .Any(p => p.UserId == userId)
-                    && c.Type != ConversationType.Support)  
-                .OrderByDescending(c =>
-                    c.LastMessageAt ?? c.CreatedAt)
+                .Include(c => c.Participants).ThenInclude(p => p.User)
+                .Include(c => c.Messages.OrderByDescending(m => m.SentAt).Take(1)).ThenInclude(m => m.Sender)
+                .Where(c => c.Participants.Any(p => p.UserId == userId) && c.Type != ConversationType.Support)
+                .OrderByDescending(c => c.LastMessageAt ?? c.CreatedAt)
                 .ToListAsync();
 
             var beneficiaries = await _context.Beneficiaries
                 .Include(b => b.ReceiverUser)
-                .Where(b => b.UserId == userId &&
-                            b.ReceiverUserId != null)
+                .Where(b => b.UserId == userId && b.ReceiverUserId != null)
                 .ToListAsync();
 
             var convParticipantIds = convs
@@ -59,14 +51,11 @@ namespace MoneyTransfer.Controllers
                 .ToList();
 
             var beneficiariesNotInChat = beneficiaries
-                .Where(b => b.ReceiverUserId != null &&
-                            !convParticipantIds.Contains(
-                                b.ReceiverUserId!))
+                .Where(b => b.ReceiverUserId != null && !convParticipantIds.Contains(b.ReceiverUserId!))
                 .ToList();
 
             ViewBag.CurrentUserId = userId;
-            ViewBag.BeneficiariesNotInChat =
-                beneficiariesNotInChat;
+            ViewBag.BeneficiariesNotInChat = beneficiariesNotInChat;
 
             return View(convs);
         }
@@ -76,36 +65,23 @@ namespace MoneyTransfer.Controllers
             var userId = _userManager.GetUserId(User)!;
 
             var conv = await _context.Conversations
-                .Include(c => c.Participants)
-                    .ThenInclude(p => p.User)
-                .Include(c => c.Messages
-                    .OrderBy(m => m.SentAt))
-                    .ThenInclude(m => m.Sender)
-                .Include(c => c.Messages)
-                    .ThenInclude(m => m.ReplyTo)
-                        .ThenInclude(r => r!.Sender)
-                .Include(c => c.Messages)
-                    .ThenInclude(m => m.Reactions)
-                .FirstOrDefaultAsync(c => c.Id == id &&
-                    c.Participants.Any(p => p.UserId == userId));
+                .Include(c => c.Participants).ThenInclude(p => p.User)
+                .Include(c => c.Messages.OrderBy(m => m.SentAt)).ThenInclude(m => m.Sender)
+                .Include(c => c.Messages).ThenInclude(m => m.ReplyTo).ThenInclude(r => r!.Sender)
+                .Include(c => c.Messages).ThenInclude(m => m.Reactions)
+                .FirstOrDefaultAsync(c => c.Id == id && c.Participants.Any(p => p.UserId == userId));
 
             if (conv == null) return NotFound();
 
-            var unread = conv.Messages
-                .Where(m => !m.IsRead && m.SenderId != userId)
-                .ToList();
+            var unread = conv.Messages.Where(m => !m.IsRead && m.SenderId != userId).ToList();
             foreach (var msg in unread) msg.IsRead = true;
-            if (unread.Any())
-                await _context.SaveChangesAsync();
+            if (unread.Any()) await _context.SaveChangesAsync();
 
             ViewBag.CurrentUserId = userId;
             return View(conv);
         }
 
-        public IActionResult New()
-        {
-            return View();
-        }
+        public IActionResult New() => View();
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -115,31 +91,22 @@ namespace MoneyTransfer.Controllers
 
             if (string.IsNullOrWhiteSpace(phoneNumber))
             {
-                ModelState.AddModelError("",
-                    "Please enter a phone number.");
+                ModelState.AddModelError("", "Please enter a phone number.");
                 ViewBag.ActiveTab = "phone";
                 return View("New");
             }
 
-            var normalizedInput = phoneNumber.Replace(" ", "")
-                                             .Replace("-", "")
-                                             .Replace("(", "")
-                                             .Replace(")", "");
+            var normalized = phoneNumber.Replace(" ", "").Replace("-", "").Replace("(", "").Replace(")", "");
 
             var recipient = await _context.Users
                 .ToListAsync()
                 .ContinueWith(t => t.Result.FirstOrDefault(u =>
                     u.Id != userId &&
-                    (u.PhoneNumber ?? "")
-                        .Replace(" ", "")
-                        .Replace("-", "")
-                        .Replace("(", "")
-                        .Replace(")", "") == normalizedInput));
+                    (u.PhoneNumber ?? "").Replace(" ", "").Replace("-", "").Replace("(", "").Replace(")", "") == normalized));
 
             if (recipient == null)
             {
-                ViewBag.Error = "No user found with that phone number. " +
-                                "Make sure they are registered on CedarPay.";
+                ViewBag.Error = "No user found with that phone number. Make sure they are registered on CedarPay.";
                 ViewBag.ActiveTab = "phone";
                 return View("New");
             }
@@ -153,18 +120,12 @@ namespace MoneyTransfer.Controllers
 
             var existing = await _context.Conversations
                 .Include(c => c.Participants)
-                .Where(c =>
-                    c.Participants.Any(p => p.UserId == userId) &&
-                    c.Participants.Any(p =>
-                        p.UserId == recipient.Id) &&
-                    c.Participants.Count() == 2)
+                .Where(c => c.Participants.Any(p => p.UserId == userId) &&
+                            c.Participants.Any(p => p.UserId == recipient.Id) &&
+                            c.Participants.Count() == 2)
                 .FirstOrDefaultAsync();
 
-            if (existing != null)
-            {
-                return RedirectToAction("Open",
-                    new { id = existing.Id });
-            }
+            if (existing != null) return RedirectToAction("Open", new { id = existing.Id });
 
             var conv = new Conversation
             {
@@ -179,23 +140,11 @@ namespace MoneyTransfer.Controllers
             await _context.SaveChangesAsync();
 
             await _context.ConversationParticipants.AddRangeAsync(
-                new ConversationParticipant
-                {
-                    ConversationId = conv.Id,
-                    UserId = userId,
-                    JoinedAt = DateTime.Now
-                },
-                new ConversationParticipant
-                {
-                    ConversationId = conv.Id,
-                    UserId = recipient.Id,
-                    JoinedAt = DateTime.Now
-                });
+                new ConversationParticipant { ConversationId = conv.Id, UserId = userId, JoinedAt = DateTime.Now },
+                new ConversationParticipant { ConversationId = conv.Id, UserId = recipient.Id, JoinedAt = DateTime.Now });
 
             await _context.SaveChangesAsync();
-
-            return RedirectToAction("Open",
-                new { id = conv.Id });
+            return RedirectToAction("Open", new { id = conv.Id });
         }
 
         [HttpPost]
@@ -212,10 +161,7 @@ namespace MoneyTransfer.Controllers
             }
 
             var clean = username.TrimStart('@').Trim();
-
-            var recipient = await _context.Users
-                .FirstOrDefaultAsync(u =>
-                    u.UserName == clean && u.Id != userId);
+            var recipient = await _context.Users.FirstOrDefaultAsync(u => u.UserName == clean && u.Id != userId);
 
             if (recipient == null)
             {
@@ -224,7 +170,6 @@ namespace MoneyTransfer.Controllers
                 return View("New");
             }
 
-            // Block self-chat
             if (recipient.Id == userId)
             {
                 ViewBag.Error = "You cannot start a chat with yourself.";
@@ -234,14 +179,12 @@ namespace MoneyTransfer.Controllers
 
             var existing = await _context.Conversations
                 .Include(c => c.Participants)
-                .Where(c =>
-                    c.Participants.Any(p => p.UserId == userId) &&
-                    c.Participants.Any(p => p.UserId == recipient.Id) &&
-                    c.Participants.Count() == 2)
+                .Where(c => c.Participants.Any(p => p.UserId == userId) &&
+                            c.Participants.Any(p => p.UserId == recipient.Id) &&
+                            c.Participants.Count() == 2)
                 .FirstOrDefaultAsync();
 
-            if (existing != null)
-                return RedirectToAction("Open", new { id = existing.Id });
+            if (existing != null) return RedirectToAction("Open", new { id = existing.Id });
 
             var conv = new Conversation
             {
@@ -256,18 +199,8 @@ namespace MoneyTransfer.Controllers
             await _context.SaveChangesAsync();
 
             await _context.ConversationParticipants.AddRangeAsync(
-                new ConversationParticipant
-                {
-                    ConversationId = conv.Id,
-                    UserId = userId,
-                    JoinedAt = DateTime.Now
-                },
-                new ConversationParticipant
-                {
-                    ConversationId = conv.Id,
-                    UserId = recipient.Id,
-                    JoinedAt = DateTime.Now
-                });
+                new ConversationParticipant { ConversationId = conv.Id, UserId = userId, JoinedAt = DateTime.Now },
+                new ConversationParticipant { ConversationId = conv.Id, UserId = recipient.Id, JoinedAt = DateTime.Now });
 
             await _context.SaveChangesAsync();
             return RedirectToAction("Open", new { id = conv.Id });
@@ -275,20 +208,15 @@ namespace MoneyTransfer.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Send(
-    int conversationId, string content, int? replyToId)
+        public async Task<IActionResult> Send(int conversationId, string content, int? replyToId)
         {
             var userId = _userManager.GetUserId(User)!;
 
             if (string.IsNullOrWhiteSpace(content))
-                return RedirectToAction("Open",
-                    new { id = conversationId });
+                return RedirectToAction("Open", new { id = conversationId });
 
-            var isParticipant = await _context
-                .ConversationParticipants
-                .AnyAsync(p =>
-                    p.ConversationId == conversationId &&
-                    p.UserId == userId);
+            var isParticipant = await _context.ConversationParticipants
+                .AnyAsync(p => p.ConversationId == conversationId && p.UserId == userId);
 
             if (!isParticipant) return Unauthorized();
 
@@ -307,8 +235,7 @@ namespace MoneyTransfer.Controllers
 
             await _context.Messages.AddAsync(msg);
 
-            var conv = await _context.Conversations
-                .FindAsync(conversationId);
+            var conv = await _context.Conversations.FindAsync(conversationId);
             if (conv != null)
             {
                 conv.LastMessageAt = DateTime.Now;
@@ -317,47 +244,35 @@ namespace MoneyTransfer.Controllers
 
             await _context.SaveChangesAsync();
 
-            // Load reply info for SignalR broadcast
             string? replyPreview = null;
             string? replySender = null;
             if (replyToId.HasValue)
             {
-                var replied = await _context.Messages
-                    .Include(m => m.Sender)
-                    .FirstOrDefaultAsync(m => m.Id == replyToId);
+                var replied = await _context.Messages.Include(m => m.Sender).FirstOrDefaultAsync(m => m.Id == replyToId);
                 replyPreview = replied?.Content;
-                replySender =
-                    $"{replied?.Sender?.FirstName} {replied?.Sender?.LastName}";
+                replySender = $"{replied?.Sender?.FirstName} {replied?.Sender?.LastName}";
             }
 
-            // Broadcast to OTHER participants via SignalR
-            await _hubContext.Clients
-                .Group($"conv_{conversationId}")
-                .SendAsync("ReceiveMessage", new
-                {
-                    ConversationId = conversationId,
-                    SenderId = userId,
-                    SenderName =
-                        $"{user?.FirstName} {user?.LastName}",
-                    SenderPicture = user?.ProfilePictureUrl,
-                    Content = content.Trim(),
-                    SentAt = msg.SentAt.ToString("HH:mm"),
-                    IsOwn = false,
-                    MessageId = msg.Id,
-                    MessageType = "Text",
-                    MediaUrl = (string?)null,
-                    MediaFileName = (string?)null,
-                    ReplyPreview = replyPreview,
-                    ReplySender = replySender
-                });
+            await _hubContext.Clients.Group($"conv_{conversationId}").SendAsync("ReceiveMessage", new
+            {
+                ConversationId = conversationId,
+                SenderId = userId,
+                SenderName = $"{user?.FirstName} {user?.LastName}",
+                SenderPicture = user?.ProfilePictureUrl,
+                Content = content.Trim(),
+                SentAt = msg.SentAt.ToString("HH:mm"),
+                IsOwn = false,
+                MessageId = msg.Id,
+                MessageType = "Text",
+                MediaUrl = (string?)null,
+                MediaFileName = (string?)null,
+                ReplyPreview = replyPreview,
+                ReplySender = replySender
+            });
 
-            // Email notifications
-            var participants = await _context
-                .ConversationParticipants
+            var participants = await _context.ConversationParticipants
                 .Include(p => p.User)
-                .Where(p =>
-                    p.ConversationId == conversationId &&
-                    p.UserId != userId)
+                .Where(p => p.ConversationId == conversationId && p.UserId != userId)
                 .ToListAsync();
 
             foreach (var participant in participants)
@@ -368,30 +283,15 @@ namespace MoneyTransfer.Controllers
                     {
                         await _emailService.SendChatMessageAsync(
                             participant.User.Email,
-                            $"{participant.User.FirstName} " +
-                            $"{participant.User.LastName}",
+                            $"{participant.User.FirstName} {participant.User.LastName}",
                             $"{user?.FirstName} {user?.LastName}",
                             content.Trim());
                     });
                 }
             }
 
-            // ── Return JSON if AJAX, redirect if normal form ──
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                return Json(new
-                {
-                    success = true,
-                    messageId = msg.Id,
-                    sentAt = msg.SentAt.ToString("HH:mm")
-                });
-
-            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                return Json(new
-                {
-                    success = true,
-                    messageId = msg.Id,
-                    sentAt = msg.SentAt.ToString("HH:mm")
-                });
+                return Json(new { success = true, messageId = msg.Id, sentAt = msg.SentAt.ToString("HH:mm") });
 
             return RedirectToAction("Open", new { id = conversationId });
         }
@@ -403,33 +303,28 @@ namespace MoneyTransfer.Controllers
         {
             var userId = _userManager.GetUserId(User)!;
 
-            var isParticipant = await _context.ConversationParticipants.AnyAsync(p => p.ConversationId == conversationId && p.UserId == userId);
+            var isParticipant = await _context.ConversationParticipants
+                .AnyAsync(p => p.ConversationId == conversationId && p.UserId == userId);
 
             if (!isParticipant) return Unauthorized();
 
             if (file == null || file.Length == 0)
-                return RedirectToAction("Open",
-                    new { id = conversationId });
+                return RedirectToAction("Open", new { id = conversationId });
 
             if (!_fileUploadService.IsAllowedFile(file))
             {
-                TempData["ChatError"] =
-                    "File type not allowed.";
-                return RedirectToAction("Open",
-                    new { id = conversationId });
+                TempData["ChatError"] = "File type not allowed.";
+                return RedirectToAction("Open", new { id = conversationId });
             }
 
             if (file.Length > 104_857_600)
             {
-                TempData["ChatError"] =
-                    "File too large. Max 100MB.";
-                return RedirectToAction("Open",
-                    new { id = conversationId });
+                TempData["ChatError"] = "File too large. Max 100MB.";
+                return RedirectToAction("Open", new { id = conversationId });
             }
 
             var user = await _userRepository.GetByIdAsync(userId);
             var msgType = _fileUploadService.GetMessageType(file);
-
             var (url, originalName, fileSize) = await _fileUploadService.SaveChatFileAsync(file);
 
             var msg = new Message
@@ -458,27 +353,25 @@ namespace MoneyTransfer.Controllers
 
             await _context.SaveChangesAsync();
 
-            await _hubContext.Clients.Group($"conv_{conversationId}")
-                .SendAsync("ReceiveMessage", new
-                {
-                    ConversationId = conversationId,
-                    SenderId = userId,
-                    SenderName = $"{user?.FirstName} {user?.LastName}",
-                    SenderPicture = user?.ProfilePictureUrl,
-                    Content = originalName,
-                    SentAt = msg.SentAt.ToString("HH:mm"),
-                    IsOwn = false,
-                    MessageId = msg.Id,
-                    MessageType = msgType.ToString(),
-                    MediaUrl = url,
-                    MediaFileName = originalName,
-                    MediaFileSize = fileSize,
-                    ReplyPreview = (string?)null,
-                    ReplySender = (string?)null
-                });
+            await _hubContext.Clients.Group($"conv_{conversationId}").SendAsync("ReceiveMessage", new
+            {
+                ConversationId = conversationId,
+                SenderId = userId,
+                SenderName = $"{user?.FirstName} {user?.LastName}",
+                SenderPicture = user?.ProfilePictureUrl,
+                Content = originalName,
+                SentAt = msg.SentAt.ToString("HH:mm"),
+                IsOwn = false,
+                MessageId = msg.Id,
+                MessageType = msgType.ToString(),
+                MediaUrl = url,
+                MediaFileName = originalName,
+                MediaFileSize = fileSize,
+                ReplyPreview = (string?)null,
+                ReplySender = (string?)null
+            });
 
-            return RedirectToAction("Open",
-                new { id = conversationId });
+            return RedirectToAction("Open", new { id = conversationId });
         }
 
         [HttpPost]
@@ -486,28 +379,22 @@ namespace MoneyTransfer.Controllers
         public async Task<IActionResult> EditMessage(int messageId, string newContent)
         {
             var userId = _userManager.GetUserId(User)!;
-
-            var msg = await _context.Messages
-                .FirstOrDefaultAsync(m =>
-                    m.Id == messageId && m.SenderId == userId);
+            var msg = await _context.Messages.FirstOrDefaultAsync(m => m.Id == messageId && m.SenderId == userId);
 
             if (msg == null) return Unauthorized();
             if (msg.IsDeletedForEveryone) return BadRequest();
-            if (string.IsNullOrWhiteSpace(newContent))
-                return BadRequest();
+            if (string.IsNullOrWhiteSpace(newContent)) return BadRequest();
 
             msg.Content = newContent.Trim();
             msg.IsEdited = true;
             msg.EditedAt = DateTime.Now;
             await _context.SaveChangesAsync();
 
-            await _hubContext.Clients
-                .Group($"conv_{msg.ConversationId}")
-                .SendAsync("MessageEdited", new
-                {
-                    MessageId = msg.Id,
-                    NewContent = msg.Content
-                });
+            await _hubContext.Clients.Group($"conv_{msg.ConversationId}").SendAsync("MessageEdited", new
+            {
+                MessageId = msg.Id,
+                NewContent = msg.Content
+            });
 
             return Ok();
         }
@@ -517,9 +404,7 @@ namespace MoneyTransfer.Controllers
         public async Task<IActionResult> DeleteMessage(int messageId, string deleteType)
         {
             var userId = _userManager.GetUserId(User)!;
-
-            var msg = await _context.Messages
-                .FirstOrDefaultAsync(m => m.Id == messageId);
+            var msg = await _context.Messages.FirstOrDefaultAsync(m => m.Id == messageId);
 
             if (msg == null) return NotFound();
 
@@ -528,17 +413,13 @@ namespace MoneyTransfer.Controllers
             if (deleteType == "everyone")
             {
                 if (!isOwner) return Unauthorized();
-
                 msg.IsDeletedForEveryone = true;
                 msg.Content = "🚫 This message was deleted.";
             }
-            else 
+            else
             {
-                var isParticipant = await _context
-                    .ConversationParticipants
-                    .AnyAsync(p =>
-                        p.ConversationId == msg.ConversationId &&
-                        p.UserId == userId);
+                var isParticipant = await _context.ConversationParticipants
+                    .AnyAsync(p => p.ConversationId == msg.ConversationId && p.UserId == userId);
 
                 if (!isParticipant) return Unauthorized();
                 msg.IsDeletedForSender = true;
@@ -548,13 +429,11 @@ namespace MoneyTransfer.Controllers
 
             if (deleteType == "everyone")
             {
-                await _hubContext.Clients
-                    .Group($"conv_{msg.ConversationId}")
-                    .SendAsync("MessageDeleted", new
-                    {
-                        MessageId = msg.Id,
-                        DeletedForEveryone = true
-                    });
+                await _hubContext.Clients.Group($"conv_{msg.ConversationId}").SendAsync("MessageDeleted", new
+                {
+                    MessageId = msg.Id,
+                    DeletedForEveryone = true
+                });
             }
 
             return Ok();
@@ -564,18 +443,12 @@ namespace MoneyTransfer.Controllers
         public async Task<IActionResult> GetMessage(int messageId)
         {
             var userId = _userManager.GetUserId(User)!;
-
-            var msg = await _context.Messages
-                .Include(m => m.Sender)
-                .FirstOrDefaultAsync(m => m.Id == messageId);
+            var msg = await _context.Messages.Include(m => m.Sender).FirstOrDefaultAsync(m => m.Id == messageId);
 
             if (msg == null) return NotFound();
 
-            var isParticipant = await _context
-                .ConversationParticipants
-                .AnyAsync(p =>
-                    p.ConversationId == msg.ConversationId &&
-                    p.UserId == userId);
+            var isParticipant = await _context.ConversationParticipants
+                .AnyAsync(p => p.ConversationId == msg.ConversationId && p.UserId == userId);
 
             if (!isParticipant) return Unauthorized();
 
@@ -583,8 +456,7 @@ namespace MoneyTransfer.Controllers
             {
                 id = msg.Id,
                 content = msg.Content,
-                senderName =
-                    $"{msg.Sender?.FirstName} {msg.Sender?.LastName}",
+                senderName = $"{msg.Sender?.FirstName} {msg.Sender?.LastName}",
                 sentAt = msg.SentAt.ToString("HH:mm")
             });
         }
@@ -595,8 +467,7 @@ namespace MoneyTransfer.Controllers
             var userId = _userManager.GetUserId(User)!;
             var count = await _context.Messages
                 .Where(m => !m.IsRead && m.SenderId != userId &&
-                    _context.ConversationParticipants
-                        .Any(p => p.ConversationId == m.ConversationId && p.UserId == userId))
+                    _context.ConversationParticipants.Any(p => p.ConversationId == m.ConversationId && p.UserId == userId))
                 .CountAsync();
             return Json(new { count });
         }
@@ -607,48 +478,24 @@ namespace MoneyTransfer.Controllers
             var userId = _userManager.GetUserId(User)!;
 
             var conv = await _context.Conversations
-                .Include(c => c.Participants)
-                    .ThenInclude(p => p.User)
+                .Include(c => c.Participants).ThenInclude(p => p.User)
                 .Include(c => c.Messages)
-                .FirstOrDefaultAsync(c => c.Id == id &&
-                    c.Participants.Any(p => p.UserId == userId));
+                .FirstOrDefaultAsync(c => c.Id == id && c.Participants.Any(p => p.UserId == userId));
 
             if (conv == null) return NotFound();
 
-            var otherParticipant = conv.Participants
-                .FirstOrDefault(p => p.UserId != userId);
-
+            var otherParticipant = conv.Participants.FirstOrDefault(p => p.UserId != userId);
             if (otherParticipant?.User == null) return NotFound();
 
             var otherUser = otherParticipant.User;
+            var messages = conv.Messages.Where(m => !m.IsDeletedForEveryone).OrderByDescending(m => m.SentAt).ToList();
 
-            var messages = conv.Messages
-                .Where(m => !m.IsDeletedForEveryone)
-                .OrderByDescending(m => m.SentAt)
-                .ToList();
-
-            var images = messages
-                .Where(m => m.MessageType == MessageType.Image
-                         && m.MediaUrl != null)
-                .Select(m => new { m.MediaUrl, m.SentAt })
-                .ToList();
-
-            var files = messages
-                .Where(m => m.MessageType == MessageType.File
-                         && m.MediaUrl != null)
-                .Select(m => new {
-                    m.MediaUrl,
-                    m.MediaFileName,
-                    m.MediaFileSize,
-                    m.SentAt
-                })
-                .ToList();
-
-            var videos = messages
-                .Where(m => m.MessageType == MessageType.Video
-                         && m.MediaUrl != null)
-                .Select(m => new { m.MediaUrl, m.SentAt })
-                .ToList();
+            var images = messages.Where(m => m.MessageType == MessageType.Image && m.MediaUrl != null)
+                .Select(m => new { m.MediaUrl, m.SentAt }).ToList();
+            var files = messages.Where(m => m.MessageType == MessageType.File && m.MediaUrl != null)
+                .Select(m => new { m.MediaUrl, m.MediaFileName, m.MediaFileSize, m.SentAt }).ToList();
+            var videos = messages.Where(m => m.MessageType == MessageType.Video && m.MediaUrl != null)
+                .Select(m => new { m.MediaUrl, m.SentAt }).ToList();
 
             return Json(new
             {
@@ -673,27 +520,19 @@ namespace MoneyTransfer.Controllers
         public async Task<IActionResult> ReactToMessage(int messageId, string emoji)
         {
             var userId = _userManager.GetUserId(User)!;
-
             var allowed = new[] { "👍", "❤️", "😂", "😮", "😢", "🙏" };
-            if (!allowed.Contains(emoji))
-            {
-                return BadRequest();
-            }
-            var msg = await _context.Messages
-                .FirstOrDefaultAsync(m => m.Id == messageId);
+
+            if (!allowed.Contains(emoji)) return BadRequest();
+
+            var msg = await _context.Messages.FirstOrDefaultAsync(m => m.Id == messageId);
             if (msg == null) return NotFound();
 
             var isParticipant = await _context.ConversationParticipants
-                .AnyAsync(p =>
-                    p.ConversationId == msg.ConversationId &&
-                    p.UserId == userId);
+                .AnyAsync(p => p.ConversationId == msg.ConversationId && p.UserId == userId);
             if (!isParticipant) return Unauthorized();
 
             var existing = await _context.MessageReactions
-                .FirstOrDefaultAsync(r =>
-                    r.MessageId == messageId &&
-                    r.UserId == userId &&
-                    r.Emoji == emoji);
+                .FirstOrDefaultAsync(r => r.MessageId == messageId && r.UserId == userId && r.Emoji == emoji);
 
             bool added;
             if (existing != null)
@@ -703,14 +542,13 @@ namespace MoneyTransfer.Controllers
             }
             else
             {
-                await _context.MessageReactions.AddAsync(
-                    new MessageReaction
-                    {
-                        MessageId = messageId,
-                        UserId = userId,
-                        Emoji = emoji,
-                        ReactedAt = DateTime.Now
-                    });
+                await _context.MessageReactions.AddAsync(new MessageReaction
+                {
+                    MessageId = messageId,
+                    UserId = userId,
+                    Emoji = emoji,
+                    ReactedAt = DateTime.Now
+                });
                 added = true;
             }
 
@@ -722,16 +560,14 @@ namespace MoneyTransfer.Controllers
                 .Select(g => new { Emoji = g.Key, Count = g.Count() })
                 .ToListAsync();
 
-            await _hubContext.Clients
-                .Group($"conv_{msg.ConversationId}")
-                .SendAsync("ReactionUpdated", new
-                {
-                    MessageId = messageId,
-                    Emoji = emoji,
-                    Added = added,
-                    UserId = userId,
-                    Counts = counts
-                });
+            await _hubContext.Clients.Group($"conv_{msg.ConversationId}").SendAsync("ReactionUpdated", new
+            {
+                MessageId = messageId,
+                Emoji = emoji,
+                Added = added,
+                UserId = userId,
+                Counts = counts
+            });
 
             return Ok(new { counts });
         }
@@ -745,20 +581,15 @@ namespace MoneyTransfer.Controllers
             var conv = await _context.Conversations
                 .Include(c => c.Participants)
                 .Include(c => c.Messages)
-                .FirstOrDefaultAsync(c => c.Id == id &&
-                    c.Participants.Any(p => p.UserId == userId));
+                .FirstOrDefaultAsync(c => c.Id == id && c.Participants.Any(p => p.UserId == userId));
 
             if (conv == null) return NotFound();
 
             _context.Messages.RemoveRange(conv.Messages);
-
-            _context.ConversationParticipants
-                .RemoveRange(conv.Participants);
-
+            _context.ConversationParticipants.RemoveRange(conv.Participants);
             _context.Conversations.Remove(conv);
 
             await _context.SaveChangesAsync();
-
             return RedirectToAction("Index");
         }
     }

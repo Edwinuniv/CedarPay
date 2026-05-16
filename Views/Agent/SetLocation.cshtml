@@ -8,16 +8,110 @@
     var allStores = ViewBag.AllStores as List<MoneyTransfer.Models.Agent> ?? new List<MoneyTransfer.Models.Agent>();
 }
 
+<style>
+    .map-container {
+        height: 400px;
+        width: 100%;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+
+    .form-section {
+        margin-bottom: 24px;
+        padding: 20px;
+        background: var(--bg-1);
+        border-radius: 16px;
+        border: 1px solid var(--border);
+    }
+
+    .section-title {
+        font-weight: 600;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--cedar-gold);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+        .section-title i {
+            color: var(--teal);
+            font-size: 20px;
+        }
+
+    .selected-coords {
+        padding: 10px;
+        background: var(--bg-2);
+        border-radius: 8px;
+        font-size: 14px;
+    }
+
+    .location-form-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border);
+    }
+
+    .store-selector-card {
+        padding: 16px;
+        background: var(--bg-2);
+        border-radius: 12px;
+        margin-bottom: 20px;
+    }
+
+    .store-selector-title {
+        font-weight: 600;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .current-location-alert {
+        margin-bottom: 16px;
+        padding: 10px 16px;
+        background: rgba(0, 184, 148, 0.1);
+        border-radius: 8px;
+        color: #00b894;
+    }
+
+    .form-actions {
+        margin-top: 24px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+    }
+
+    .save-all-btn {
+        background: var(--teal);
+        color: white;
+        padding: 12px 24px;
+        font-size: 16px;
+    }
+
+        .save-all-btn:hover {
+            background: #00a884;
+        }
+</style>
+
 <div class="row justify-content-center">
     <div class="col-md-8">
 
         <div class="page-header">
             <div>
                 <h2><i class="bi bi-geo-alt-fill" style="color:var(--teal);margin-right:8px"></i>Update Store</h2>
-                <p>Update location, contact and working hours</p>
+                <p>Update all store information in one place</p>
             </div>
             <a asp-action="Dashboard" class="btn-tp-secondary">
-                <i class="bi bi-arrow-left"></i> Back
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
             </a>
         </div>
 
@@ -26,10 +120,14 @@
             <div class="alert-tp success mb-3"><i class="bi bi-check-circle-fill"></i> @TempData["Success"]</div>
         }
 
-        <!-- Store selector if multiple stores -->
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert-tp error mb-3"><i class="bi bi-exclamation-circle-fill"></i> @TempData["Error"]</div>
+        }
+
         @if (allStores.Count > 1)
         {
-            <div class="tp-card mb-3 store-selector-card">
+            <div class="store-selector-card">
                 <div class="store-selector-title">
                     <i class="bi bi-shop"></i> Select Store to Edit
                 </div>
@@ -37,85 +135,148 @@
                     @foreach (var s in allStores)
                     {
                         <option value="@s.Id" selected="@(s.Id == Model.Id)">
-                            @s.StoreName — @s.City
+                            @s.StoreName — @(string.IsNullOrEmpty(s.City) ? "Location not set" : s.City)
                         </option>
                     }
                 </select>
             </div>
         }
 
-        <!-- Store Info Form -->
-        <div class="tp-card mb-3">
-            <div class="store-info-header">
-                <i class="bi bi-info-circle"></i>
-                Store Information
-            </div>
-            <form asp-action="UpdateStoreInfo" method="post">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="id" value="@Model.Id" />
+        <form asp-action="UpdateStore" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.Id" />
+            <input type="hidden" name="latitude" id="latInput" value="@latValue" />
+            <input type="hidden" name="longitude" id="lngInput" value="@lngValue" />
+
+            <div class="form-section">
+                <div class="section-title">
+                    <i class="bi bi-shop"></i>
+                    Store Information
+                </div>
                 <div class="row g-3">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">Store Name</label>
-                            <input name="storeName" value="@Model.StoreName" class="form-control" placeholder="Store name" />
+                            <label class="form-label">Store Name *</label>
+                            <input name="StoreName" value="@Model.StoreName" class="form-control" required />
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">Phone Number</label>
-                            <input name="phoneNumber" value="@Model.PhoneNumber" class="form-control" placeholder="+961 XX XXX XXX" />
+                            <label class="form-label">Agent Name</label>
+                            <input name="AgentName" value="@Model.AgentName" class="form-control" />
                         </div>
                     </div>
-                    <div class="col-md-12">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Phone Number *</label>
+                            <input name="PhoneNumber" value="@Model.PhoneNumber" class="form-control" required />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input name="Email" value="@Model.Email" class="form-control" type="email" />
+                        </div>
+                    </div>
+                    <div class="col-12">
                         <div class="form-group">
                             <label class="form-label">Working Hours</label>
-                            <input name="workingHours" value="@Model.WorkingHours" class="form-control"
-                                   placeholder="e.g. Mon-Fri 9:00 AM – 6:00 PM, Sat 10:00 AM – 3:00 PM" />
+                            <input name="WorkingHours" value="@Model.WorkingHours" class="form-control"
+                                   placeholder="e.g., Mon-Fri 9:00 AM - 6:00 PM, Sat 10:00 AM - 3:00 PM" />
                         </div>
                     </div>
                 </div>
-                <div class="save-info-btn-container">
-                    <button type="submit" class="btn-tp-primary">
-                        <i class="bi bi-save"></i> Save Info
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        <!-- Map for location -->
-        <div class="tp-card">
-            <div class="map-header">
-                <i class="bi bi-map"></i>
-                Set Map Location — click to place pin
             </div>
 
-            @if (Model.Latitude != 0)
-            {
-                <div class="alert-tp success current-location-alert">
-                    <i class="bi bi-geo-alt-fill"></i>
-                    Current: @Model.Latitude.ToString("F5"), @Model.Longitude.ToString("F5")
+            <div class="form-section">
+                <div class="section-title">
+                    <i class="bi bi-house-door"></i>
+                    Address Details
                 </div>
-            }
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            <label class="form-label">Street / Building Name</label>
+                            <input name="Street" value="@Model.Street" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Building Number</label>
+                            <input name="BuildingNumber" value="@Model.BuildingNumber" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="form-group">
+                            <label class="form-label">City</label>
+                            <input name="City" value="@Model.City" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Region / State</label>
+                            <input name="Region" value="@Model.Region" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-label">Postal Code</label>
+                            <input name="PostalCode" value="@Model.PostalCode" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Country</label>
+                            <input name="Country" value="@Model.Country" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-group">
+                            <label class="form-label">Store Description</label>
+                            <textarea name="Description" class="form-control" rows="2">@Model.Description</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-            <div id="map" class="map-container"></div>
+            <div class="form-section">
+                <div class="section-title">
+                    <i class="bi bi-map"></i>
+                    Map Location
+                </div>
 
-            <form asp-action="SetLocation" method="post">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="id" value="@Model.Id" />
-                <input type="hidden" name="latitude" id="latInput" value="@latValue" />
-                <input type="hidden" name="longitude" id="lngInput" value="@lngValue" />
+                @if (Model.Latitude != 0)
+                {
+                    <div class="current-location-alert">
+                        <i class="bi bi-geo-alt-fill"></i>
+                        Current location: <strong>@Model.Latitude.ToString("F5")°, @Model.Longitude.ToString("F5")°</strong>
+                    </div>
+                }
+
+                <div id="map" class="map-container"></div>
 
                 <div class="location-form-footer">
                     <div class="selected-coords">
-                        Selected: <span id="coordDisplay" class="selected-coords-value">
+                        <i class="bi bi-pin-map-fill"></i> Selected coordinates:
+                        <span id="coordDisplay" class="selected-coords-value">
                             @latValue, @lngValue
                         </span>
                     </div>
-                    <button type="submit" class="btn-tp-primary">
-                        <i class="bi bi-geo-alt-fill"></i> Save Location
-                    </button>
+                    <small class="text-muted">Click on map or drag the pin to set location</small>
                 </div>
-            </form>
+            </div>
+
+            <div class="form-actions">
+                <a asp-action="Dashboard" class="btn-tp-secondary">Cancel</a>
+                <button type="submit" class="btn-tp-primary save-all-btn">
+                    <i class="bi bi-save-all"></i> Save All Store Information
+                </button>
+            </div>
+        </form>
+
+        <div class="alert-tp info mt-3">
+            <i class="bi bi-info-circle-fill"></i>
+            <strong>Note:</strong> These changes only affect your store information for the Agent Portal. They do not affect your personal user profile.
         </div>
 
     </div>
@@ -123,6 +284,11 @@
 
 @section Styles {
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        .leaflet-container {
+            border-radius: 12px;
+        }
+    </style>
 }
 
 @section Scripts {
@@ -130,11 +296,11 @@
     <script>
         var map = L.map('map').setView([@latValue, @lngValue], @zoomValue);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap'
+            attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
         var marker = L.marker([@latValue, @lngValue], { draggable: true }).addTo(map);
-        marker.bindPopup('<b>@Html.Raw(Model.StoreName?.Replace("'", "\\'"))</b>').openPopup();
+        marker.bindPopup('<b>@Html.Raw(Model.StoreName?.Replace("'", "\\'"))</b><br>Click and drag to move').openPopup();
 
         function updateCoords(lat, lng) {
             document.getElementById('latInput').value = lat;
@@ -145,11 +311,13 @@
         marker.on('dragend', function(e) {
             var pos = e.target.getLatLng();
             updateCoords(pos.lat, pos.lng);
+            marker.bindPopup('<b>@Html.Raw(Model.StoreName?.Replace("'", "\\'"))</b><br>📍 New location set').openPopup();
         });
 
         map.on('click', function(e) {
             marker.setLatLng(e.latlng);
             updateCoords(e.latlng.lat, e.latlng.lng);
+            marker.bindPopup('<b>@Html.Raw(Model.StoreName?.Replace("'", "\\'"))</b><br>📍 Location updated').openPopup();
         });
     </script>
 }

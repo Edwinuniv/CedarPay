@@ -31,9 +31,7 @@ namespace MoneyTransfer.Repositories.Implementations
         }
         public async Task<Account?> GetDefaultAccountAsync(string userId)
         {
-            return await _context.Accounts
-                .Include(a => a.Wallets)
-                .FirstOrDefaultAsync(a => a.UserId == userId && a.IsDefault);
+            return await _context.Accounts.Include(a => a.Wallets).FirstOrDefaultAsync(a => a.UserId == userId && a.IsDefault);
         }
     }
 }

@@ -1,10 +1,10 @@
 ﻿@model MoneyTransfer.ViewModels.TransferViewModel
+@using MoneyTransfer.Models
 @{
     ViewData["Title"] = "Send Money";
     ViewBag.PageClass = "page-transfer";
 }
 
-<!-- Remove the row justify-content-center that might be causing flex height issues -->
 <div class="transfer-container">
     <div class="col-md-7 mx-auto">
 
@@ -22,7 +22,6 @@
                 <div asp-validation-summary="All" class="alert-tp error"
                      style="@(ViewData.ModelState.ErrorCount > 0 ? "" : "display:none")"></div>
 
-                <!-- Transfer Type Selection -->
                 <div class="form-group">
                     <label class="form-label">Transfer Type</label>
                     <div class="transfer-type-grid" id="transferTypeGrid">
@@ -54,7 +53,6 @@
                     </div>
                 </div>
 
-                <!-- From Wallet -->
                 <div class="form-group">
                     <label class="form-label">From Wallet</label>
                     <select asp-for="SenderWalletId" class="form-select">
@@ -67,11 +65,9 @@
                             </option>
                         }
                     </select>
-                    <span asp-validation-for="SenderWalletId"
-                          class="text-danger validation-error"></span>
+                    <span asp-validation-for="SenderWalletId" class="text-danger validation-error"></span>
                 </div>
 
-                <!-- Receiver Wallet Serial -->
                 <div class="form-group" id="walletField">
                     <label class="form-label">Receiver Wallet Serial</label>
                     @if (Model.Beneficiaries.Any())
@@ -94,7 +90,6 @@
                            placeholder="WAL-2026-XXXXX" id="walletInput" />
                 </div>
 
-                <!-- Mobile Transfer Fields -->
                 <div id="mobileFields" style="display:none">
                     <div class="form-group">
                         <label class="form-label">Receiver Phone Number</label>
@@ -108,24 +103,27 @@
                     </div>
                 </div>
 
-                <!-- Amount -->
                 <div class="form-group">
                     <label class="form-label">Amount</label>
                     <input asp-for="Amount" class="form-control"
                            type="number" step="0.01" min="0.01"
                            placeholder="0.00" />
-                    <span asp-validation-for="Amount"
-                          class="text-danger validation-error"></span>
+                    <span asp-validation-for="Amount" class="text-danger validation-error"></span>
                 </div>
 
-                <!-- Note -->
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select asp-for="Category" class="form-select"
+                            asp-items="Html.GetEnumSelectList<TransactionCategory>()">
+                    </select>
+                </div>
+
                 <div class="form-group">
                     <label class="form-label">Note (Optional)</label>
                     <input asp-for="Description" class="form-control"
                            placeholder="What's this for?" />
                 </div>
 
-                <!-- Fee Information -->
                 @{
                     bool nxtFree = ViewBag.NextIsFree == true;
                     decimal feePct = ViewBag.FeePercentage != null ? (decimal)ViewBag.FeePercentage : 2.0m;
@@ -151,13 +149,11 @@
                     </div>
                 }
 
-                <!-- Buttons -->
                 <div class="d-flex gap-2">
                     <button type="submit" class="btn-tp-primary">
                         <i class="bi bi-send-fill"></i> Send Money
                     </button>
-                    <a asp-controller="Dashboard" asp-action="Index"
-                       class="btn-tp-secondary">Cancel</a>
+                    <a asp-controller="Dashboard" asp-action="Index" class="btn-tp-secondary">Cancel</a>
                 </div>
             </form>
         </div>

@@ -84,16 +84,12 @@ namespace MoneyTransfer.Repositories.Implementations
 
         public async Task<int> GetUserTransactionCountAsync(string userId)
         {
-            return await _context.Transactions
-                .CountAsync(t => t.SenderWallet.UserId == userId);
+            return await _context.Transactions.CountAsync(t => t.SenderWallet.UserId == userId);
         }
 
         public async Task<decimal> GetTotalSentByUserAsync(string userId)
         {
-            return await _context.Transactions
-                .Where(t => t.SenderWallet.UserId == userId
-                         && t.Status == TransactionStatus.Completed)
-                .SumAsync(t => t.Amount);
+            return await _context.Transactions.Where(t => t.SenderWallet.UserId == userId && t.Status == TransactionStatus.Completed).SumAsync(t => t.Amount);
         }
 
         public async Task<decimal> GetTotalReceivedByUserAsync(string userId)

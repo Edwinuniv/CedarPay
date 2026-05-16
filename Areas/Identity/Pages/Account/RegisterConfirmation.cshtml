@@ -1,0 +1,45 @@
+﻿@page
+@model RegisterConfirmationModel
+@{
+    ViewData["Title"] = "Confirm Your Email";
+    Layout = "/Views/Shared/_Layout.cshtml";
+    ViewBag.PageClass = "page-dashboard";
+}
+
+<div class="confirm-email-container">
+    <div class="confirm-email-card">
+
+        @if (!string.IsNullOrEmpty(TempData["SuccessMessage"]?.ToString()))
+        {
+            <div class="alert-tp success" style="margin-bottom:16px;">
+                @TempData["SuccessMessage"]
+            </div>
+        }
+
+        <div class="confirm-email-icon">📧</div>
+        <h1 class="confirm-email-title">Check Your Email</h1>
+
+        <div class="confirm-email-message">
+            <p>A confirmation link has been sent to <strong>@Model.Email</strong>.</p>
+            <p>Click the link in the email to activate your CedarPay account.</p>
+            <div style="background:#f5f7fa;padding:12px;border-radius:8px;margin-top:16px;">
+                <small style="color:#888;">📌 Didn't receive it? Check your spam folder or</small>
+                <br />
+                <a asp-page="./ResendEmailConfirmation" style="color:var(--teal);font-weight:600;">
+                    <i class="bi bi-arrow-repeat"></i> Resend confirmation
+                </a>
+            </div>
+        </div>
+
+        <div class="confirm-email-actions" style="margin-top:20px;">
+            <a asp-page="./Login" class="btn-tp-primary">
+                <i class="bi bi-box-arrow-in-right"></i> Go to Login
+            </a>
+        </div>
+
+        <div class="confirm-email-footer" style="margin-top:24px;text-align:center;color:#aaa;">
+            <i class="bi bi-tree-fill"></i>
+            <span>CedarPay — Secure Digital Wallet</span>
+        </div>
+    </div>
+</div>

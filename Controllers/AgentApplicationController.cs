@@ -15,12 +15,7 @@ namespace MoneyTransfer.Controllers
         private readonly IAgentRepository _agentRepository;
         private readonly IEmailService _emailService;
 
-        public AgentApplicationController(
-            IAgentApplicationRepository applicationRepository,
-            IAgentRepository agentRepository,
-            UserManager<User> userManager,
-            IUserRepository userRepository,
-            IEmailService emailService) : base(userManager, userRepository)
+        public AgentApplicationController(IAgentApplicationRepository applicationRepository, IAgentRepository agentRepository, UserManager<User> userManager, IUserRepository userRepository, IEmailService emailService) : base(userManager, userRepository)
         {
             _applicationRepository = applicationRepository;
             _agentRepository = agentRepository;
@@ -104,7 +99,6 @@ namespace MoneyTransfer.Controllers
 
             await _applicationRepository.AddAsync(application);
 
-            // Send email confirmation to user
             if (user?.Email != null)
             {
                 _ = Task.Run(async () =>

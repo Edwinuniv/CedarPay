@@ -23,7 +23,6 @@
     </a>
 </div>
 
-<!-- Tabs -->
 <div class="reviews-tabs-container">
     <button onclick="switchTab('app')" id="tab-app" class="reviews-tab-btn active">
         <i class="bi bi-star-fill"></i> App (@appReviews.Count)
@@ -36,7 +35,6 @@
     </button>
 </div>
 
-<!-- APP REVIEWS TAB -->
 <div id="panel-app">
     @if (!appReviews.Any())
     {
@@ -81,7 +79,6 @@
     }
 </div>
 
-<!-- TRANSACTION REVIEWS TAB -->
 <div id="panel-tx" style="display:none">
     @if (!transactions.Any())
     {
@@ -139,7 +136,6 @@
     }
 </div>
 
-<!-- AGENT REVIEWS TAB -->
 <div id="panel-agent" style="display:none">
     @if (!agents.Any())
     {

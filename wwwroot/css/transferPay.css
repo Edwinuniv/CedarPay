@@ -1,20 +1,15 @@
 ﻿@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap');
 
-/* ============================================
-   LEBANESE DESIGN SYSTEM — CedarPay v2
-   ============================================ */
 :root {
     --teal: #00b894;
     --teal-light: #e8faf5;
     --teal-dark: #00967a;
     --teal-mid: #00cec9;
-    /* Lebanese Flag Colors */
     --lebanon-red: #EF3340;
     --lebanon-red-mid: #c0272d;
     --lebanon-white: #FFFFFF;
     --lebanon-green: #00A651;
     --lebanon-green-dark: #007a3d;
-    /* Lebanese Cultural Colors */
     --cedar-brown: #8B5A2B;
     --cedar-dark-green: #2C5F2D;
     --cedar-gold: #D4AF37;
@@ -60,7 +55,6 @@
     --transition: all 0.18s ease;
 }
 
-/* Dark Mode */
 html.dark-mode,
 body.dark-mode {
     --bg: #0d0f14;
@@ -85,7 +79,6 @@ body.dark-mode {
     --lebanon-green: #00A651;
 }
 
-/* Admin Theme */
 body.admin-theme {
     --bg: #0a0c10;
     --surface: #111318;
@@ -110,7 +103,6 @@ body.admin-theme {
         border: 1px solid rgba(0,229,195,0.2);
     }
 
-/* Agent Theme */
 body.agent-theme {
     --teal: #f97316;
     --teal-light: rgba(249,115,22,0.1);
@@ -139,9 +131,6 @@ html.dark-mode body {
     color: var(--text-1) !important;
 }
 
-/* ============================================
-   GLOBAL & RESET
-   ============================================ */
 * {
     margin: 0;
     padding: 0;
@@ -156,13 +145,6 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
-/* ============================================
-   PAGE-SPECIFIC BACKGROUNDS
-   Each page gets a unique Lebanese-themed bg
-   Add class to <body> or .page-content wrapper
-   ============================================ */
-
-/* Dashboard — Cedar Forest Skyline */
 .page-dashboard {
     background: radial-gradient(ellipse at 15% 85%, rgba(44,95,45,0.06) 0%, transparent 50%), radial-gradient(ellipse at 85% 80%, rgba(44,95,45,0.04) 0%, transparent 45%), radial-gradient(ellipse at 50% 100%, rgba(0,166,81,0.05) 0%, transparent 60%), var(--bg);
     position: relative;
@@ -175,9 +157,7 @@ body {
         left: 0;
         right: 0;
         height: 260px;
-        background:
-        /* Cedar tree silhouettes (layered) */
-        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 260'%3E%3Cg fill='%232C5F2D' opacity='0.05'%3E%3C!-- Tree 1 --%3E%3Cpolygon points='80,260 160,260 120,180'/%3E%3Cpolygon points='70,200 170,200 120,110'/%3E%3Cpolygon points='75,140 165,140 120,50'/%3E%3Crect x='113' y='240' width='14' height='20'/%3E%3C!-- Tree 2 --%3E%3Cpolygon points='220,260 320,260 270,160'/%3E%3Cpolygon points='210,190 330,190 270,80'/%3E%3Cpolygon points='215,120 325,120 270,20'/%3E%3Crect x='263' y='240' width='14' height='20'/%3E%3C!-- Tree 3 small --%3E%3Cpolygon points='380,260 440,260 410,200'/%3E%3Cpolygon points='375,215 445,215 410,155'/%3E%3Crect x='404' y='245' width='12' height='15'/%3E%3C!-- Tree 4 --%3E%3Cpolygon points='560,260 680,260 620,140'/%3E%3Cpolygon points='550,185 690,185 620,60'/%3E%3Cpolygon points='555,120 685,120 620,10'/%3E%3Crect x='613' y='238' width='14' height='22'/%3E%3C!-- Tree 5 small --%3E%3Cpolygon points='760,260 820,260 790,205'/%3E%3Cpolygon points='755,220 825,220 790,165'/%3E%3Crect x='784' y='248' width='12' height='12'/%3E%3C!-- Tree 6 --%3E%3Cpolygon points='940,260 1060,260 1000,145'/%3E%3Cpolygon points='930,190 1070,190 1000,70'/%3E%3Cpolygon points='935,125 1065,125 1000,15'/%3E%3Crect x='993' y='240' width='14' height='20'/%3E%3C!-- Tree 7 --%3E%3Cpolygon points='1160,260 1260,260 1210,165'/%3E%3Cpolygon points='1150,200 1270,200 1210,90'/%3E%3Cpolygon points='1155,135 1265,135 1210,30'/%3E%3Crect x='1203' y='242' width='14' height='18'/%3E%3C!-- Tree 8 small --%3E%3Cpolygon points='1340,260 1400,260 1370,208'/%3E%3Cpolygon points='1335,222 1405,222 1370,170'/%3E%3Crect x='1364' y='250' width='12' height='10'/%3E%3C/g%3E%3C/svg%3E") bottom/cover no-repeat;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 260'%3E%3Cg fill='%232C5F2D' opacity='0.05'%3E%3C!-- Tree 1 --%3E%3Cpolygon points='80,260 160,260 120,180'/%3E%3Cpolygon points='70,200 170,200 120,110'/%3E%3Cpolygon points='75,140 165,140 120,50'/%3E%3Crect x='113' y='240' width='14' height='20'/%3E%3C!-- Tree 2 --%3E%3Cpolygon points='220,260 320,260 270,160'/%3E%3Cpolygon points='210,190 330,190 270,80'/%3E%3Cpolygon points='215,120 325,120 270,20'/%3E%3Crect x='263' y='240' width='14' height='20'/%3E%3C!-- Tree 3 small --%3E%3Cpolygon points='380,260 440,260 410,200'/%3E%3Cpolygon points='375,215 445,215 410,155'/%3E%3Crect x='404' y='245' width='12' height='15'/%3E%3C!-- Tree 4 --%3E%3Cpolygon points='560,260 680,260 620,140'/%3E%3Cpolygon points='550,185 690,185 620,60'/%3E%3Cpolygon points='555,120 685,120 620,10'/%3E%3Crect x='613' y='238' width='14' height='22'/%3E%3C!-- Tree 5 small --%3E%3Cpolygon points='760,260 820,260 790,205'/%3E%3Cpolygon points='755,220 825,220 790,165'/%3E%3Crect x='784' y='248' width='12' height='12'/%3E%3C!-- Tree 6 --%3E%3Cpolygon points='940,260 1060,260 1000,145'/%3E%3Cpolygon points='930,190 1070,190 1000,70'/%3E%3Cpolygon points='935,125 1065,125 1000,15'/%3E%3Crect x='993' y='240' width='14' height='20'/%3E%3C!-- Tree 7 --%3E%3Cpolygon points='1160,260 1260,260 1210,165'/%3E%3Cpolygon points='1150,200 1270,200 1210,90'/%3E%3Cpolygon points='1155,135 1265,135 1210,30'/%3E%3Crect x='1203' y='242' width='14' height='18'/%3E%3C!-- Tree 8 small --%3E%3Cpolygon points='1340,260 1400,260 1370,208'/%3E%3Cpolygon points='1335,222 1405,222 1370,170'/%3E%3Crect x='1364' y='250' width='12' height='10'/%3E%3C/g%3E%3C/svg%3E") bottom/cover no-repeat;
         pointer-events: none;
         z-index: 0;
     }
@@ -187,7 +167,6 @@ html.dark-mode .page-dashboard::before {
     opacity: 0.5;
 }
 
-/* Transfer — Mediterranean Sea (waves + Lebanon map) */
 .page-transfer {
     background: radial-gradient(ellipse at 50% 0%, rgba(0,153,204,0.07) 0%, transparent 60%), radial-gradient(ellipse at 20% 50%, rgba(0,99,153,0.04) 0%, transparent 50%), var(--bg);
     position: relative;
@@ -206,7 +185,6 @@ html.dark-mode .page-dashboard::before {
         z-index: 0;
     }
 
-/* Wallet — Phoenician / Ancient Coins */
 .page-wallet {
     background: radial-gradient(ellipse at 80% 20%, rgba(212,175,55,0.07) 0%, transparent 50%), radial-gradient(ellipse at 20% 80%, rgba(212,175,55,0.05) 0%, transparent 45%), var(--bg);
     position: relative;
@@ -224,7 +202,6 @@ html.dark-mode .page-dashboard::before {
         z-index: 0;
     }
 
-/* Admin — Geometric Cedar Pattern */
 .page-admin {
     background: linear-gradient(135deg, rgba(0,229,195,0.03) 0%, transparent 50%), repeating-linear-gradient( 45deg, transparent, transparent 40px, rgba(0,229,195,0.015) 40px, rgba(0,229,195,0.015) 41px ), var(--bg);
 }
@@ -241,7 +218,6 @@ html.dark-mode .page-dashboard::before {
         z-index: 0;
     }
 
-/* Finance — Beirut Skyline at dusk */
 .page-finance {
     background: radial-gradient(ellipse at 50% 0%, rgba(245,166,35,0.06) 0%, transparent 55%), radial-gradient(ellipse at 0% 100%, rgba(239,51,64,0.04) 0%, transparent 50%), radial-gradient(ellipse at 100% 100%, rgba(0,166,81,0.04) 0%, transparent 50%), var(--bg);
     position: relative;
@@ -259,7 +235,6 @@ html.dark-mode .page-dashboard::before {
         z-index: 0;
     }
 
-/* Transactions — Phoenician Ship (ancient trade routes) */
 .page-transactions {
     background: radial-gradient(ellipse at 70% 30%, rgba(0,153,204,0.05) 0%, transparent 50%), radial-gradient(ellipse at 30% 70%, rgba(0,99,153,0.04) 0%, transparent 45%), var(--bg);
     position: relative;
@@ -277,7 +252,6 @@ html.dark-mode .page-dashboard::before {
         z-index: 0;
     }
 
-/* KYC / Profile — Lebanese Flag Geometric */
 .page-kyc,
 .page-profile {
     background: linear-gradient(135deg, rgba(239,51,64,0.04) 0%, rgba(255,255,255,0) 33%, rgba(0,166,81,0.04) 66%, rgba(0,166,81,0) 100% ), var(--bg);
@@ -296,7 +270,6 @@ html.dark-mode .page-dashboard::before {
         z-index: 200;
     }
 
-/* Map — Topographic contour lines */
 .page-map {
     background: radial-gradient(ellipse at 50% 50%, rgba(44,95,45,0.06) 0%, transparent 70%), var(--bg);
     position: relative;
@@ -311,12 +284,10 @@ html.dark-mode .page-dashboard::before {
         z-index: 0;
     }
 
-/* Chat — Abstract connection nodes */
 .page-chat {
     background: radial-gradient(circle at 20% 50%, rgba(0,184,148,0.05) 0%, transparent 40%), radial-gradient(circle at 80% 50%, rgba(212,175,55,0.04) 0%, transparent 40%), var(--bg);
 }
 
-/* Settings — Minimal cedar branch */
 .page-settings {
     background: radial-gradient(ellipse at 100% 0%, rgba(212,175,55,0.06) 0%, transparent 50%), var(--bg);
     position: relative;
@@ -334,7 +305,6 @@ html.dark-mode .page-dashboard::before {
         z-index: 0;
     }
 
-/* Reviews — Stars & Baalbek columns */
 .page-reviews {
     background: radial-gradient(ellipse at 50% 0%, rgba(212,175,55,0.07) 0%, transparent 55%), var(--bg);
     position: relative;
@@ -352,22 +322,18 @@ html.dark-mode .page-dashboard::before {
         z-index: 0;
     }
 
-/* Notifications — Stars over Lebanon mountains */
 .page-notifications {
     background: radial-gradient(ellipse at 20% 20%, rgba(212,175,55,0.05) 0%, transparent 40%), radial-gradient(ellipse at 80% 30%, rgba(212,175,55,0.04) 0%, transparent 35%), radial-gradient(ellipse at 50% 10%, rgba(0,153,204,0.04) 0%, transparent 40%), var(--bg);
 }
 
-/* Beneficiary — Human connection arcs */
 .page-beneficiary {
     background: radial-gradient(ellipse at 30% 40%, rgba(0,184,148,0.05) 0%, transparent 45%), radial-gradient(ellipse at 70% 60%, rgba(0,166,81,0.04) 0%, transparent 45%), var(--bg);
 }
 
-/* TopUp — Coins and currency symbols */
 .page-topup {
     background: radial-gradient(ellipse at 80% 20%, rgba(212,175,55,0.08) 0%, transparent 45%), radial-gradient(ellipse at 20% 80%, rgba(245,166,35,0.05) 0%, transparent 45%), var(--bg);
 }
 
-/* Baalbek temples full-width bg for special pages */
 .page-baalbek {
     background: radial-gradient(ellipse at 50% 100%, rgba(196,168,130,0.1) 0%, transparent 60%), var(--bg);
     position: relative;
@@ -385,11 +351,6 @@ html.dark-mode .page-dashboard::before {
         z-index: 0;
     }
 
-/* ============================================
-   GLOBAL LEBANESE SUBTLE WATERMARKS
-   ============================================ */
-
-/* Lebanese flag top stripe for all pages (subtle) */
 body::before {
     content: '';
     position: fixed;
@@ -406,12 +367,6 @@ html.dark-mode body::before {
     background: linear-gradient(90deg, var(--lebanon-red) 33%, rgba(80,80,80,0.6) 33% 66%, var(--lebanon-green) 66% );
 }
 
-/* ============================================
-   ANIMATED AVATAR SYSTEM
-   Colorful, animated avatars for users without pics
-   ============================================ */
-
-/* Base avatar */
 .avatar-initials {
     border-radius: var(--r-sm);
     display: flex;
@@ -425,7 +380,7 @@ html.dark-mode body::before {
     flex-shrink: 0;
 }
 
-    /* Shimmer overlay on all gradient avatars */
+
     .avatar-initials::before {
         content: '';
         position: absolute;
@@ -434,7 +389,6 @@ html.dark-mode body::before {
         pointer-events: none;
     }
 
-/* Lebanese Flag Animated — primary "you" avatar */
 .avatar-lb {
     background: linear-gradient(135deg, var(--lebanon-red), var(--lebanon-green), var(--cedar-gold), var(--mediterranean-blue), var(--lebanon-red) );
     background-size: 400% 400%;
@@ -463,7 +417,6 @@ html.dark-mode body::before {
     }
 }
 
-/* Cedar Sunset — warm reds + gold */
 .avatar-cedar {
     background: linear-gradient(135deg, #EF3340 0%, #f5a623 35%, #D4AF37 60%, #EF3340 100% );
     background-size: 300% 300%;
@@ -484,7 +437,6 @@ html.dark-mode body::before {
     }
 }
 
-/* Mediterranean — blue + teal + green */
 .avatar-mediterranean {
     background: linear-gradient(135deg, #0099CC 0%, #00cec9 40%, #00A651 70%, #0099CC 100% );
     background-size: 300% 300%;
@@ -505,7 +457,6 @@ html.dark-mode body::before {
     }
 }
 
-/* Phoenician — deep purple + gold */
 .avatar-phoenician {
     background: linear-gradient(135deg, #6c63ff 0%, #D4AF37 50%, #8B5A2B 100% );
     background-size: 300% 300%;
@@ -530,7 +481,6 @@ html.dark-mode body::before {
     }
 }
 
-/* Baalbek Sunset — stone + red + gold */
 .avatar-baalbek {
     background: linear-gradient(135deg, #c4a882 0%, #EF3340 45%, #f5a623 100% );
     background-size: 300% 300%;
@@ -551,7 +501,6 @@ html.dark-mode body::before {
     }
 }
 
-/* Green Cedar — forest greens */
 .avatar-forest {
     background: linear-gradient(135deg, #2C5F2D 0%, #00A651 40%, #00b894 70%, #2C5F2D 100% );
     background-size: 300% 300%;
@@ -572,7 +521,6 @@ html.dark-mode body::before {
     }
 }
 
-/* Snow Peak — cool whites + blue (Mt. Sannine) */
 .avatar-snow {
     background: linear-gradient(135deg, #0099CC 0%, #48CAE4 40%, #E8ECEF 70%, #0099CC 100% );
     background-size: 300% 300%;
@@ -593,7 +541,6 @@ html.dark-mode body::before {
     }
 }
 
-/* Gold — purely Lebanese gold */
 .avatar-gold {
     background: linear-gradient(135deg, #D4AF37 0%, #f5d76e 40%, #8B5A2B 70%, #D4AF37 100% );
     background-size: 300% 300%;
@@ -614,9 +561,6 @@ html.dark-mode body::before {
     }
 }
 
-/* Helper: auto-assign avatar color by user initial or hash
-   Use data-avatar="lb|cedar|med|phoenician|baalbek|forest|snow|gold"
-   or use .avatar-color-{1-8} */
 .avatar-color-1 {
     background: linear-gradient(135deg, #EF3340, #D4AF37);
     background-size: 200% 200%;
@@ -665,7 +609,6 @@ html.dark-mode body::before {
     animation: avatarGold 8s ease infinite;
 }
 
-/* Pulsing ring for active/online users */
 .avatar-online {
     box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--lebanon-green);
     animation: avatarOnline 2s ease infinite;
@@ -681,7 +624,6 @@ html.dark-mode body::before {
     }
 }
 
-/* Ripple for avatar on click */
 .avatar-initials:active::after {
     content: '';
     position: absolute;
@@ -703,9 +645,6 @@ html.dark-mode body::before {
     }
 }
 
-/* ============================================
-   SIDEBAR & LAYOUT
-   ============================================ */
 .app-wrapper {
     display: flex;
     min-height: 100vh;
@@ -726,7 +665,6 @@ html.dark-mode body::before {
     display: flex;
     flex-direction: column;
     padding: 20px 0;
-    /* Lebanese flag top stripe */
     border-top: 3px solid transparent !important;
     border-image: linear-gradient(90deg, var(--lebanon-red) 33%, #fff 33% 66%, var(--lebanon-green) 66%) 1 !important;
 }
@@ -770,9 +708,6 @@ html.dark-mode .sidebar {
         margin-left: 64px;
     }
 
-/* ============================================
-   SIDEBAR COMPONENTS
-   ============================================ */
 .sidebar-brand {
     display: flex;
     align-items: center;
@@ -867,7 +802,7 @@ html.dark-mode .sidebar {
             color: var(--lebanon-green);
         }
 
-        /* Cedar tree indicator on active item */
+
         .nav-item.active::before {
             content: '';
             position: absolute;
@@ -915,9 +850,6 @@ html.dark-mode .sidebar {
         background: var(--cedar-red-lt) !important;
     }
 
-/* ============================================
-   TOPBAR
-   ============================================ */
 .topbar {
     height: var(--topbar-h);
     background: var(--surface);
@@ -929,7 +861,6 @@ html.dark-mode .sidebar {
     position: sticky;
     top: 0;
     z-index: 50;
-    /* Subtle bottom gradient hint of Lebanese colors */
     box-shadow: 0 1px 0 var(--border), 0 2px 8px rgba(0,0,0,0.03);
 }
 
@@ -1014,7 +945,6 @@ html.dark-mode .sidebar {
     animation: badgePulse 2s ease infinite;
 }
 
-/* Topbar user avatar — Lebanese animated */
 .user-avatar {
     width: 36px;
     height: 36px;
@@ -1049,9 +979,6 @@ html.dark-mode .sidebar {
         box-shadow: 0 4px 14px rgba(239,51,64,0.3);
     }
 
-/* ============================================
-   ALERTS
-   ============================================ */
 .alerts-container {
     padding: 14px 28px 0;
 }
@@ -1079,9 +1006,6 @@ html.dark-mode .sidebar {
         color: var(--lebanon-red);
     }
 
-/* ============================================
-   CARDS & STATS
-   ============================================ */
 .page-content {
     padding: 24px 28px;
     flex: 1;
@@ -1107,7 +1031,7 @@ html.dark-mode .sidebar {
         box-shadow: 0 6px 24px rgba(212,175,55,0.1);
     }
 
-    /* Subtle cedar watermark on cards */
+
     .tp-card::after {
         content: '🌲';
         position: absolute;
@@ -1148,9 +1072,6 @@ html.dark-mode .sidebar {
         color: var(--teal-dark);
     }
 
-/* ============================================
-   BALANCE CARD — Lebanese Gradient Hero
-   ============================================ */
 .balance-card {
     background: linear-gradient(135deg, var(--lebanon-green) 0%, var(--teal) 35%, var(--mediterranean-blue) 65%, var(--cedar-dark-green) 100% ) !important;
     background-size: 300% 300% !important;
@@ -1178,7 +1099,6 @@ html.dark-mode .sidebar {
     }
 }
 
-/* Cedar silhouette inside balance card */
 .balance-card::before {
     content: '';
     position: absolute;
@@ -1190,7 +1110,6 @@ html.dark-mode .sidebar {
     pointer-events: none;
 }
 
-/* Lebanese flag ring on bottom-left */
 .balance-card::after {
     content: '🇱🇧';
     position: absolute;
@@ -1250,7 +1169,7 @@ html.dark-mode .sidebar {
         transform: translateY(-1px);
     }
 
-    /* LBP special pill — Lebanese flag colors */
+
     .currency-pill[data-currency="LBP"] {
         border-color: rgba(239,51,64,0.6);
         background: rgba(239,51,64,0.15);
@@ -1261,9 +1180,6 @@ html.dark-mode .sidebar {
             border-color: rgba(239,51,64,0.9);
         }
 
-/* ============================================
-   STAT CARDS
-   ============================================ */
 .stat-card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -1281,7 +1197,7 @@ html.dark-mode .sidebar {
         border-color: rgba(212,175,55,0.3);
     }
 
-    /* Lebanese color accent bar on top of each stat card */
+
     .stat-card::before {
         content: '';
         position: absolute;
@@ -1374,9 +1290,6 @@ html.dark-mode .sidebar {
         color: var(--text-3);
     }
 
-/* ============================================
-   QUICK ACTIONS
-   ============================================ */
 .quick-actions {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -1480,9 +1393,6 @@ html.dark-mode .sidebar {
     text-align: center;
 }
 
-/* ============================================
-   BUTTONS
-   ============================================ */
 .btn-tp-primary {
     background: linear-gradient(135deg, var(--teal), var(--lebanon-green));
     color: #fff;
@@ -1587,7 +1497,6 @@ html.dark-mode .sidebar {
         box-shadow: 0 4px 12px rgba(239,51,64,0.3);
     }
 
-/* Lebanese Flag Button — special CTA */
 .btn-tp-lebanon {
     background: linear-gradient(135deg, var(--lebanon-red) 0%, var(--cedar-gold) 50%, var(--lebanon-green) 100% );
     background-size: 300% 300%;
@@ -1613,9 +1522,6 @@ html.dark-mode .sidebar {
         box-shadow: 0 8px 28px rgba(239,51,64,0.4);
     }
 
-/* ============================================
-   FORMS
-   ============================================ */
 .form-group {
     display: flex;
     flex-direction: column;
@@ -1652,9 +1558,6 @@ html.dark-mode .sidebar {
         color: var(--text-3) !important;
     }
 
-/* ============================================
-   TABLES & BADGES
-   ============================================ */
 .tp-table {
     width: 100%;
     border-collapse: collapse;
@@ -1738,16 +1641,13 @@ html.dark-mode .sidebar {
         border: 1px solid rgba(212,175,55,0.3);
     }
 
-    /* Lebanese flag badge */
+
     .badge-tp.lebanon {
         background: linear-gradient(135deg, rgba(239,51,64,0.1) 0%, rgba(255,255,255,0) 50%, rgba(0,166,81,0.1) 100%);
         border: 1px solid rgba(212,175,55,0.3);
         color: var(--text-1);
     }
 
-/* ============================================
-   PAGE HEADER
-   ============================================ */
 .page-header {
     display: flex;
     align-items: center;
@@ -1777,7 +1677,6 @@ html.dark-mode .sidebar {
         margin-top: 3px;
     }
 
-/* Decorative Lebanese header accent line */
 .page-header-accent {
     height: 2px;
     background: linear-gradient(90deg, var(--lebanon-red) 0%, var(--cedar-gold) 33%, var(--lebanon-green) 66%, transparent 100% );
@@ -1786,9 +1685,6 @@ html.dark-mode .sidebar {
     width: 200px;
 }
 
-/* ============================================
-   TRANSACTIONS
-   ============================================ */
 .transaction-item {
     display: flex;
     align-items: center;
@@ -1893,9 +1789,6 @@ html.dark-mode .sidebar {
         color: var(--lebanon-green);
     }
 
-/* ============================================
-   WALLET CARDS
-   ============================================ */
 .wallet-card {
     background: var(--surface-2);
     border: 1px solid var(--border);
@@ -1906,7 +1799,7 @@ html.dark-mode .sidebar {
     overflow: hidden;
 }
 
-    /* Currency flag accent */
+
     .wallet-card::before {
         content: '';
         position: absolute;
@@ -1944,7 +1837,7 @@ html.dark-mode .sidebar {
         box-shadow: 0 4px 16px rgba(212,175,55,0.15);
     }
 
-    /* LBP wallet — Lebanese flag colors */
+
     .wallet-card[data-currency="LBP"] {
         border-color: rgba(239,51,64,0.2);
         background: linear-gradient(135deg, rgba(239,51,64,0.04), rgba(0,166,81,0.03));
@@ -1975,9 +1868,6 @@ html.dark-mode .wallet-card.default {
     letter-spacing: .3px;
 }
 
-/* ============================================
-   BENEFICIARY ITEMS
-   ============================================ */
 .beneficiary-item {
     display: flex;
     align-items: center;
@@ -2053,9 +1943,6 @@ html.dark-mode .wallet-card.default {
         transform: translateY(-1px);
     }
 
-/* ============================================
-   EMPTY STATE
-   ============================================ */
 .empty-state {
     text-align: center;
     padding: 40px 24px;
@@ -2075,7 +1962,6 @@ html.dark-mode .wallet-card.default {
         color: var(--text-2);
     }
 
-/* Lebanese empty state decoration */
 .empty-state-cedar {
     font-size: 52px;
     margin-bottom: 16px;
@@ -2094,9 +1980,6 @@ html.dark-mode .wallet-card.default {
     }
 }
 
-/* ============================================
-   PUBLIC LAYOUT
-   ============================================ */
 .public-nav {
     display: flex;
     align-items: center;
@@ -2153,9 +2036,6 @@ html.dark-mode .wallet-card.default {
     padding: 40px 32px;
 }
 
-/* ============================================
-   NOTIFICATION TOASTS
-   ============================================ */
 #inAppToast {
     position: fixed;
     bottom: 24px;
@@ -2240,11 +2120,6 @@ html.dark-mode .wallet-card.default {
     text-overflow: ellipsis;
 }
 
-/* ============================================
-   LEBANESE CULTURAL WIDGETS
-   ============================================ */
-
-/* Culture tip widget */
 .culture-tip {
     background: linear-gradient(135deg, var(--teal-light), var(--cedar-red-lt));
     border-left: 4px solid var(--lebanon-red);
@@ -2275,7 +2150,6 @@ html.dark-mode .wallet-card.default {
         margin-right: 6px;
     }
 
-/* Lebanese quote card */
 .lebanon-quote {
     background: linear-gradient(135deg, var(--surface), var(--surface-2));
     border: 1px solid var(--cedar-gold);
@@ -2310,7 +2184,6 @@ html.dark-mode .wallet-card.default {
         font-weight: 600;
     }
 
-/* LBP exchange ticker */
 .exchange-ticker {
     background: linear-gradient(135deg, rgba(239,51,64,0.07), rgba(0,166,81,0.07));
     border: 1px solid rgba(212,175,55,0.25);
@@ -2334,7 +2207,6 @@ html.dark-mode .wallet-card.default {
     }
 }
 
-/* Cedar tree watermark utility */
 .cedar-watermark {
     position: relative;
     overflow: hidden;
@@ -2350,7 +2222,6 @@ html.dark-mode .wallet-card.default {
         pointer-events: none;
     }
 
-/* Lebanese landmark showcase */
 .landmark-showcase {
     display: flex;
     gap: 8px;
@@ -2402,9 +2273,6 @@ html.dark-mode .wallet-card.default {
     font-weight: 600;
 }
 
-/* ============================================
-   CURRENCY DISPLAY
-   ============================================ */
 .currency-lbp {
     position: relative;
     display: inline-flex;
@@ -2428,9 +2296,6 @@ html.dark-mode .wallet-card.default {
         color: var(--cedar-gold);
     }
 
-/* ============================================
-   CHAT SPECIFIC
-   ============================================ */
 .chat-avatar {
     border-radius: 50%;
     width: 38px;
@@ -2454,7 +2319,6 @@ html.dark-mode .wallet-card.default {
         background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 60%);
     }
 
-/* Chat bubble enhancement */
 .message-bubble-sent {
     background: linear-gradient(135deg, var(--teal), var(--lebanon-green)) !important;
     box-shadow: 0 2px 8px rgba(0,184,148,0.2);
@@ -2465,9 +2329,6 @@ html.dark-mode .wallet-card.default {
     border: 1px solid var(--border) !important;
 }
 
-/* ============================================
-   ADMIN PANEL SPECIFIC
-   ============================================ */
 .admin-kpi-card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -2494,9 +2355,6 @@ html.dark-mode .wallet-card.default {
         transform: translateY(-2px);
     }
 
-/* ============================================
-   FINANCE CHARTS
-   ============================================ */
 .chart-legend-lb {
     display: flex;
     align-items: center;
@@ -2513,9 +2371,6 @@ html.dark-mode .wallet-card.default {
         background: linear-gradient(135deg, var(--lebanon-red), var(--cedar-gold));
     }
 
-/* ============================================
-   PROFILE PAGE SPECIAL ELEMENTS
-   ============================================ */
 .profile-hero {
     background: linear-gradient(135deg, var(--lebanon-red) 0%, var(--cedar-gold) 33%, var(--lebanon-green) 66%, var(--mediterranean-blue) 100% );
     background-size: 400% 400%;
@@ -2567,7 +2422,6 @@ html.dark-mode .wallet-card.default {
     box-shadow: 0 8px 24px rgba(0,0,0,0.2);
 }
 
-/* Edit overlay for profile pic */
 .profile-pic-wrap {
     position: relative;
     display: inline-block;
@@ -2592,9 +2446,6 @@ html.dark-mode .wallet-card.default {
     transition: var(--transition);
 }
 
-/* ============================================
-   LEBANESE LANDMARK SLIDER
-   ============================================ */
 .lebanon-slider {
     position: relative;
     overflow: hidden;
@@ -2666,9 +2517,6 @@ html.dark-mode .wallet-card.default {
         border-radius: 4px;
     }
 
-/* ============================================
-   SEASONAL BACKGROUNDS
-   ============================================ */
 .bg-spring {
     background: linear-gradient(135deg, rgba(255,228,225,0.3), rgba(255,182,193,0.2), rgba(255,240,245,0.3));
 }
@@ -2685,9 +2533,6 @@ html.dark-mode .wallet-card.default {
     background: linear-gradient(135deg, rgba(232,236,239,0.4), rgba(207,216,220,0.3), rgba(176,190,197,0.2));
 }
 
-/* ============================================
-   SPECIAL: KYC / Document upload area
-   ============================================ */
 .kyc-upload-zone {
     border: 2px dashed rgba(212,175,55,0.4);
     border-radius: var(--r-lg);
@@ -2713,9 +2558,6 @@ html.dark-mode .wallet-card.default {
         background: linear-gradient(135deg, rgba(212,175,55,0.12), var(--teal-light));
     }
 
-/* ============================================
-   SPECIAL: Lebanese Currency Display Widget
-   ============================================ */
 .lbp-widget {
     background: linear-gradient(135deg, rgba(239,51,64,0.06) 0%, rgba(255,255,255,0.02) 33%, rgba(0,166,81,0.06) 100% );
     border: 1px solid rgba(212,175,55,0.2);
@@ -2750,9 +2592,6 @@ html.dark-mode .wallet-card.default {
     margin-bottom: 4px;
 }
 
-/* ============================================
-   ANIMATIONS
-   ============================================ */
 @keyframes pageIn {
     from {
         opacity: 0;
@@ -2777,7 +2616,6 @@ html.dark-mode .wallet-card.default {
     }
 }
 
-/* Staggered card entrance */
 .tp-card:nth-child(1) {
     animation-delay: 0.02s;
 }
@@ -2798,9 +2636,6 @@ html.dark-mode .wallet-card.default {
     animation-delay: 0.10s;
 }
 
-/* ============================================
-   SCROLLBAR — Lebanese Gold
-   ============================================ */
 ::-webkit-scrollbar {
     width: 5px;
 }
@@ -2818,9 +2653,6 @@ html.dark-mode .wallet-card.default {
         background: var(--cedar-gold);
     }
 
-/* ============================================
-   RESPONSIVE
-   ============================================ */
 @media (max-width: 768px) {
     .sidebar {
         width: 0;
@@ -2858,9 +2690,6 @@ html.dark-mode .wallet-card.default {
     }
 }
 
-/* ============================================
-   UTILITY CLASSES
-   ============================================ */
 .text-lebanon-red {
     color: var(--lebanon-red);
 }
@@ -2905,7 +2734,6 @@ html.dark-mode .wallet-card.default {
     border-color: var(--lebanon-red) !important;
 }
 
-/* Flag stripe divider */
 .flag-divider {
     height: 3px;
     background: linear-gradient(90deg, var(--lebanon-red) 33%, rgba(200,200,200,0.3) 33% 66%, var(--lebanon-green) 66% );
@@ -2913,7 +2741,6 @@ html.dark-mode .wallet-card.default {
     margin: 16px 0;
 }
 
-/* Cedar badge */
 .cedar-badge {
     display: inline-flex;
     align-items: center;
@@ -2927,7 +2754,6 @@ html.dark-mode .wallet-card.default {
     color: var(--lebanon-green);
 }
 
-/* Responsive grid helper */
 .grid-lb {
     display: grid;
     gap: 16px;
@@ -2945,11 +2771,6 @@ html.dark-mode .wallet-card.default {
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 }
 
-/* ============================================
-   DASHBOARD SPECIFIC STYLES
-   ============================================ */
-
-/* Welcome section */
 .welcome-section {
     margin-bottom: 20px;
 }
@@ -2967,7 +2788,6 @@ html.dark-mode .wallet-card.default {
     margin-top: 3px;
 }
 
-/* Panel Navigation Cards */
 .panel-nav {
     display: flex;
     gap: 12px;
@@ -3026,7 +2846,6 @@ html.dark-mode .wallet-card.default {
         color: #fff;
     }
 
-/* Balance text utilities */
 .balance-account {
     font-size: 11px;
     opacity: .75;
@@ -3067,14 +2886,12 @@ html.dark-mode .wallet-card.default {
         color: #fff;
     }
 
-/* Quick actions grid */
 .quick-actions-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 10px;
 }
 
-/* Transaction details link */
 .tx-details-link {
     font-size: 11px;
     color: var(--teal);
@@ -3085,18 +2902,12 @@ html.dark-mode .wallet-card.default {
         text-decoration: underline;
     }
 
-/* Add Funds button */
 .add-funds-btn {
     justify-content: center;
     font-size: 12px;
     padding: 9px;
 }
 
-/* ============================================
-   LAYOUT SPECIFIC STYLES
-   ============================================ */
-
-/* Sidebar brand button */
 .sidebar-brand-btn {
     background: none;
     border: none;
@@ -3108,7 +2919,6 @@ html.dark-mode .wallet-card.default {
     width: 100%;
 }
 
-/* Sidebar bottom user section */
 .sidebar-user {
     display: flex;
     align-items: center;
@@ -3135,7 +2945,6 @@ html.dark-mode .wallet-card.default {
     color: var(--text-3);
 }
 
-/* User avatar image */
 .user-avatar-img {
     width: 36px;
     height: 36px;
@@ -3143,7 +2952,6 @@ html.dark-mode .wallet-card.default {
     object-fit: cover;
 }
 
-/* Sidebar avatar small */
 .sidebar-avatar-img {
     width: 32px;
     height: 32px;
@@ -3165,24 +2973,20 @@ html.dark-mode .wallet-card.default {
     flex-shrink: 0;
 }
 
-/* Topbar elements */
 .topbar-left {
     display: flex;
     align-items: center;
     gap: 14px;
 }
 
-/* Announcement banner container */
 .ann-banner-container {
     margin-bottom: 8px;
 }
 
-/* Logout button full width */
 .logout-btn-full {
     width: 100%;
 }
 
-/* Chat badge styles */
 .chat-badge {
     display: none;
     position: absolute;
@@ -3200,13 +3004,11 @@ html.dark-mode .wallet-card.default {
     border: 2px solid var(--surface);
 }
 
-/* Inline form in currency pills */
 .currency-pill-form {
     display: inline;
     margin: 0;
 }
 
-/* Topbar user avatar wrapper */
 .topbar-user-avatar {
     display: flex;
     align-items: center;
@@ -3214,13 +3016,11 @@ html.dark-mode .wallet-card.default {
     text-decoration: none;
 }
 
-/* Public nav brand */
 .public-nav-brand {
     padding: 0;
     margin: 0;
 }
 
-/* Toast notification button */
 .toast-close-btn {
     background: none;
     border: none;
@@ -3232,7 +3032,6 @@ html.dark-mode .wallet-card.default {
     margin-left: 4px;
 }
 
-/* Announcement banner button */
 .ann-banner-close {
     background: none;
     border: none;
@@ -3253,16 +3052,10 @@ html.dark-mode .wallet-card.default {
     margin-right: 6px;
 }
 
-/* ============================================
-   DELETE ACCOUNT PAGE STYLES
-   ============================================ */
-
-/* Delete account warning card */
 .delete-warning-card {
     border: 1px solid rgba(255,107,107,.3);
 }
 
-/* Warning icon container */
 .warning-icon {
     width: 60px;
     height: 60px;
@@ -3294,7 +3087,6 @@ html.dark-mode .wallet-card.default {
     line-height: 1.6;
 }
 
-/* Delete form */
 .delete-form {
     display: flex;
     flex-direction: column;
@@ -3315,11 +3107,7 @@ html.dark-mode .wallet-card.default {
     text-align: center;
     padding: 12px;
 }
-/* ============================================
-   PROFILE PAGE STYLES
-   ============================================ */
 
-/* Profile info alert */
 .profile-info-alert {
     background: var(--surface-2);
     border: 1px solid var(--border);
@@ -3341,7 +3129,6 @@ html.dark-mode .wallet-card.default {
         margin: 0 4px;
     }
 
-/* Profile avatar section */
 .profile-avatar-wrapper {
     display: flex;
     align-items: center;
@@ -3379,7 +3166,6 @@ html.dark-mode .wallet-card.default {
     display: none;
 }
 
-/* Profile info section */
 .profile-info-details {
     flex: 1;
 }
@@ -3397,7 +3183,6 @@ html.dark-mode .wallet-card.default {
     margin-bottom: 10px;
 }
 
-/* Profile action buttons */
 .profile-actions {
     display: flex;
     gap: 8px;
@@ -3446,7 +3231,6 @@ html.dark-mode .wallet-card.default {
     cursor: pointer;
 }
 
-/* Section headers */
 .section-header {
     font-size: 13px;
     font-weight: 700;
@@ -3467,7 +3251,6 @@ html.dark-mode .wallet-card.default {
     margin-left: 6px;
 }
 
-/* Account type display */
 .account-type-locked {
     display: flex;
     align-items: center;
@@ -3492,7 +3275,6 @@ html.dark-mode .wallet-card.default {
     color: var(--text-3);
 }
 
-/* Account type selector */
 .account-type-selector {
     display: flex;
     gap: 12px;
@@ -3534,7 +3316,6 @@ html.dark-mode .wallet-card.default {
     color: var(--text-3);
 }
 
-/* Username input with @ prefix */
 .username-input-wrapper {
     display: flex;
     align-items: center;
@@ -3561,13 +3342,11 @@ html.dark-mode .wallet-card.default {
     outline: none;
 }
 
-/* Read-only form control */
 .form-control-readonly {
     background: var(--surface-2);
     color: var(--text-1);
 }
 
-/* KYC status card */
 .kyc-status-card {
     display: flex;
     align-items: center;
@@ -3628,7 +3407,6 @@ html.dark-mode .wallet-card.default {
     text-decoration: none;
 }
 
-/* Agent cards */
 .agent-card {
     border: 1px solid rgba(0,184,148,.2);
     background: var(--teal-light);
@@ -3662,7 +3440,6 @@ html.dark-mode .wallet-card.default {
     margin-top: 2px;
 }
 
-/* Pending agent card */
 .agent-pending-card {
     border: 1px solid rgba(255,209,102,.3);
     background: var(--yellow-light);
@@ -3673,7 +3450,6 @@ html.dark-mode .wallet-card.default {
     font-size: 20px;
 }
 
-/* Rejected agent card */
 .agent-rejected-card {
     border: 1px solid rgba(255,107,107,.3);
     background: var(--red-light);
@@ -3685,7 +3461,6 @@ html.dark-mode .wallet-card.default {
     color: var(--red);
 }
 
-/* Delete account card */
 .delete-account-card {
     border: 1px solid rgba(255,107,107,.25);
 }
@@ -3709,7 +3484,6 @@ html.dark-mode .wallet-card.default {
     color: var(--text-2);
 }
 
-/* Terms checkbox */
 .terms-checkbox-wrapper {
     display: flex;
     align-items: flex-start;
@@ -3736,7 +3510,6 @@ html.dark-mode .wallet-card.default {
     text-decoration: none;
 }
 
-/* Cropper modal */
 .cropper-modal {
     display: none;
     position: fixed;
@@ -3795,12 +3568,6 @@ html.dark-mode .wallet-card.default {
     justify-content: center;
 }
 
-
-/* ============================================
-   REPORT / PRINT STYLES
-   ============================================ */
-
-/* Report body */
 .report-body {
     font-family: 'Segoe UI', sans-serif;
     max-width: 960px;
@@ -3811,7 +3578,6 @@ html.dark-mode .wallet-card.default {
     background: #fff;
 }
 
-/* Dark mode overrides */
 html.dark-mode .report-body {
     background: #0d0f14 !important;
     color: #f0f2f8 !important;
@@ -3837,7 +3603,6 @@ html.dark-mode .report-table {
         border-color: rgba(255,255,255,0.06) !important;
     }
 
-/* Header */
 .report-header {
     display: flex;
     justify-content: space-between;
@@ -3874,7 +3639,6 @@ html.dark-mode .report-table {
     font-size: 14px;
 }
 
-/* Section titles */
 .report-section-title {
     font-size: 15px;
     margin: 28px 0 10px;
@@ -3896,7 +3660,6 @@ html.dark-mode .report-table {
     border-radius: 0 4px 4px 0;
 }
 
-/* Tables */
 .report-table {
     width: 100%;
     border-collapse: collapse;
@@ -3927,7 +3690,6 @@ html.dark-mode .report-table {
     width: 160px;
 }
 
-/* Stats grid */
 .report-stat-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -3961,7 +3723,6 @@ html.dark-mode .report-table {
     font-weight: 600;
 }
 
-/* Monthly chart */
 .report-monthly-chart {
     display: flex;
     gap: 8px;
@@ -4043,7 +3804,6 @@ html.dark-mode .report-table {
     background: #7c3aed;
 }
 
-/* Amount colors */
 .report-amount-sent {
     color: #dc2626;
     font-weight: 700;
@@ -4069,7 +3829,6 @@ html.dark-mode .report-table {
     font-weight: 700;
 }
 
-/* Wallet card */
 .report-wallet-card {
     background: #f5f7fa;
     border-radius: 8px;
@@ -4155,7 +3914,6 @@ html.dark-mode .report-wallet-stat-card {
     color: #888;
 }
 
-/* Badges */
 .report-badge {
     display: inline-block;
     padding: 2px 8px;
@@ -4185,7 +3943,6 @@ html.dark-mode .report-wallet-stat-card {
     color: #dc2626;
 }
 
-/* Footer */
 .report-footer {
     margin-top: 40px;
     padding-top: 16px;
@@ -4195,7 +3952,6 @@ html.dark-mode .report-wallet-stat-card {
     text-align: center;
 }
 
-/* Action bar */
 .report-action-bar {
     position: fixed;
     top: 16px;
@@ -4228,7 +3984,6 @@ html.dark-mode .report-wallet-stat-card {
     color: #fff;
 }
 
-/* Empty state */
 .report-empty-wallet {
     text-align: center;
     color: #aaa;
@@ -4236,7 +3991,6 @@ html.dark-mode .report-wallet-stat-card {
     font-style: italic;
 }
 
-/* Utilities */
 .report-mono {
     font-family: monospace;
     font-size: 11px;
@@ -4267,7 +4021,6 @@ html.dark-mode .report-wallet-stat-card {
     font-size: 11px;
 }
 
-/* Print styles */
 @media print {
     .report-action-bar {
         display: none;
@@ -4292,15 +4045,11 @@ html.dark-mode .report-wallet-stat-card {
     }
 }
 
-/* Responsive */
 @media (max-width: 600px) {
     .report-stat-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 }
-/* ============================================
-   SETUP CHOICE PAGE (First Login)
-   ============================================ */
 
 .setup-container {
     min-height: calc(100vh - 140px);
@@ -4333,9 +4082,9 @@ html.dark-mode .report-wallet-stat-card {
     margin: 0;
 }
 
-.setup-title span {
-    color: var(--teal);
-}
+    .setup-title span {
+        color: var(--teal);
+    }
 
 .setup-subtitle {
     font-size: 14px;
@@ -4370,15 +4119,10 @@ html.dark-mode .report-wallet-stat-card {
     margin-top: 20px;
 }
 
-.setup-footer p {
-    margin: 0;
-}
+    .setup-footer p {
+        margin: 0;
+    }
 
-/* ============================================
-   AGENT APPLICATIONS PAGE STYLES
-   ============================================ */
-
-/* Application card */
 .application-card {
     display: flex;
     flex-direction: column;
@@ -4472,11 +4216,7 @@ html.dark-mode .report-wallet-stat-card {
     flex-direction: column;
     gap: 12px;
 }
-/* ============================================
-   ALL TRANSACTIONS PAGE (ADMIN)
-   ============================================ */
 
-/* Transaction table cell styles */
 .tx-serial-cell {
     font-family: monospace;
     font-size: 12px;
@@ -4505,15 +4245,10 @@ html.dark-mode .report-wallet-stat-card {
     color: var(--text-3);
 }
 
-/* Search input container */
 .search-container {
     margin-bottom: 16px;
 }
-/* ============================================
-   EARNINGS REPORT PAGE (ADMIN)
-   ============================================ */
 
-/* Fee policy card */
 .fee-policy-card {
     background: var(--teal-light);
     border: 1px solid rgba(0,184,148,.2);
@@ -4535,7 +4270,6 @@ html.dark-mode .report-wallet-stat-card {
     font-weight: 700;
 }
 
-/* Agent earnings table cells */
 .agent-store-cell {
     font-weight: 600;
 }
@@ -4556,17 +4290,12 @@ html.dark-mode .report-wallet-stat-card {
 .agent-unpaid-cell {
     color: var(--yellow);
 }
-/* ============================================
-   EXCHANGE RATES PAGE (ADMIN)
-   ============================================ */
 
-/* Header action buttons */
 .rates-header-actions {
     display: flex;
     gap: 8px;
 }
 
-/* Rate table */
 .rates-table-container {
     overflow-x: auto;
 }
@@ -4620,7 +4349,6 @@ html.dark-mode .report-wallet-stat-card {
     color: var(--red);
 }
 
-/* Quick conversion cards */
 .rates-conversion-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -4650,23 +4378,17 @@ html.dark-mode .report-wallet-stat-card {
     font-size: 12px;
     color: var(--text-2);
 }
-/* ============================================
-   FEE SETTINGS PAGE (ADMIN)
-   ============================================ */
 
-/* Fee form container */
 .fee-settings-container {
     max-width: 600px;
     margin: 0 auto;
 }
 
-/* Form hint text */
 .form-hint {
     font-size: 11px;
     color: var(--text-3);
 }
 
-/* Current rates info box */
 .current-rates-box {
     background: var(--surface-2);
     border-radius: var(--r-sm);
@@ -4675,11 +4397,7 @@ html.dark-mode .report-wallet-stat-card {
     color: var(--text-2);
     margin-bottom: 4px;
 }
-/* ============================================
-   ADMIN CONTROL CENTER PAGE
-   ============================================ */
 
-/* Welcome section */
 .admin-welcome {
     margin-bottom: 24px;
 }
@@ -4697,7 +4415,6 @@ html.dark-mode .report-wallet-stat-card {
     margin-top: 4px;
 }
 
-/* Admin action cards */
 .admin-card-link {
     transition: var(--transition);
     text-decoration: none;
@@ -4733,11 +4450,7 @@ html.dark-mode .report-wallet-stat-card {
 .admin-card-chevron {
     color: var(--text-3);
 }
-/* ============================================
-   KYC REVIEW PAGE (ADMIN)
-   ============================================ */
 
-/* KYC card header */
 .kyc-card-header {
     display: flex;
     align-items: flex-start;
@@ -4770,7 +4483,6 @@ html.dark-mode .report-wallet-stat-card {
     color: var(--text-3);
 }
 
-/* Document images section */
 .kyc-images {
     display: flex;
     gap: 12px;
@@ -4791,7 +4503,6 @@ html.dark-mode .report-wallet-stat-card {
     cursor: pointer;
 }
 
-/* KYC actions */
 .kyc-actions {
     display: flex;
     gap: 10px;
@@ -4820,17 +4531,12 @@ html.dark-mode .report-wallet-stat-card {
     font-size: 13px;
 }
 
-/* KYC container */
 .kyc-container-list {
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
-/* ============================================
-   PENDING AGENTS PAGE (ADMIN)
-   ============================================ */
 
-/* Agent table cells */
 .agent-name-cell {
     font-weight: 600;
 }
@@ -4850,7 +4556,6 @@ html.dark-mode .report-wallet-stat-card {
     color: var(--text-3);
 }
 
-/* Agent action buttons */
 .agent-actions {
     display: flex;
     gap: 6px;
@@ -4865,11 +4570,7 @@ html.dark-mode .report-wallet-stat-card {
     padding: 7px 14px;
     font-size: 12px;
 }
-/* ============================================
-   ALL REVIEWS PAGE (ADMIN)
-   ============================================ */
 
-/* Review header */
 .reviews-header {
     display: flex;
     align-items: flex-start;
@@ -4877,52 +4578,43 @@ html.dark-mode .report-wallet-stat-card {
     gap: 12px;
 }
 
-/* Rating stars */
 .review-stars {
     color: #f0a500;
     font-size: 18px;
     margin-bottom: 4px;
 }
 
-/* Review comment */
 .review-comment {
     font-size: 14px;
     color: var(--text-1);
     margin-bottom: 4px;
 }
 
-/* Review metadata */
 .review-meta {
     font-size: 12px;
     color: var(--text-3);
 }
 
-/* Delete review button */
 .review-delete-btn {
     padding: 6px 10px;
     font-size: 11px;
 }
 
-/* Reviews container */
 .reviews-container {
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
+
 .text-teal {
     color: var(--teal);
 }
-/* ============================================
-   USER DETAILS PAGE (ADMIN)
-   ============================================ */
 
-/* Header actions */
 .user-details-actions {
     display: flex;
     gap: 10px;
 }
 
-/* Personal info section */
 .user-info-container {
     display: flex;
     flex-direction: column;
@@ -4955,7 +4647,6 @@ html.dark-mode .report-wallet-stat-card {
     margin-right: 3px;
 }
 
-/* KYC section */
 .kyc-documents-container {
     display: flex;
     gap: 10px;
@@ -5008,7 +4699,6 @@ html.dark-mode .report-wallet-stat-card {
     font-size: 13px;
 }
 
-/* Wallets section */
 .user-wallet-card {
     margin-bottom: 8px;
 }
@@ -5026,17 +4716,12 @@ html.dark-mode .report-wallet-stat-card {
     color: var(--text-3);
     font-size: 13px;
 }
-/* ============================================
-   USER MANAGEMENT PAGE (ADMIN)
-   ============================================ */
 
-/* Header actions */
 .user-management-actions {
     display: flex;
     gap: 8px;
 }
 
-/* Search/filter bar */
 .user-filters-container {
     display: flex;
     gap: 12px;
@@ -5056,12 +4741,10 @@ html.dark-mode .report-wallet-stat-card {
     width: auto;
 }
 
-/* Table container */
 .users-table-container {
     overflow-x: auto;
 }
 
-/* User avatar row */
 .user-avatar-row {
     display: flex;
     align-items: center;
@@ -5100,7 +4783,6 @@ html.dark-mode .report-wallet-stat-card {
     margin-right: 2px;
 }
 
-/* User table cells */
 .user-email-cell {
     font-size: 13px;
     color: var(--text-2);
@@ -5121,7 +4803,6 @@ html.dark-mode .report-wallet-stat-card {
     color: var(--text-3);
 }
 
-/* User action buttons */
 .user-actions {
     display: flex;
     gap: 4px;
@@ -5136,17 +4817,12 @@ html.dark-mode .report-wallet-stat-card {
 .user-action-icon {
     font-size: 11px;
 }
-/* ============================================
-   WALLET APPROVAL REQUESTS PAGE (ADMIN)
-   ============================================ */
 
-/* Wallet request card */
 .wallet-request-card {
     display: flex;
     flex-direction: column;
 }
 
-/* Header section */
 .wallet-request-header {
     display: flex;
     align-items: center;
@@ -5189,7 +4865,6 @@ html.dark-mode .report-wallet-stat-card {
     color: var(--text-3);
 }
 
-/* Description section */
 .wallet-request-description {
     font-size: 13px;
     color: var(--text-2);
@@ -5197,14 +4872,12 @@ html.dark-mode .report-wallet-stat-card {
     font-style: italic;
 }
 
-/* Date section */
 .wallet-request-date {
     font-size: 12px;
     color: var(--text-3);
     margin-bottom: 14px;
 }
 
-/* Actions section */
 .wallet-request-actions {
     display: flex;
     gap: 10px;
@@ -5234,17 +4907,12 @@ html.dark-mode .report-wallet-stat-card {
     flex-shrink: 0;
 }
 
-/* Container */
 .wallet-requests-container {
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
-/* ============================================
-   CASH IN/OUT PAGES (AGENT)
-   ============================================ */
 
-/* Info alert box */
 .cash-info-alert {
     background: var(--teal-light);
     border-radius: var(--r-sm);
@@ -5258,17 +4926,12 @@ html.dark-mode .report-wallet-stat-card {
         margin-right: 6px;
     }
 
-/* Full width button */
 .cash-submit-btn {
     width: 100%;
     justify-content: center;
     padding: 13px;
 }
-/* ============================================
-   CASH OUT PAGE (AGENT)
-   ============================================ */
 
-/* Warning alert box for cash out */
 .cashout-warning-alert {
     background: var(--red-light);
     border-radius: var(--r-sm);
@@ -5282,18 +4945,13 @@ html.dark-mode .report-wallet-stat-card {
         margin-right: 6px;
     }
 
-/* Cash out submit button */
 .cashout-submit-btn {
     width: 100%;
     justify-content: center;
     padding: 13px;
     font-size: 14px;
 }
-/* ============================================
-   AGENT COMMISSIONS PAGE
-   ============================================ */
 
-/* Commission table cells */
 .commission-transaction-cell {
     font-family: monospace;
     font-size: 12px;
@@ -5313,11 +4971,7 @@ html.dark-mode .report-wallet-stat-card {
     font-size: 12px;
     color: var(--text-3);
 }
-/* ============================================
-   AGENT DASHBOARD PAGE
-   ============================================ */
 
-/* Dashboard header */
 .agent-dashboard-header {
     margin-bottom: 24px;
 }
@@ -5342,7 +4996,6 @@ html.dark-mode .report-wallet-stat-card {
     margin-top: 3px;
 }
 
-/* Store selector */
 .store-selector-card {
     margin-bottom: 16px;
 }
@@ -5381,7 +5034,6 @@ html.dark-mode .report-wallet-stat-card {
     font-size: 12px;
 }
 
-/* Action cards */
 .agent-action-card {
     transition: var(--transition);
     text-decoration: none;
@@ -5420,7 +5072,6 @@ html.dark-mode .report-wallet-stat-card {
     margin-left: auto;
 }
 
-/* Store info grid */
 .store-info-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -5476,11 +5127,7 @@ html.dark-mode .report-wallet-stat-card {
     max-width: 700px;
     margin: 0 auto;
 }
-/* ============================================
-   SET LOCATION PAGE (AGENT)
-   ============================================ */
 
-/* Store selector card */
 .store-selector-card {
     background: var(--teal-light);
     border: 1px solid rgba(0,184,148,.2);
@@ -5497,7 +5144,6 @@ html.dark-mode .report-wallet-stat-card {
         margin-right: 6px;
     }
 
-/* Store info header */
 .store-info-header {
     font-size: 13px;
     font-weight: 700;
@@ -5510,12 +5156,10 @@ html.dark-mode .report-wallet-stat-card {
         margin-right: 6px;
     }
 
-/* Save info button container */
 .save-info-btn-container {
     margin-top: 14px;
 }
 
-/* Map header */
 .map-header {
     font-size: 13px;
     font-weight: 700;
@@ -5528,14 +5172,12 @@ html.dark-mode .report-wallet-stat-card {
         margin-right: 6px;
     }
 
-/* Current location alert */
 .current-location-alert {
     margin-bottom: 12px;
     padding: 8px 14px;
     font-size: 13px;
 }
 
-/* Map container */
 .map-container {
     height: 360px;
     border-radius: var(--r-md);
@@ -5543,7 +5185,6 @@ html.dark-mode .report-wallet-stat-card {
     border: 1px solid var(--border);
 }
 
-/* Location form footer */
 .location-form-footer {
     display: flex;
     align-items: center;
@@ -5553,7 +5194,6 @@ html.dark-mode .report-wallet-stat-card {
     margin-top: 14px;
 }
 
-/* Selected coordinates display */
 .selected-coords {
     font-size: 13px;
     color: var(--text-2);
@@ -5563,11 +5203,7 @@ html.dark-mode .report-wallet-stat-card {
     font-family: var(--font-mono);
     color: var(--teal);
 }
-/* ============================================
-   AGENT APPLICATION PAGE (USER)
-   ============================================ */
 
-/* Rejection alert */
 .rejection-alert {
     background: var(--red-light);
     border: 1px solid rgba(255,107,107,.25);
@@ -5582,7 +5218,6 @@ html.dark-mode .report-wallet-stat-card {
         margin-right: 6px;
     }
 
-/* Info box */
 .application-info-box {
     background: var(--teal-light);
     border: 1px solid rgba(0,184,148,.2);
@@ -5597,7 +5232,6 @@ html.dark-mode .report-wallet-stat-card {
         margin-right: 6px;
     }
 
-/* Section divider */
 .form-section-divider {
     font-size: 13px;
     font-weight: 700;
@@ -5606,7 +5240,6 @@ html.dark-mode .report-wallet-stat-card {
     border-bottom: 1px solid var(--border);
 }
 
-/* First section divider (top) */
 .form-section-divider-first {
     font-size: 13px;
     font-weight: 700;
@@ -5615,20 +5248,14 @@ html.dark-mode .report-wallet-stat-card {
     border-bottom: 1px solid var(--border);
 }
 
-/* Textarea with vertical resize */
 .application-textarea {
     resize: vertical;
 }
-/* ============================================
-   MY AGENT APPLICATION PAGE (USER)
-   ============================================ */
 
-/* Application card */
 .application-card {
     margin-bottom: 0;
 }
 
-/* Application header */
 .application-header {
     display: flex;
     align-items: flex-start;
@@ -5636,12 +5263,10 @@ html.dark-mode .report-wallet-stat-card {
     gap: 12px;
 }
 
-/* Application content */
 .application-content {
     flex: 1;
 }
 
-/* Store name row */
 .application-store-row {
     display: flex;
     align-items: center;
@@ -5655,7 +5280,6 @@ html.dark-mode .report-wallet-stat-card {
     color: var(--text-1);
 }
 
-/* Application details grid */
 .application-details-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -5668,7 +5292,6 @@ html.dark-mode .report-wallet-stat-card {
     margin-right: 4px;
 }
 
-/* Rejection reason box */
 .rejection-reason-box {
     margin-top: 12px;
     padding: 10px 14px;
@@ -5682,7 +5305,6 @@ html.dark-mode .report-wallet-stat-card {
         margin-right: 4px;
     }
 
-/* Approved box */
 .approved-box {
     margin-top: 12px;
     padding: 10px 14px;
@@ -5696,7 +5318,6 @@ html.dark-mode .report-wallet-stat-card {
         margin-right: 4px;
     }
 
-/* Application date */
 .application-date {
     font-size: 11px;
     color: var(--text-3);
@@ -5708,17 +5329,12 @@ html.dark-mode .report-wallet-stat-card {
         font-weight: 600;
     }
 
-/* Applications container */
 .applications-container {
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
-/* ============================================
-   SEND MONEY / TRANSFER PAGE
-   ============================================ */
 
-/* Transfer type grid */
 .transfer-type-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -5766,12 +5382,10 @@ html.dark-mode .report-wallet-stat-card {
     margin-top: 2px;
 }
 
-/* Beneficiary select */
 .beneficiary-select {
     margin-bottom: 8px;
 }
 
-/* Free transfer alert */
 .free-transfer-alert {
     background: linear-gradient(135deg, rgba(0,184,148,.15), rgba(0,184,148,.05));
     border: 1.5px solid var(--teal);
@@ -5785,7 +5399,6 @@ html.dark-mode .report-wallet-stat-card {
         color: var(--teal);
     }
 
-/* Fee info alert */
 .fee-info-alert {
     background: var(--teal-light);
     border-radius: var(--r-sm);
@@ -5794,41 +5407,33 @@ html.dark-mode .report-wallet-stat-card {
     color: var(--teal-dark);
 }
 
-.fee-info-alert i {
-    margin-right: 4px;
-}
-/* ============================================
-   MY WALLETS PAGE
-   ============================================ */
+    .fee-info-alert i {
+        margin-right: 4px;
+    }
 
-/* Wallet page header actions */
 .wallet-header-actions {
     display: flex;
     gap: 8px;
 }
 
-/* Wallet card created date */
 .wallet-created-date {
     font-size: 11px;
     color: var(--text-3);
     margin-top: 2px;
 }
 
-/* Wallet card currency name */
 .wallet-currency-name {
     font-size: 13px;
     color: var(--text-2);
     margin: 4px 0;
 }
 
-/* Wallet action buttons container */
 .wallet-actions {
     display: flex;
     gap: 8px;
     margin-top: 12px;
 }
 
-/* Set default button */
 .wallet-set-default-btn {
     flex: 1;
     justify-content: center;
@@ -5836,13 +5441,11 @@ html.dark-mode .report-wallet-stat-card {
     font-size: 12px;
 }
 
-/* Delete wallet button */
 .wallet-delete-btn {
     padding: 8px 12px;
     font-size: 12px;
 }
 
-/* Form in wallet actions */
 .wallet-action-form {
     flex: 1;
 }
@@ -5851,26 +5454,19 @@ html.dark-mode .report-wallet-stat-card {
     flex: 1;
 }
 
-/* Full width button */
 .w-full {
     width: 100%;
 }
-/* ============================================
-   MY WALLET REQUESTS PAGE
-   ============================================ */
 
-/* Wallet request header actions */
 .wallet-requests-header-actions {
     display: flex;
     gap: 8px;
 }
 
-/* Wallet request card */
 .wallet-request-card {
     margin-bottom: 0;
 }
 
-/* Wallet request row */
 .wallet-request-row {
     display: flex;
     align-items: center;
@@ -5878,14 +5474,12 @@ html.dark-mode .report-wallet-stat-card {
     gap: 12px;
 }
 
-/* Wallet request info */
 .wallet-request-info {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
-/* Currency symbol box */
 .wallet-request-symbol-box {
     width: 48px;
     height: 48px;
@@ -5899,7 +5493,6 @@ html.dark-mode .report-wallet-stat-card {
     color: var(--teal);
 }
 
-/* Wallet request details */
 .wallet-request-details {
     flex: 1;
 }
@@ -5916,7 +5509,6 @@ html.dark-mode .report-wallet-stat-card {
     margin-top: 2px;
 }
 
-/* Right section with badge */
 .wallet-request-right {
     text-align: right;
 }
@@ -5927,7 +5519,6 @@ html.dark-mode .report-wallet-stat-card {
     margin-top: 4px;
 }
 
-/* Rejection box */
 .wallet-request-rejection {
     margin-top: 12px;
     padding: 10px 14px;
@@ -5950,7 +5541,6 @@ html.dark-mode .report-wallet-stat-card {
     font-size: 12px;
 }
 
-/* Pending box */
 .wallet-request-pending {
     margin-top: 12px;
     padding: 10px 14px;
@@ -5964,7 +5554,6 @@ html.dark-mode .report-wallet-stat-card {
         margin-right: 4px;
     }
 
-/* Approved box */
 .wallet-request-approved {
     margin-top: 12px;
     padding: 10px 14px;
@@ -5989,7 +5578,6 @@ html.dark-mode .report-wallet-stat-card {
         text-decoration: underline;
     }
 
-/* Info footer */
 .wallet-requests-footer {
     background: var(--surface-2);
     border: 1px solid var(--border);
@@ -6011,14 +5599,10 @@ html.dark-mode .report-wallet-stat-card {
     text-decoration: none;
 }
 
-.wallet-requests-footer-link:hover {
-    text-decoration: underline;
-}
-/* ============================================
-   TRANSACTIONS PAGE
-   ============================================ */
+    .wallet-requests-footer-link:hover {
+        text-decoration: underline;
+    }
 
-/* Transaction user info */
 .tx-user-info {
     display: flex;
     align-items: center;
@@ -6040,7 +5624,6 @@ html.dark-mode .report-wallet-stat-card {
     font-family: var(--font-mono);
 }
 
-/* Transaction avatar with image */
 .tx-avatar-with-img {
     padding: 0;
     overflow: hidden;
@@ -6053,40 +5636,31 @@ html.dark-mode .report-wallet-stat-card {
     border-radius: var(--r-sm);
 }
 
-/* Fee text */
 .tx-fee-text {
     font-size: 13px;
     color: var(--text-2);
 }
 
-/* Transaction date cell */
 .tx-date-cell {
     font-size: 12px;
     color: var(--text-3);
 }
 
-/* Search input container */
 .tx-search-container {
     margin-bottom: 16px;
 }
-/* ============================================
-   TRANSACTION DETAILS PAGE
-   ============================================ */
 
-/* Transaction header serial */
 .tx-details-serial {
     font-family: var(--font-mono);
     font-size: 12px;
 }
 
-/* Transaction amount section */
 .tx-details-amount-section {
     text-align: center;
     padding: 24px 0 20px;
     border-bottom: 1px solid var(--border);
 }
 
-/* Large transaction avatar */
 .tx-details-avatar {
     width: 60px;
     height: 60px;
@@ -6100,7 +5674,6 @@ html.dark-mode .report-wallet-stat-card {
     object-fit: cover;
 }
 
-/* Transaction party name */
 .tx-details-party-name {
     font-size: 16px;
     font-weight: 600;
@@ -6108,14 +5681,12 @@ html.dark-mode .report-wallet-stat-card {
     margin-bottom: 6px;
 }
 
-/* Large transaction amount */
 .tx-details-amount-large {
     font-size: 34px;
     font-weight: 800;
     letter-spacing: -0.5px;
 }
 
-/* Status badge wrapper */
 .tx-details-status-wrapper {
     margin-top: 8px;
     display: flex;
@@ -6128,7 +5699,6 @@ html.dark-mode .report-wallet-stat-card {
     padding: 4px 12px;
 }
 
-/* Info grid */
 .tx-details-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -6136,7 +5706,6 @@ html.dark-mode .report-wallet-stat-card {
     padding: 20px 0;
 }
 
-/* Info section */
 .tx-details-info-section {
     flex: 1;
 }
@@ -6167,12 +5736,10 @@ html.dark-mode .report-wallet-stat-card {
     font-family: var(--font-mono);
 }
 
-/* Free fee text */
 .tx-details-free-fee {
     color: var(--teal);
 }
 
-/* Note box */
 .tx-details-note {
     padding: 14px;
     background: var(--surface-2);
@@ -6185,7 +5752,6 @@ html.dark-mode .report-wallet-stat-card {
         color: var(--text-1);
     }
 
-/* Review prompt box */
 .tx-details-review-box {
     border: 1px solid rgba(240,165,0,.3);
     background: var(--yellow-light);
@@ -6219,11 +5785,7 @@ html.dark-mode .report-wallet-stat-card {
     padding: 8px 16px;
     font-size: 12px;
 }
-/* ============================================
-   TRANSACTION RECEIPT PAGE (PRINT FRIENDLY)
-   ============================================ */
 
-/* Receipt body */
 .receipt-body {
     font-family: 'Segoe UI', sans-serif;
     max-width: 500px;
@@ -6232,7 +5794,6 @@ html.dark-mode .report-wallet-stat-card {
     color: #1a1a2e;
 }
 
-/* Receipt header */
 .receipt-header {
     text-align: center;
     padding: 24px 0 20px;
@@ -6255,7 +5816,6 @@ html.dark-mode .report-wallet-stat-card {
     margin-top: 6px;
 }
 
-/* Receipt amount */
 .receipt-amount {
     font-size: 42px;
     font-weight: 800;
@@ -6271,7 +5831,6 @@ html.dark-mode .report-wallet-stat-card {
     color: #00b894;
 }
 
-/* Receipt status */
 .receipt-status {
     text-align: center;
     margin-bottom: 24px;
@@ -6292,7 +5851,6 @@ html.dark-mode .report-wallet-stat-card {
     margin-left: 6px;
 }
 
-/* Receipt rows */
 .receipt-row {
     display: flex;
     justify-content: space-between;
@@ -6314,7 +5872,6 @@ html.dark-mode .report-wallet-stat-card {
     font-size: 12px;
 }
 
-/* Receipt footer */
 .receipt-footer {
     text-align: center;
     margin-top: 32px;
@@ -6324,7 +5881,6 @@ html.dark-mode .report-wallet-stat-card {
     border-top: 1px solid #eee;
 }
 
-/* Print buttons */
 .receipt-print-buttons {
     display: block;
     text-align: center;
@@ -6351,7 +5907,6 @@ html.dark-mode .report-wallet-stat-card {
     border: 1px solid #dde;
 }
 
-/* Print styles */
 @media print {
     .receipt-print-buttons {
         display: none;
@@ -6361,25 +5916,19 @@ html.dark-mode .report-wallet-stat-card {
         margin: 0;
     }
 }
-/* ============================================
-   BENEFICIARIES PAGE
-   ============================================ */
 
-/* Beneficiary user info */
 .beneficiary-user-info {
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
-/* Small beneficiary avatar */
 .beneficiary-avatar-small {
     width: 36px;
     height: 36px;
     font-size: 12px;
 }
 
-/* Beneficiary details */
 .beneficiary-details {
     flex: 1;
 }
@@ -6393,26 +5942,22 @@ html.dark-mode .report-wallet-stat-card {
     color: var(--text-3);
 }
 
-/* Beneficiary wallet/phone cell */
 .beneficiary-identifier {
     font-size: 12px;
     font-family: var(--font-mono);
     color: var(--text-2);
 }
 
-/* Beneficiary country cell */
 .beneficiary-country {
     font-size: 13px;
     color: var(--text-2);
 }
 
-/* Beneficiary date cell */
 .beneficiary-date {
     font-size: 12px;
     color: var(--text-3);
 }
 
-/* Beneficiary action buttons */
 .beneficiary-actions {
     display: flex;
     gap: 6px;
@@ -6430,11 +5975,7 @@ html.dark-mode .report-wallet-stat-card {
 
 .beneficiary-send-btn {
 }
-/* ============================================
-   ADD BENEFICIARY PAGE
-   ============================================ */
 
-/* Method selector header */
 .method-selector-header {
     font-size: 13px;
     font-weight: 700;
@@ -6442,14 +5983,12 @@ html.dark-mode .report-wallet-stat-card {
     margin-bottom: 12px;
 }
 
-/* Method selector grid */
 .method-selector-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
 }
 
-/* Method option */
 .method-option {
     padding: 14px;
     border-radius: var(--r-md);
@@ -6489,7 +6028,6 @@ html.dark-mode .report-wallet-stat-card {
     color: var(--text-3);
 }
 
-/* Username search input */
 .username-search-wrapper {
     display: flex;
     align-items: center;
@@ -6517,13 +6055,11 @@ html.dark-mode .report-wallet-stat-card {
     outline: none;
 }
 
-/* Search results container */
 .search-results-container {
     margin-top: 12px;
     display: none;
 }
 
-/* Search result item */
 .search-result-item {
     display: flex;
     align-items: center;
@@ -6564,21 +6100,16 @@ html.dark-mode .report-wallet-stat-card {
     color: var(--text-3);
 }
 
-/* Search error message */
 .search-error-message {
     padding: 12px;
     color: var(--text-3);
     font-size: 13px;
 }
 
-.search-error-message.error {
-    color: var(--red);
-}
-/* ============================================
-   FINANCE PAGE
-   ============================================ */
+    .search-error-message.error {
+        color: var(--red);
+    }
 
-/* Header actions */
 .finance-header-actions {
     display: flex;
     gap: 8px;
@@ -6594,7 +6125,6 @@ html.dark-mode .report-wallet-stat-card {
     color: #1d6f42;
 }
 
-/* Switch wallet card */
 .finance-switch-card {
     padding: 12px 16px;
 }
@@ -6637,7 +6167,6 @@ html.dark-mode .report-wallet-stat-card {
     opacity: .7;
 }
 
-/* Stat sub styles */
 .stat-sub-light {
     color: var(--text-3);
     font-size: 11px;
@@ -6648,7 +6177,6 @@ html.dark-mode .report-wallet-stat-card {
     font-size: 11px;
 }
 
-/* Chart card */
 .finance-chart-card {
     height: 100%;
 }
@@ -6753,7 +6281,6 @@ html.dark-mode .report-wallet-stat-card {
     border-radius: 2px;
 }
 
-/* Wallet balances card */
 .finance-balances-card {
     height: 100%;
 }
@@ -6796,7 +6323,6 @@ html.dark-mode .report-wallet-stat-card {
     font-size: 10px;
 }
 
-/* Free transaction progress */
 .finance-progress-header {
     display: flex;
     justify-content: space-between;
@@ -6835,7 +6361,6 @@ html.dark-mode .report-wallet-stat-card {
     font-weight: 600;
 }
 
-/* History section */
 .finance-history-badge {
     font-size: 10px;
     margin-left: 6px;
@@ -6881,7 +6406,6 @@ html.dark-mode .report-wallet-stat-card {
     overflow-x: auto;
 }
 
-/* Table cell styles */
 .finance-date-cell {
     font-size: 12px;
     color: var(--text-3);
@@ -6950,11 +6474,7 @@ html.dark-mode .report-wallet-stat-card {
     display: none;
     z-index: 9999;
 }
-/* ============================================
-   BOT CHAT PAGE
-   ============================================ */
 
-/* Bot shell */
 .bot-shell {
     display: flex;
     flex-direction: column;
@@ -6967,7 +6487,6 @@ html.dark-mode .report-wallet-stat-card {
     box-shadow: 0 4px 24px rgba(0,0,0,.08);
 }
 
-/* Bot header */
 .bot-header {
     display: flex;
     align-items: center;
@@ -7042,7 +6561,6 @@ html.dark-mode .report-wallet-stat-card {
     border: 1px solid rgba(0,184,148,.2);
 }
 
-/* Messages area */
 .bot-messages {
     flex: 1;
     overflow-y: auto;
@@ -7053,7 +6571,6 @@ html.dark-mode .report-wallet-stat-card {
     gap: 10px;
 }
 
-/* Date separator */
 .bot-date-sep {
     text-align: center;
     margin: 4px 0;
@@ -7068,7 +6585,6 @@ html.dark-mode .report-wallet-stat-card {
         border: 1px solid var(--border);
     }
 
-/* Message row */
 .bot-row {
     display: flex;
     align-items: flex-end;
@@ -7083,7 +6599,6 @@ html.dark-mode .report-wallet-stat-card {
         justify-content: flex-start;
     }
 
-/* Mini avatar */
 .bot-mini-avatar {
     width: 28px;
     height: 28px;
@@ -7097,12 +6612,10 @@ html.dark-mode .report-wallet-stat-card {
     margin-bottom: 2px;
 }
 
-/* Bubble wrapper */
 .bot-bubble-wrap {
     max-width: 68%;
 }
 
-/* Bubble */
 .bot-bubble {
     padding: 10px 14px;
     word-break: break-word;
@@ -7127,7 +6640,6 @@ html.dark-mode .report-wallet-stat-card {
             color: var(--teal);
         }
 
-/* Time stamp */
 .bot-time {
     font-size: 10px;
     color: var(--text-3);
@@ -7143,7 +6655,6 @@ html.dark-mode .report-wallet-stat-card {
     text-align: left;
 }
 
-/* Typing indicator */
 #typingRow {
     display: none;
 }
@@ -7186,7 +6697,6 @@ html.dark-mode .report-wallet-stat-card {
     }
 }
 
-/* Input bar */
 .bot-input-bar {
     background: var(--surface);
     border-top: 1px solid var(--border);
@@ -7200,7 +6710,6 @@ html.dark-mode .report-wallet-stat-card {
     align-items: center;
 }
 
-/* Emoji picker */
 .bot-emoji-wrap {
     position: relative;
     flex-shrink: 0;
@@ -7249,7 +6758,6 @@ html.dark-mode .report-wallet-stat-card {
     gap: 4px;
 }
 
-/* Input field */
 #botInput {
     flex: 1;
     border-radius: 22px;
@@ -7266,7 +6774,6 @@ html.dark-mode .report-wallet-stat-card {
         border-color: var(--teal);
     }
 
-/* Send button */
 .bot-send-btn {
     width: 42px;
     height: 42px;
@@ -7292,7 +6799,6 @@ html.dark-mode .report-wallet-stat-card {
         cursor: not-allowed;
     }
 
-/* Empty state */
 .bot-empty {
     text-align: center;
     margin: auto;
@@ -7300,14 +6806,13 @@ html.dark-mode .report-wallet-stat-card {
     font-size: 13px;
 }
 
-.bot-empty i {
-    font-size: 36px;
-    display: block;
-    margin-bottom: 10px;
-    opacity: .35;
-}
+    .bot-empty i {
+        font-size: 36px;
+        display: block;
+        margin-bottom: 10px;
+        opacity: .35;
+    }
 
-/* Suggestions */
 .bot-suggestions {
     display: flex;
     flex-wrap: wrap;
@@ -7327,16 +6832,12 @@ html.dark-mode .report-wallet-stat-card {
     transition: var(--transition);
 }
 
-.bot-chip:hover {
-    border-color: var(--teal);
-    color: var(--teal);
-    background: var(--teal-light);
-}
-/* ============================================
-   KYC VERIFICATION PAGE
-   ============================================ */
+    .bot-chip:hover {
+        border-color: var(--teal);
+        color: var(--teal);
+        background: var(--teal-light);
+    }
 
-/* KYC header */
 .kyc-header {
     display: flex;
     align-items: center;
@@ -7348,7 +6849,6 @@ html.dark-mode .report-wallet-stat-card {
     margin-right: 8px;
 }
 
-/* KYC status banner */
 .kyc-status-banner {
     border: 2px solid;
     margin-bottom: 16px;
@@ -7420,7 +6920,6 @@ html.dark-mode .report-wallet-stat-card {
     color: var(--text-3);
 }
 
-/* KYC form section */
 .kyc-form-section {
     margin-bottom: 16px;
 }
@@ -7437,12 +6936,10 @@ html.dark-mode .report-wallet-stat-card {
         margin-right: 6px;
     }
 
-/* Required field asterisk */
 .kyc-required {
     color: var(--red);
 }
 
-/* Document preview */
 .kyc-document-preview {
     margin-bottom: 8px;
 }
@@ -7460,13 +6957,11 @@ html.dark-mode .report-wallet-stat-card {
     margin-top: 4px;
 }
 
-/* Optional hint */
 .kyc-optional-hint {
     font-size: 11px;
     color: var(--text-3);
 }
 
-/* Form actions */
 .kyc-form-actions {
     margin-top: 20px;
     padding-top: 16px;
@@ -7475,7 +6970,6 @@ html.dark-mode .report-wallet-stat-card {
     gap: 10px;
 }
 
-/* Info box */
 .kyc-info-box {
     background: var(--surface-2);
     border: 1px solid var(--border);
@@ -7501,15 +6995,10 @@ html.dark-mode .report-wallet-stat-card {
     line-height: 1.8;
 }
 
-/* KYC required text */
 .kyc-required-text {
     font-size: 11px;
 }
-/* ============================================
-   AGENT MAP PAGE
-   ============================================ */
 
-/* Your stores section */
 .agent-stores-header {
     display: flex;
     align-items: center;
@@ -7538,7 +7027,6 @@ html.dark-mode .report-wallet-stat-card {
     padding: 6px 12px;
 }
 
-/* Store list */
 .agent-stores-list {
     display: flex;
     flex-direction: column;
@@ -7576,7 +7064,6 @@ html.dark-mode .report-wallet-stat-card {
     font-size: 12px;
 }
 
-/* Empty stores state */
 .agent-stores-empty {
     text-align: center;
     padding: 20px;
@@ -7589,7 +7076,6 @@ html.dark-mode .report-wallet-stat-card {
     margin-bottom: 8px;
 }
 
-/* Map search bar */
 .agent-map-search {
     display: flex;
     gap: 12px;
@@ -7602,7 +7088,6 @@ html.dark-mode .report-wallet-stat-card {
     flex-shrink: 0;
 }
 
-/* Map container */
 .agent-map-container {
     padding: 0;
     overflow: hidden;
@@ -7613,7 +7098,6 @@ html.dark-mode .report-wallet-stat-card {
     border-radius: var(--r-lg);
 }
 
-/* Agent list sidebar */
 .agent-list-sidebar {
     height: 500px;
     overflow-y: auto;
@@ -7633,7 +7117,6 @@ html.dark-mode .report-wallet-stat-card {
     gap: 8px;
 }
 
-/* Agent card item */
 .agent-card-item {
     padding: 12px;
     border-radius: var(--r-sm);
@@ -7673,7 +7156,6 @@ html.dark-mode .report-wallet-stat-card {
     margin-top: 3px;
 }
 
-/* Map leaflet custom icon */
 .leaflet-custom-icon {
     width: 32px;
     height: 32px;
@@ -7684,7 +7166,6 @@ html.dark-mode .report-wallet-stat-card {
     box-shadow: 0 2px 8px rgba(0,0,0,.25);
 }
 
-/* Popup styles */
 .custom-popup-name {
     font-weight: 700;
     font-size: 14px;
@@ -7706,11 +7187,7 @@ html.dark-mode .report-wallet-stat-card {
     color: #00b894;
     margin-top: 2px;
 }
-/* ============================================
-   NOTIFICATIONS PAGE
-   ============================================ */
 
-/* Notification item */
 .notification-item {
     display: flex;
     align-items: flex-start;
@@ -7723,7 +7200,6 @@ html.dark-mode .report-wallet-stat-card {
         background: rgba(0,184,148,0.03);
     }
 
-/* Notification icon */
 .notification-icon {
     width: 38px;
     height: 38px;
@@ -7737,7 +7213,6 @@ html.dark-mode .report-wallet-stat-card {
     color: var(--teal);
 }
 
-/* Notification content */
 .notification-content {
     flex: 1;
 }
@@ -7750,15 +7225,14 @@ html.dark-mode .report-wallet-stat-card {
     gap: 6px;
 }
 
-.notification-title.unread {
-    font-weight: 700;
-}
+    .notification-title.unread {
+        font-weight: 700;
+    }
 
-.notification-title.read {
-    font-weight: 500;
-}
+    .notification-title.read {
+        font-weight: 500;
+    }
 
-/* Unread dot */
 .notification-unread-dot {
     display: inline-block;
     width: 7px;
@@ -7768,30 +7242,23 @@ html.dark-mode .report-wallet-stat-card {
     vertical-align: middle;
 }
 
-/* Notification message */
 .notification-message {
     font-size: 13px;
     color: var(--text-2);
     margin-top: 2px;
 }
 
-/* Notification date */
 .notification-date {
     font-size: 11px;
     color: var(--text-3);
     margin-top: 4px;
 }
 
-/* Mark read button */
 .notification-mark-read-btn {
     padding: 6px 12px;
     font-size: 11px;
 }
-/* ============================================
-   SETTINGS PAGE
-   ============================================ */
 
-/* Tutorial card link */
 .settings-tutorial-link {
     display: flex;
     align-items: center;
@@ -7822,7 +7289,6 @@ html.dark-mode .report-wallet-stat-card {
     color: var(--teal);
 }
 
-/* Settings card link */
 .settings-card-link {
     display: flex;
     align-items: center;
@@ -7854,7 +7320,6 @@ html.dark-mode .report-wallet-stat-card {
     color: var(--text-3);
 }
 
-/* Delete account link */
 .settings-delete-link {
     display: flex;
     align-items: center;
@@ -7886,7 +7351,6 @@ html.dark-mode .report-wallet-stat-card {
     color: var(--red);
 }
 
-/* Dark mode toggle */
 .dark-mode-toggle {
     display: flex;
     align-items: center;
@@ -7928,7 +7392,6 @@ html.dark-mode .report-wallet-stat-card {
     box-shadow: 0 1px 4px rgba(0,0,0,.2);
 }
 
-/* About section */
 .settings-about-row {
     display: flex;
     justify-content: space-between;
@@ -7956,11 +7419,7 @@ html.dark-mode .report-wallet-stat-card {
 .validation-error {
     font-size: 12px;
 }
-/* ============================================
-   TOP UP / ADD FUNDS PAGE
-   ============================================ */
 
-/* Agent operations card */
 .topup-agent-card {
     background: linear-gradient(135deg, rgba(249,115,22,.1), rgba(249,115,22,.05));
     border: 1px solid rgba(249,115,22,.2);
@@ -7994,7 +7453,6 @@ html.dark-mode .report-wallet-stat-card {
     justify-content: center;
 }
 
-/* Total display */
 .topup-total-display {
     display: none;
     background: var(--surface-2);
@@ -8025,7 +7483,6 @@ html.dark-mode .report-wallet-stat-card {
     color: var(--teal);
 }
 
-/* Payment method grid */
 .topup-method-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -8075,7 +7532,6 @@ html.dark-mode .report-wallet-stat-card {
     color: var(--text-3);
 }
 
-/* Stripe section */
 .topup-stripe-section {
     display: none;
 }
@@ -8099,23 +7555,17 @@ html.dark-mode .report-wallet-stat-card {
     margin-top: 6px;
 }
 
-/* Submit button */
 .topup-submit-btn {
     width: 100%;
     justify-content: center;
     padding: 14px;
 }
-/* ============================================
-   TUTORIAL PAGE
-   ============================================ */
 
-/* Tutorial container */
 .tutorial-container {
     max-width: 700px;
     margin: 0 auto;
 }
 
-/* Tutorial header */
 .tutorial-header {
     text-align: center;
     margin-bottom: 32px;
@@ -8137,7 +7587,6 @@ html.dark-mode .report-wallet-stat-card {
     color: var(--text-3);
 }
 
-/* Tutorial step link */
 .tutorial-step-link {
     text-decoration: none;
     display: block;
@@ -8148,7 +7597,6 @@ html.dark-mode .report-wallet-stat-card {
         transform: translateX(4px);
     }
 
-/* Tutorial step card */
 .tutorial-step-card {
     display: flex;
     align-items: flex-start;
@@ -8156,7 +7604,6 @@ html.dark-mode .report-wallet-stat-card {
     cursor: pointer;
 }
 
-/* Step number badge */
 .tutorial-step-number {
     width: 40px;
     height: 40px;
@@ -8171,7 +7618,6 @@ html.dark-mode .report-wallet-stat-card {
     flex-shrink: 0;
 }
 
-/* Step content */
 .tutorial-step-content {
     flex: 1;
 }
@@ -8197,16 +7643,11 @@ html.dark-mode .report-wallet-stat-card {
     gap: 4px;
 }
 
-/* Tutorial footer */
 .tutorial-footer {
     text-align: center;
     margin-top: 24px;
 }
-/* ============================================
-   REVIEWS PAGE (PUBLIC APP REVIEWS)
-   ============================================ */
 
-/* Average rating container */
 .reviews-average-container {
     text-align: center;
     padding: 20px 0;
@@ -8230,7 +7671,6 @@ html.dark-mode .report-wallet-stat-card {
     color: var(--text-3);
 }
 
-/* Review card */
 .review-card {
     margin-bottom: 0;
 }
@@ -8280,17 +7720,12 @@ html.dark-mode .report-wallet-stat-card {
     margin-top: 4px;
 }
 
-/* Reviews container */
 .reviews-container {
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
-/* ============================================
-   WRITE A REVIEW PAGE
-   ============================================ */
 
-/* Last review info alert */
 .review-last-alert {
     background: var(--teal-light);
     border: 1px solid rgba(0,184,148,.2);
@@ -8304,7 +7739,6 @@ html.dark-mode .report-wallet-stat-card {
     gap: 8px;
 }
 
-/* Star rating container */
 .review-star-rating {
     display: flex;
     gap: 8px;
@@ -8327,21 +7761,15 @@ html.dark-mode .report-wallet-stat-card {
         color: #d0d7e0;
     }
 
-/* Rating error message */
 .review-rating-error {
     font-size: 12px;
     color: var(--red);
 }
 
-/* Textarea with vertical resize */
 .review-textarea {
     resize: vertical;
 }
-/* ============================================
-   MY REVIEWS PAGE
-   ============================================ */
 
-/* Tabs container */
 .reviews-tabs-container {
     display: flex;
     gap: 4px;
@@ -8373,7 +7801,6 @@ html.dark-mode .report-wallet-stat-card {
         color: var(--text-2);
     }
 
-/* Review card */
 .review-card-item {
     margin-bottom: 8px;
 }
@@ -8410,7 +7837,6 @@ html.dark-mode .report-wallet-stat-card {
     margin-top: 6px;
 }
 
-/* Review actions */
 .review-actions {
     display: flex;
     gap: 6px;
@@ -8437,7 +7863,6 @@ html.dark-mode .report-wallet-stat-card {
     cursor: pointer;
 }
 
-/* Transaction/Agent review row */
 .review-item-row {
     display: flex;
     align-items: center;
@@ -8502,11 +7927,7 @@ html.dark-mode .report-wallet-stat-card {
     color: var(--red);
     cursor: pointer;
 }
-/* ============================================
-   MESSAGES / CHAT INDEX PAGE
-   ============================================ */
 
-/* Bot assistant card */
 .chat-bot-card {
     margin-bottom: 16px;
 }
@@ -8548,7 +7969,6 @@ html.dark-mode .report-wallet-stat-card {
     color: var(--text-3);
 }
 
-/* Search bar */
 .chat-search-bar {
     display: flex;
     gap: 10px;
@@ -8578,7 +7998,6 @@ html.dark-mode .report-wallet-stat-card {
     flex-shrink: 0;
 }
 
-/* Beneficiaries section */
 .chat-beneficiaries-header {
     font-size: 13px;
     font-weight: 700;
@@ -8629,7 +8048,6 @@ html.dark-mode .report-wallet-stat-card {
     color: var(--teal);
 }
 
-/* Chat list item */
 .chat-list-item {
     position: relative;
     border-bottom: 1px solid var(--border);
@@ -8639,7 +8057,6 @@ html.dark-mode .report-wallet-stat-card {
         opacity: 1 !important;
     }
 
-/* Chat link */
 .chat-link {
     display: flex;
     align-items: center;
@@ -8658,7 +8075,6 @@ html.dark-mode .report-wallet-stat-card {
         background: var(--surface-2);
     }
 
-/* Chat avatar wrapper */
 .chat-avatar-wrapper {
     flex-shrink: 0;
     position: relative;
@@ -8684,7 +8100,6 @@ html.dark-mode .report-wallet-stat-card {
     color: #fff;
 }
 
-/* Unread badge */
 .chat-unread-badge {
     position: absolute;
     top: -2px;
@@ -8702,7 +8117,6 @@ html.dark-mode .report-wallet-stat-card {
     border: 2px solid var(--surface);
 }
 
-/* Chat info */
 .chat-info {
     flex: 1;
     min-width: 0;
@@ -8750,7 +8164,6 @@ html.dark-mode .report-wallet-stat-card {
         font-weight: 400;
     }
 
-/* Delete conversation button */
 .delete-conv-btn {
     position: absolute;
     right: 14px;
@@ -8772,12 +8185,11 @@ html.dark-mode .report-wallet-stat-card {
     z-index: 2;
 }
 
-.delete-conv-btn:hover {
-    background: var(--red-light);
-    color: var(--red);
-}
+    .delete-conv-btn:hover {
+        background: var(--red-light);
+        color: var(--red);
+    }
 
-/* No search result */
 .chat-no-result {
     padding: 24px;
     text-align: center;
@@ -8785,17 +8197,13 @@ html.dark-mode .report-wallet-stat-card {
     font-size: 13px;
 }
 
-.chat-no-result i {
-    font-size: 24px;
-    display: block;
-    margin-bottom: 8px;
-    opacity: .4;
-}
-/* ============================================
-   NEW CHAT PAGE
-   ============================================ */
+    .chat-no-result i {
+        font-size: 24px;
+        display: block;
+        margin-bottom: 8px;
+        opacity: .4;
+    }
 
-/* Error alert */
 .chat-error-alert {
     background: var(--red-light);
     border: 1px solid rgba(255,107,107,.25);
@@ -8809,7 +8217,6 @@ html.dark-mode .report-wallet-stat-card {
     gap: 8px;
 }
 
-/* Tab container */
 .chat-tab-container {
     display: flex;
     gap: 0;
@@ -8839,7 +8246,6 @@ html.dark-mode .report-wallet-stat-card {
         color: var(--text-2);
     }
 
-/* Username input wrapper */
 .chat-username-wrapper {
     position: relative;
     display: flex;
@@ -8872,22 +8278,16 @@ html.dark-mode .report-wallet-stat-card {
     background: transparent;
 }
 
-/* Form hint text */
 .chat-form-hint {
     font-size: 12px;
     color: var(--text-3);
     margin-top: 6px;
 }
 
-/* Full width button */
 .chat-submit-btn {
     width: 100%;
 }
-/* ============================================
-   DIRECT CHAT / CONVERSATION PAGE
-   ============================================ */
 
-/* Chat shell */
 .chat-shell {
     display: flex;
     flex-direction: column;
@@ -8900,7 +8300,6 @@ html.dark-mode .report-wallet-stat-card {
     box-shadow: 0 4px 24px rgba(0,0,0,.06);
 }
 
-/* Chat header */
 .chat-header {
     display: flex;
     align-items: center;
@@ -8960,7 +8359,6 @@ html.dark-mode .report-wallet-stat-card {
     font-size: 22px;
 }
 
-/* Chat messages area */
 .chat-messages {
     flex: 1;
     overflow-y: auto;
@@ -8987,7 +8385,6 @@ html.dark-mode .report-wallet-stat-card {
         border: 1px solid var(--border);
     }
 
-/* Message wrapper */
 .msg-wrapper {
     display: flex;
     align-items: flex-end;
@@ -9003,7 +8400,6 @@ html.dark-mode .report-wallet-stat-card {
         justify-content: flex-start;
     }
 
-/* Message avatars */
 .msg-avatar-img {
     width: 28px;
     height: 28px;
@@ -9028,13 +8424,11 @@ html.dark-mode .report-wallet-stat-card {
     margin-bottom: 2px;
 }
 
-/* Message bubble */
 .msg-bubble {
     max-width: 68%;
     position: relative;
 }
 
-/* Message actions */
 .msg-actions {
     position: absolute;
     top: 0;
@@ -9091,7 +8485,6 @@ html.dark-mode .report-wallet-stat-card {
         color: var(--red);
     }
 
-/* Emoji picker popup */
 .emoji-picker-popup {
     position: absolute;
     z-index: 999;
@@ -9118,7 +8511,6 @@ html.dark-mode .report-wallet-stat-card {
         display: flex;
     }
 
-/* Reply preview */
 .reply-preview {
     background: var(--teal-light);
     border-left: 3px solid var(--teal);
@@ -9145,7 +8537,6 @@ html.dark-mode .report-wallet-stat-card {
         color: #fff;
     }
 
-/* Bubble inner */
 .bubble-inner {
     padding: 9px 13px;
     word-break: break-word;
@@ -9170,7 +8561,6 @@ html.dark-mode .report-wallet-stat-card {
     border: 1px solid var(--border);
 }
 
-/* Message time */
 .msg-time {
     font-size: 10px;
     color: var(--text-3);
@@ -9186,7 +8576,6 @@ html.dark-mode .report-wallet-stat-card {
         text-align: left;
     }
 
-/* Reactions strip */
 .reactions-strip {
     display: flex;
     flex-wrap: wrap;
@@ -9220,14 +8609,12 @@ html.dark-mode .report-wallet-stat-card {
         font-weight: 600;
     }
 
-/* Deleted message */
 .deleted-msg {
     font-style: italic;
     opacity: .6;
     font-size: 13px;
 }
 
-/* Media elements */
 .media-img {
     max-width: 100%;
     border-radius: 10px;
@@ -9260,7 +8647,6 @@ html.dark-mode .report-wallet-stat-card {
         background: rgba(0,0,0,.12);
     }
 
-/* Attach and reply bars */
 .attach-bar,
 .reply-bar {
     background: var(--surface-2);
@@ -9287,7 +8673,6 @@ html.dark-mode .report-wallet-stat-card {
     line-height: 1;
 }
 
-/* Input bar */
 .chat-input-bar {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -9325,7 +8710,6 @@ html.dark-mode .report-wallet-stat-card {
         color: var(--teal);
     }
 
-/* Emoji picker */
 .emoji-input-wrap {
     position: relative;
     flex-shrink: 0;
@@ -9355,7 +8739,6 @@ html.dark-mode .report-wallet-stat-card {
     gap: 4px;
 }
 
-/* Message input */
 #msgInput {
     flex: 1;
     border-radius: 22px;
@@ -9372,7 +8755,6 @@ html.dark-mode .report-wallet-stat-card {
         border-color: var(--teal);
     }
 
-/* Send button */
 .send-btn {
     width: 42px;
     height: 42px;
@@ -9398,7 +8780,6 @@ html.dark-mode .report-wallet-stat-card {
         cursor: not-allowed;
     }
 
-/* Chat empty state */
 .chat-empty {
     text-align: center;
     margin: auto;
@@ -9413,7 +8794,6 @@ html.dark-mode .report-wallet-stat-card {
         opacity: .4;
     }
 
-/* Lightbox */
 #lightbox {
     display: none;
     position: fixed;
@@ -9446,7 +8826,6 @@ html.dark-mode .report-wallet-stat-card {
     line-height: 1;
 }
 
-/* Context menu */
 .ctx-menu {
     position: fixed;
     background: var(--surface);
@@ -9486,7 +8865,6 @@ html.dark-mode .report-wallet-stat-card {
             background: var(--red-light);
         }
 
-/* Edit modal */
 .edit-overlay {
     position: fixed;
     inset: 0;
@@ -9511,7 +8889,6 @@ html.dark-mode .report-wallet-stat-card {
     border: 1px solid var(--border);
 }
 
-/* Profile panel */
 .profile-overlay {
     display: none;
     position: fixed;
@@ -9536,7 +8913,6 @@ html.dark-mode .report-wallet-stat-card {
     flex-direction: column;
 }
 
-/* Bot message formatting */
 .bot-msg-content p:last-child {
     margin-bottom: 0;
 }
@@ -9549,21 +8925,15 @@ html.dark-mode .report-wallet-stat-card {
     font-weight: 700;
 }
 
-/* Message deleting animation */
 .msg-deleting {
     opacity: 0;
     transition: opacity 0.2s ease;
 }
-/* ============================================
-   ANNOUNCEMENT FORM PAGE
-   ============================================ */
 
-/* Required field asterisk */
 .announcement-required {
     color: var(--red);
 }
 
-/* Checkbox label */
 .announcement-checkbox-label {
     display: flex;
     align-items: center;
@@ -9579,23 +8949,17 @@ html.dark-mode .report-wallet-stat-card {
     accent-color: var(--teal);
 }
 
-/* Form action buttons */
 .announcement-actions {
     margin-top: 20px;
     display: flex;
     gap: 10px;
 }
-/* ============================================
-   ANNOUNCEMENT DETAILS PAGE
-   ============================================ */
 
-/* Header actions */
 .announcement-details-actions {
     display: flex;
     gap: 8px;
 }
 
-/* Colorful left border for announcement card */
 .announcement-details-border {
     padding-left: 16px;
     margin-bottom: 20px;
@@ -9621,7 +8985,6 @@ html.dark-mode .report-wallet-stat-card {
     color: var(--text-3);
 }
 
-/* Content section */
 .announcement-details-content {
     font-size: 14px;
     color: var(--text-2);
@@ -9629,7 +8992,6 @@ html.dark-mode .report-wallet-stat-card {
     margin-bottom: 20px;
 }
 
-/* Info grid */
 .announcement-details-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -9649,7 +9011,6 @@ html.dark-mode .report-wallet-stat-card {
     font-weight: 600;
 }
 
-/* Action buttons section */
 .announcement-details-footer {
     display: flex;
     gap: 8px;
@@ -9657,21 +9018,15 @@ html.dark-mode .report-wallet-stat-card {
     padding-top: 16px;
     border-top: 1px solid var(--border);
 }
-/* ============================================
-   ANNOUNCEMENT EDIT PAGE
-   ============================================ */
 
-/* Required field asterisk */
 .required-asterisk {
     color: var(--red);
 }
 
-/* Validation error text */
 .validation-error {
     font-size: 12px;
 }
 
-/* Checkbox label */
 .checkbox-label {
     display: flex;
     align-items: center;
@@ -9681,36 +9036,29 @@ html.dark-mode .report-wallet-stat-card {
     color: var(--text-2);
 }
 
-/* Checkbox input */
 .checkbox-input {
     width: 16px;
     height: 16px;
     accent-color: var(--teal);
 }
 
-/* Form actions with border top */
 .form-actions {
     margin-top: 20px;
     display: flex;
     gap: 10px;
 }
 
-.form-actions.with-border-top {
-    padding-top: 16px;
-    border-top: 1px solid var(--border);
-}
-/* ============================================
-   ANNOUNCEMENTS INDEX PAGE
-   ============================================ */
+    .form-actions.with-border-top {
+        padding-top: 16px;
+        border-top: 1px solid var(--border);
+    }
 
-/* Announcement card */
 .announcement-card {
     border-left: 4px solid;
     transition: var(--transition);
     margin-bottom: 16px;
 }
 
-/* Announcement type badge */
 .announcement-type-badge {
     font-size: 11px;
     font-weight: 700;
@@ -9719,7 +9067,6 @@ html.dark-mode .report-wallet-stat-card {
     color: #fff;
 }
 
-/* Unread dot */
 .announcement-unread-dot {
     width: 8px;
     height: 8px;
@@ -9728,7 +9075,6 @@ html.dark-mode .report-wallet-stat-card {
     display: none;
 }
 
-/* Announcement title */
 .announcement-title {
     font-size: 15px;
     font-weight: 700;
@@ -9736,14 +9082,12 @@ html.dark-mode .report-wallet-stat-card {
     margin-bottom: 6px;
 }
 
-/* Announcement content */
 .announcement-content {
     font-size: 13px;
     color: var(--text-2);
     line-height: 1.6;
 }
 
-/* Announcement footer */
 .announcement-footer {
     font-size: 11px;
     color: var(--text-3);
@@ -9758,7 +9102,6 @@ html.dark-mode .report-wallet-stat-card {
     margin-left: 8px;
 }
 
-/* Admin actions */
 .announcement-admin-actions {
     display: flex;
     gap: 6px;
@@ -9784,10 +9127,12 @@ html.dark-mode .report-wallet-stat-card {
     color: var(--red);
     cursor: pointer;
 }
+
 .announcement-header-icon {
     color: var(--teal);
     margin-right: 8px;
 }
+
 .announcement-header {
     display: flex;
     align-items: flex-start;
@@ -9805,11 +9150,7 @@ html.dark-mode .report-wallet-stat-card {
     gap: 8px;
     margin-bottom: 6px;
 }
-/* ============================================
-   MANAGE ANNOUNCEMENTS PAGE (ADMIN)
-   ============================================ */
 
-/* Stats cards */
 .announcement-stat-card {
     border-left: 3px solid #22c55e;
 }
@@ -9828,7 +9169,6 @@ html.dark-mode .report-wallet-stat-card {
     color: var(--text-3);
 }
 
-/* Announcement management card */
 .announcement-manage-card {
     margin-bottom: 8px;
 }
@@ -9881,7 +9221,6 @@ html.dark-mode .report-wallet-stat-card {
     margin-top: 5px;
 }
 
-/* Announcement action buttons */
 .announcement-manage-actions {
     display: flex;
     gap: 6px;
@@ -9928,10 +9267,12 @@ html.dark-mode .report-wallet-stat-card {
     color: var(--red);
     cursor: pointer;
 }
+
 .announcement-header-icon {
     color: var(--teal);
     margin-right: 8px;
 }
+
 .home-container {
     max-width: 900px;
     margin: 0 auto;
@@ -10155,6 +9496,7 @@ html.dark-mode .report-wallet-stat-card {
         justify-content: center;
     }
 }
+
 .privacy-container {
     max-width: 800px;
     margin: 0 auto;
@@ -10235,6 +9577,7 @@ html.dark-mode .report-wallet-stat-card {
         font-size: 16px;
     }
 }
+
 .access-denied-container {
     min-height: calc(100vh - 200px);
     display: flex;
@@ -10364,9 +9707,6 @@ html.dark-mode .report-wallet-stat-card {
             justify-content: center;
         }
 }
-/* ============================================
-   CONFIRM EMAIL PAGE
-   ============================================ */
 
 .confirm-email-container {
     min-height: calc(100vh - 200px);
@@ -10460,9 +9800,6 @@ html.dark-mode .report-wallet-stat-card {
             justify-content: center;
         }
 }
-/* ============================================
-   FORGOT PASSWORD PAGE
-   ============================================ */
 
 .forgot-password-container {
     min-height: 100vh;
@@ -10591,9 +9928,6 @@ html.dark-mode .report-wallet-stat-card {
         font-size: 20px;
     }
 }
-/* ============================================
-   FORGOT PASSWORD CONFIRMATION PAGE
-   ============================================ */
 
 .forgot-confirm-container {
     min-height: 100vh;
@@ -10741,9 +10075,6 @@ html.dark-mode .report-wallet-stat-card {
         font-size: 20px;
     }
 }
-/* ============================================
-   LOGIN PAGE
-   ============================================ */
 
 .login-container {
     min-height: 100vh;
@@ -10973,9 +10304,6 @@ html.dark-mode .report-wallet-stat-card {
         font-size: 20px;
     }
 }
-/* ============================================
-   REGISTER PAGE
-   ============================================ */
 
 .register-container {
     min-height: 100vh;
@@ -11149,9 +10477,6 @@ html.dark-mode .report-wallet-stat-card {
         gap: 14px;
     }
 }
-/* ============================================
-   RESET PASSWORD PAGE
-   ============================================ */
 
 .reset-container {
     min-height: 100vh;
@@ -11278,9 +10603,9 @@ html.dark-mode .report-wallet-stat-card {
     text-decoration: none;
 }
 
-.reset-back-link:hover {
-    text-decoration: underline;
-}
+    .reset-back-link:hover {
+        text-decoration: underline;
+    }
 
 .validation-error {
     font-size: 12px;
@@ -11303,7 +10628,7 @@ html.dark-mode .report-wallet-stat-card {
         font-size: 20px;
     }
 }
-/* Admin Users Table - Additional Styles */
+
 .user-cell {
     padding: 13px 16px;
     border-bottom: 1px solid var(--border);
@@ -11326,22 +10651,20 @@ html.dark-mode .report-wallet-stat-card {
     flex-wrap: wrap;
 }
 
-/* Make sure the body allows scrolling */
 body {
     overflow-y: auto;
     min-height: 100vh;
 }
 
-/* The main content should allow scrolling */
 .main-content {
     margin-left: var(--sidebar-w);
     flex: 1;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    overflow-y: auto; /* Add this if not present */
+    overflow-y: auto;
 }
-/* Fix scrolling for transfer page */
+
 .transfer-container {
     padding: 20px;
     min-height: auto;
@@ -11363,14 +10686,10 @@ body {
     padding-bottom: 40px;
 }
 
-/* Make sure body allows scrolling */
 body {
     overflow-y: auto;
     min-height: 100vh;
 }
-/* ============================================
-   ANNOUNCEMENTS PAGE (USER-FACING)
-   ============================================ */
 
 .announcements-container {
     display: flex;
@@ -11515,9 +10834,6 @@ html.dark-mode .announcement-badge.maintenance {
         font-size: 13px;
     }
 }
-/* ============================================
-   MANAGE ANNOUNCEMENTS PAGE (ADMIN)
-   ============================================ */
 
 .announcements-manage-container {
     display: flex;
@@ -11640,9 +10956,6 @@ html.dark-mode .announcement-badge.maintenance {
         justify-content: flex-end;
     }
 }
-/* ============================================
-   ANNOUNCEMENT BANNERS (Top bar)
-   ============================================ */
 
 .ann-banner-container {
     margin-bottom: 8px;
@@ -11705,10 +11018,10 @@ html.dark-mode .announcement-badge.maintenance {
         justify-content: center;
     }
 
-        .ann-banner button:hover {
-            opacity: 1;
-            background: rgba(0,0,0,0.1);
-        }
+    .ann-banner button:hover {
+        opacity: 1;
+        background: rgba(0,0,0,0.1);
+    }
 
 html.dark-mode .ann-banner.Info {
     background: linear-gradient(135deg, rgba(3,105,161,0.2), rgba(3,105,161,0.1));
@@ -11733,7 +11046,7 @@ html.dark-mode .ann-banner.Maintenance {
     color: #f87171;
     border-left-color: #ef4444;
 }
-/* Reviewing info box */
+
 .reviewing-info {
     padding: 12px 16px;
     background: var(--surface-2);
@@ -11745,6 +11058,305 @@ html.dark-mode .ann-banner.Maintenance {
     gap: 8px;
 }
 
-    .reviewing-info i {
-        color: var(--teal);
+.reviewing-info i {
+    color: var(--teal);
+}
+
+.dark-mode-toggle-topbar {
+    display: flex;
+    align-items: center;
+    margin: 0 8px;
+}
+
+.dark-mode-label {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 24px;
+    cursor: pointer;
+}
+
+.dark-mode-input {
+    display: none;
+}
+
+.dark-mode-slider {
+    position: absolute;
+    inset: 0;
+    background: #d0d7e0;
+    border-radius: 24px;
+    transition: .3s;
+}
+
+.dark-mode-knob {
+    position: absolute;
+    left: 2px;
+    top: 2px;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border-radius: 50%;
+    transition: .3s;
+    box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+
+.dark-mode-input:checked + .dark-mode-slider {
+    background: var(--teal);
+}
+
+.dark-mode-input:checked + .dark-mode-slider .dark-mode-knob {
+    transform: translateX(24px);
+}
+
+.ann-sidebar-badge {
+    background: #ef4444;
+    color: #fff;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    margin-left: auto;
+    display: none;
+}
+
+.beneficiary-avatar-img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.profile-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 10000;
+    backdrop-filter: blur(4px);
+}
+
+.profile-panel {
+    position: fixed;
+    top: 0;
+    right: -420px;
+    width: 380px;
+    max-width: 95vw;
+    height: 100vh;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    z-index: 10001;
+    overflow-y: auto;
+    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    box-shadow: -4px 0 24px rgba(0,0,0,0.1);
+}
+
+.profile-panel-header {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, var(--teal-light), var(--surface));
+}
+
+.profile-close-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-2);
+    font-size: 18px;
+    padding: 0;
+    line-height: 1;
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.profile-close-btn:hover {
+    background: var(--surface-2);
+    color: var(--teal);
+}
+
+.profile-panel-title {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text-1);
+}
+
+.profile-loading {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-3);
+    text-align: center;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--teal-light);
+    border-top-color: var(--teal);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
     }
+}
+
+.profile-avatar-section {
+    padding: 32px 20px 24px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, var(--cedar-red-lt), var(--teal-light));
+}
+
+.profile-avatar-large {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin: 0 auto 16px;
+    background: linear-gradient(135deg, var(--teal), var(--teal-mid));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    font-weight: 800;
+    color: #fff;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    border: 3px solid #fff;
+}
+
+.profile-avatar-large-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-name-large {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text-1);
+    margin-bottom: 4px;
+}
+
+.profile-username {
+    font-size: 13px;
+    color: var(--text-3);
+    margin-bottom: 8px;
+}
+
+.profile-verified-badge {
+    display: inline-block;
+    background: var(--teal-light);
+    color: var(--teal);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 12px;
+    border: 1px solid var(--teal);
+}
+
+.profile-info-section {
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+}
+
+.profile-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+}
+
+.profile-bio {
+    font-size: 14px;
+    color: var(--text-1);
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+
+.profile-info-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 13px;
+    color: var(--text-1);
+}
+
+.profile-info-row i {
+    color: var(--teal);
+    width: 18px;
+    flex-shrink: 0;
+}
+
+.profile-media-section {
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+}
+
+.profile-images-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+}
+
+.profile-media-item {
+    aspect-ratio: 1;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.profile-media-item:hover {
+    transform: scale(1.02);
+    box-shadow: var(--shadow-sm);
+}
+
+.profile-media-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-no-media {
+    font-size: 13px;
+    color: var(--text-3);
+    text-align: center;
+    padding: 24px 0;
+}
+
+.profile-files-section {
+    padding: 20px;
+}
+
+.profile-files-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.error-message {
+    color: var(--red);
+    text-align: center;
+    padding: 20px;
+}

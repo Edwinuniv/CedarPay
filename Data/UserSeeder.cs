@@ -31,13 +31,7 @@ namespace MoneyTransfer.Data
                 Roles.Agent);
         }
 
-        private static async Task CreateUserWithRole(
-            UserManager<User> userManager,
-            string email,
-            string password,
-            string firstName,
-            string lastName,
-            string role)
+        private static async Task CreateUserWithRole(UserManager<User> userManager, string email, string password, string firstName, string lastName, string role)
         {
             if (await userManager.FindByEmailAsync(email) == null)
             {

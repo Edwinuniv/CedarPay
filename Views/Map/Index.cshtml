@@ -8,34 +8,315 @@
     bool isAgentOrAdmin = User.IsInRole("Agent") || User.IsInRole("Admin");
 }
 
+<style>
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .agent-stores-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .agent-stores-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+    }
+    .agent-stores-icon { font-size: 20px; color: var(--teal); }
+    .agent-stores-list { display: flex; flex-direction: column; gap: 12px; }
+    .agent-store-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px;
+        background: var(--bg-2);
+        border-radius: 12px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .agent-store-name { font-weight: 600; }
+    .agent-store-location { font-size: 12px; color: var(--text-3); }
+    .agent-stores-empty { text-align: center; padding: 40px; }
+    .agent-stores-empty-icon { font-size: 48px; color: var(--text-3); margin-bottom: 16px; display: block; }
+    .agent-map-search {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+    }
+    .agent-map-search input { flex: 1; }
+    .agent-map-count { font-size: 14px; color: var(--text-3); white-space: nowrap; }
+    .agent-map-frame { height: 550px; width: 100%; border-radius: 12px; }
+    .agent-list-sidebar { max-height: 550px; overflow-y: auto; }
+    .agent-list-header {
+        font-weight: 600;
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid var(--cedar-gold);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .sort-buttons {
+        display: flex;
+        gap: 8px;
+    }
+    .sort-btn {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        background: var(--bg-2);
+        border: 1px solid var(--border);
+        color: var(--text-2);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .sort-btn.active {
+        background: var(--teal);
+        border-color: var(--teal);
+        color: white;
+    }
+    .sort-btn:hover {
+        border-color: var(--teal);
+        color: var(--teal);
+    }
+    .filter-buttons {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+    .filter-status-btn {
+        flex: 1;
+        padding: 6px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        background: var(--bg-2);
+        border: 1px solid var(--border);
+        color: var(--text-2);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: center;
+    }
+    .filter-status-btn.active {
+        background: var(--teal);
+        border-color: var(--teal);
+        color: white;
+    }
+    .filter-status-btn:hover {
+        border-color: var(--teal);
+        color: var(--teal);
+    }
+    .agent-list-items { display: flex; flex-direction: column; gap: 12px; }
+    .agent-card-item {
+        padding: 12px;
+        background: var(--bg-2);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .agent-card-item:hover {
+        background: var(--bg-1);
+        border-left: 3px solid var(--teal);
+        transform: translateX(4px);
+    }
+    .agent-card-item.active {
+        border-left: 3px solid var(--teal);
+        background: rgba(0, 184, 148, 0.08);
+    }
+    .agent-card-name { 
+        font-weight: 600; 
+        margin-bottom: 4px; 
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .agent-card-location, .agent-card-hours { font-size: 12px; color: var(--text-3); margin-top: 4px; }
+    .agent-card-rating {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: rgba(245, 158, 11, 0.1);
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-size: 11px;
+        color: #f59e0b;
+    }
+    .agent-card-warning { font-size: 11px; color: #f59e0b; margin-top: 6px; }
+    .agent-store-set-location { white-space: nowrap; }
+    .agent-status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 10px;
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-weight: 500;
+    }
+    .agent-status-open {
+        background: rgba(0, 184, 148, 0.12);
+        color: #00b894;
+    }
+    .agent-status-closed {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+    .agent-status-unknown {
+        background: var(--surface-2);
+        color: var(--text-3);
+    }
+
+    .route-panel {
+        margin-top: 16px;
+        padding: 16px;
+        background: var(--bg-1);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+    }
+    .route-panel-title {
+        font-weight: 600;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .route-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 12px;
+    }
+    .route-btn-primary {
+        width: 100%;
+        background: var(--teal);
+        color: white;
+        border: none;
+        padding: 10px 14px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: background 0.2s;
+    }
+    .route-btn-primary:hover { background: #00a884; }
+    .route-btn-secondary {
+        width: 100%;
+        background: transparent;
+        color: var(--text-2);
+        border: 1px solid var(--border);
+        padding: 8px 14px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: all 0.2s;
+    }
+    .route-btn-secondary:hover { border-color: var(--teal); color: var(--teal); }
+
+    .btn-pick-location-active {
+        background: linear-gradient(135deg, #f59e0b 0%, #e67e22 100%) !important;
+        color: white !important;
+        border-color: transparent !important;
+    }
+    .pick-location-hint {
+        position: absolute;
+        top: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(245, 158, 11, 0.95);
+        color: white;
+        padding: 8px 18px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        z-index: 1000;
+        pointer-events: none;
+        box-shadow: 0 3px 12px rgba(0,0,0,0.3);
+        white-space: nowrap;
+        display: none;
+    }
+    .map-wrapper { position: relative; }
+
+    .selected-agent-info {
+        padding: 12px;
+        background: rgba(0, 184, 148, 0.08);
+        border: 1px solid rgba(0, 184, 148, 0.2);
+        border-radius: 8px;
+        margin-bottom: 12px;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+    .distance-info {
+        font-size: 13px;
+        padding: 10px 12px;
+        background: var(--bg-2);
+        border-radius: 8px;
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--text-2);
+    }
+    .star-rating {
+        color: #f59e0b;
+    }
+    .review-count {
+        font-size: 10px;
+        color: var(--text-3);
+        margin-left: 4px;
+    }
+    .agent-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+    }
+</style>
+
 <div class="page-header">
     <div>
-        <h2>Agent Map</h2>
-        <p>Find a CedarPay agent near you</p>
+        <h2><i class="bi bi-geo-alt-fill" style="color: var(--teal);"></i> Agent Map</h2>
+        <p>Find a CedarPay agent near you and get directions</p>
     </div>
     @if (isAgentOrAdmin)
     {
-        <a asp-controller="Agent"
-           asp-action="SetLocation"
-           class="btn-tp-primary">
+        <a asp-controller="Agent" asp-action="SetLocation" class="btn-tp-primary">
             <i class="bi bi-geo-alt-fill"></i>
-            @(userAgents.Any(a => a.Latitude != 0)
-                ? "Update My Location"
-                : "Set My Location")
+            @(userAgents.Any(a => a.Latitude != 0) ? "Update My Location" : "Set My Location")
         </a>
     }
 </div>
 
-<!-- Your Stores Section for agents and admins -->
 @if (isAgentOrAdmin)
 {
     <div class="tp-card mb-3">
         <div class="agent-stores-header">
             <div class="agent-stores-title">
                 <i class="bi bi-shop agent-stores-icon"></i>
-                <span class="agent-stores-title-text">Your Stores</span>
+                <span>Your Stores</span>
             </div>
-            <a asp-controller="AgentApplication" asp-action="Apply" class="btn-tp-primary agent-register-btn">
+            <a asp-controller="Agent" asp-action="Register" class="btn-tp-primary agent-register-btn">
                 <i class="bi bi-plus"></i> Register New Store
             </a>
         </div>
@@ -51,14 +332,14 @@
                             <div class="agent-store-location">@store.City, @store.Country</div>
                             @if (store.Latitude != 0 && store.Longitude != 0)
                             {
-                                <span class="badge-tp success agent-store-badge">Location Set ✓</span>
+                                <span class="badge-tp success">📍 Location Set</span>
                             }
                             else
                             {
-                                <span class="badge-tp warning agent-store-badge">Location Not Set</span>
+                                <span class="badge-tp warning">⚠️ Location Not Set</span>
                             }
                         </div>
-                        <a asp-controller="Agent" asp-action="SetLocation" asp-route-id="@store.Id" class="btn-tp-secondary agent-store-set-location">
+                        <a asp-controller="Agent" asp-action="SetLocation" asp-route-id="@store.Id" class="btn-tp-secondary">
                             <i class="bi bi-geo-alt-fill"></i> Set Location
                         </a>
                     </div>
@@ -70,7 +351,7 @@
             <div class="agent-stores-empty">
                 <i class="bi bi-shop agent-stores-empty-icon"></i>
                 <p>You don't have any stores yet.</p>
-                <a asp-controller="AgentApplication" asp-action="Apply" class="btn-tp-primary">Register Your First Store</a>
+                <a asp-controller="Agent" asp-action="Register" class="btn-tp-primary">Register Your First Store</a>
             </div>
         }
     </div>
@@ -78,88 +359,180 @@
 
 <div class="tp-card mb-3">
     <div class="agent-map-search">
-        <input type="text"
-               id="searchInput"
-               class="form-control"
-               placeholder="Type a city or agent name to filter..."
-               oninput="filterAgents(this.value)" />
+        <input type="text" id="searchInput" class="form-control" placeholder="Search by agent name or city..." oninput="filterAgents(this.value)" />
+        <button id="pickLocationBtn" class="btn-tp-secondary" onclick="togglePickLocationMode()" title="Click a spot on the map to find the nearest agent" style="white-space:nowrap;">
+            <i class="bi bi-cursor-fill"></i> Pick Location
+        </button>
         <div class="agent-map-count">
-            <span id="agentCount">@Model.Count</span>
-            agent@(Model.Count != 1 ? "s" : "")
+            <span id="agentCount">@Model.Count</span> agent@(Model.Count != 1 ? "s" : "")
         </div>
     </div>
 </div>
 
 <div class="row g-3">
     <div class="col-lg-8">
-        <div class="tp-card agent-map-container">
+        <div class="tp-card map-wrapper" style="padding: 0; overflow: hidden;">
+            <div class="pick-location-hint" id="pickLocationHint">📍 Click anywhere on the map to find the nearest agent</div>
             <div id="map" class="agent-map-frame"></div>
         </div>
     </div>
 
     <div class="col-lg-4">
         <div class="tp-card agent-list-sidebar">
-            <div class="agent-list-header">All Agents</div>
+            <div class="agent-list-header">
+                <span>All Agents</span>
+                <div class="sort-buttons">
+                    <button class="sort-btn" data-sort="name" onclick="sortAgents('name')">Name</button>
+                    <button class="sort-btn active" data-sort="rating" onclick="sortAgents('rating')">Top Rated</button>
+                </div>
+            </div>
+            <div class="filter-buttons">
+                <button class="filter-status-btn active" data-filter="all" onclick="filterByStatus('all')">All</button>
+                <button class="filter-status-btn" data-filter="open" onclick="filterByStatus('open')">
+                    <span style="color:#00b894">●</span> Open
+                </button>
+                <button class="filter-status-btn" data-filter="closed" onclick="filterByStatus('closed')">
+                    <span style="color:#dc3545">●</span> Closed
+                </button>
+            </div>
             <div id="agentList" class="agent-list-items">
-                @foreach (var agent in Model)
+                @foreach (var agent in Model.OrderByDescending(a => a.AverageRating))
                 {
+                    var isOpen = agent.IsOpenNow;
+                    var statusClass = isOpen == true ? "open" : isOpen == false ? "closed" : "unknown";
+                    var statusText = isOpen == true ? "Open Now" : isOpen == false ? "Closed" : "Hours Not Set";
+                    var statusColor = isOpen == true ? "#00b894" : isOpen == false ? "#dc3545" : "var(--text-3)";
+                    
                     <div class="agent-card-item"
+                         data-id="@agent.Id"
                          data-name="@(agent.StoreName?.ToLower() ?? "")"
                          data-city="@(agent.City?.ToLower() ?? "")"
                          data-lat="@agent.Latitude"
                          data-lng="@agent.Longitude"
-                         onclick="flyTo(@agent.Latitude, @agent.Longitude, '@(agent.StoreName?.Replace("'", "\\'") ?? "")')">
-                        <div class="agent-card-name">@agent.StoreName</div>
-                        <div class="agent-card-location">
-                            <i class="bi bi-geo-alt"></i>
-                            @agent.City, @agent.Country
+                         data-rating="@agent.AverageRating"
+                         data-reviews="@agent.ReviewCount"
+                         data-status="@statusClass"
+                         data-store="@agent.StoreName"
+                         data-phone="@agent.PhoneNumber"
+                         data-hours="@agent.WorkingHours"
+                         onclick="selectAgent(@agent.Id, @agent.Latitude, @agent.Longitude, '@(agent.StoreName?.Replace("'", "\\'") ?? "")', '@(agent.PhoneNumber?.Replace("'", "\\'") ?? "")', '@(agent.WorkingHours?.Replace("'", "\\'") ?? "")', '@(agent.City?.Replace("'", "\\'") ?? "")', '@(agent.Country?.Replace("'", "\\'") ?? "")')">
+                        <div class="agent-card-name">
+                            <span>🌲 @agent.StoreName</span>
+                            @if (agent.AverageRating > 0)
+                            {
+                                <span class="agent-card-rating">
+                                    <i class="bi bi-star-fill"></i> @agent.AverageRating.ToString("F1")
+                                    <span class="review-count">(@agent.ReviewCount)</span>
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="agent-card-rating" style="background: rgba(0,0,0,0.05); color: var(--text-3);">
+                                    <i class="bi bi-star"></i> No reviews
+                                </span>
+                            }
                         </div>
+                        <div class="agent-card-location"><i class="bi bi-geo-alt"></i> @agent.City, @agent.Country</div>
                         @if (!string.IsNullOrEmpty(agent.WorkingHours))
                         {
-                            <div class="agent-card-hours">
-                                <i class="bi bi-clock"></i>
-                                @agent.WorkingHours
-                            </div>
+                            <div class="agent-card-hours"><i class="bi bi-clock"></i> @agent.WorkingHours</div>
                         }
+                        <div class="agent-status-badge agent-status-@statusClass">
+                            <i class="bi bi-circle-fill" style="font-size: 6px;"></i> @statusText
+                        </div>
                         @if (agent.Latitude == 0 && agent.Longitude == 0)
                         {
-                            <div class="agent-card-warning">
-                                <i class="bi bi-exclamation-triangle"></i>
-                                Location not set
-                            </div>
+                            <div class="agent-card-warning"><i class="bi bi-exclamation-triangle"></i> Location not set</div>
                         }
                     </div>
                 }
+            </div>
+        </div>
+        
+        <div class="tp-card route-panel" id="routePanel" style="display: none;">
+            <div class="route-panel-title">
+                <i class="bi bi-signpost-split" style="color: var(--teal);"></i>
+                Get Directions
+            </div>
+            <div id="selectedAgentInfo" class="selected-agent-info"></div>
+            <div class="route-buttons">
+                <button id="getDirectionsBtn" class="route-btn-primary" onclick="getDirections()">
+                    <i class="bi bi-map"></i> Get Directions from My Location
+                </button>
+                <button id="clearRouteBtn" class="route-btn-secondary" onclick="clearRoute()">
+                    <i class="bi bi-x-circle"></i> Clear Route
+                </button>
+            </div>
+            <div id="distanceInfo" class="distance-info" style="display: none;">
+                <i class="bi bi-rulers" style="color: var(--teal);"></i>
+                <span id="distanceText"></span>
             </div>
         </div>
     </div>
 </div>
 
 @section Styles {
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
 }
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.js"></script>
+    
     <script>
         const map = L.map('map').setView([33.8547, 35.8623], 9);
-
+        
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors',
             maxZoom: 18
         }).addTo(map);
-
-        const tealIcon = L.divIcon({
-            html: `<div class="leaflet-custom-icon"></div>`,
+        
+        const cedarIcon = L.divIcon({
+            html: `<div class="cedar-marker" style="width: 36px; height: 42px; position: relative; cursor: pointer; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">
+                        <div style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 8px; height: 10px; background: #8B6914; border-radius: 2px;"></div>
+                        <div style="position: absolute; bottom: 9px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 16px solid transparent; border-right: 16px solid transparent; border-bottom: 18px solid #1a5f2a;"></div>
+                        <div style="position: absolute; bottom: 21px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-bottom: 15px solid #2d8c3c;"></div>
+                        <div style="position: absolute; bottom: 31px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 11px solid #43a047;"></div>
+                        <div style="position: absolute; top: -3px; left: 50%; transform: translateX(-50%); font-size: 10px; color: #f59e0b; text-shadow: 0 0 2px rgba(0,0,0,0.2);">★</div>
+                        <div style="position: absolute; bottom: -2px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; background: #FFD700; border-radius: 50%;"></div>
+                    </div>`,
             className: '',
-            iconSize: [32, 32],
-            iconAnchor: [16, 32],
-            popupAnchor: [0, -32]
+            iconSize: [36, 42],
+            iconAnchor: [18, 42],
+            popupAnchor: [0, -38]
         });
 
+        const cedarIconHighlight = L.divIcon({
+            html: `<div class="cedar-marker" style="width: 44px; height: 52px; position: relative; cursor: pointer; filter: drop-shadow(0 4px 8px rgba(102,126,234,0.7)); animation: bounce 0.5s ease;">
+                        <div style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 10px; height: 12px; background: #8B6914; border-radius: 2px;"></div>
+                        <div style="position: absolute; bottom: 11px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-bottom: 22px solid #1a3f8c;"></div>
+                        <div style="position: absolute; bottom: 27px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-bottom: 18px solid #2d5ccc;"></div>
+                        <div style="position: absolute; bottom: 39px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 14px solid #667eea;"></div>
+                        <div style="position: absolute; top: -4px; left: 50%; transform: translateX(-50%); font-size: 14px; color: #f59e0b; text-shadow: 0 0 4px rgba(0,0,0,0.4);">★</div>
+                        <div style="position: absolute; bottom: -2px; left: 50%; transform: translateX(-50%); width: 6px; height: 6px; background: #667eea; border-radius: 50%; box-shadow: 0 0 8px #667eea;"></div>
+                    </div>`,
+            className: '',
+            iconSize: [44, 52],
+            iconAnchor: [22, 52],
+            popupAnchor: [0, -48]
+        });
+        
+        let markers = [];
+        let currentRoute = null;
+        let selectedAgentLat = null;
+        let selectedAgentLng = null;
+        let selectedAgentName = null;
+        let userLocationMarker = null;
+        let highlightedMarker = null;
+        let pickLocationMode = false;
+        let pickedLocationMarker = null;
+        let currentSort = 'rating';
+        let currentStatusFilter = 'all';
+        
         const agents = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
             Model.Select(a => new {
+                id = a.Id,
                 name = a.StoreName,
                 agent = a.AgentName,
                 city = a.City,
@@ -167,33 +540,417 @@
                 phone = a.PhoneNumber,
                 hours = a.WorkingHours,
                 lat = a.Latitude,
-                lng = a.Longitude
+                lng = a.Longitude,
+                rating = a.AverageRating,
+                reviewCount = a.ReviewCount,
+                isOpen = a.IsOpenNow,
+                status = a.IsOpenNow == true ? "open" : a.IsOpenNow == false ? "closed" : "unknown"
             })
         ));
-
-        const markers = [];
-
+        
         agents.forEach(a => {
             if (!a.lat || !a.lng || (a.lat === 0 && a.lng === 0)) return;
-
-            const marker = L.marker([a.lat, a.lng], { icon: tealIcon })
+            
+            const marker = L.marker([a.lat, a.lng], { icon: cedarIcon })
                 .bindPopup(`
-                    <div style="font-family:sans-serif;min-width:160px">
-                        <div class="custom-popup-name">${escapeHtml(a.name)}</div>
-                        <div class="custom-popup-location">${escapeHtml(a.city)}, ${escapeHtml(a.country)}</div>
-                        ${a.phone ? `<div class="custom-popup-phone">📞 ${escapeHtml(a.phone)}</div>` : ''}
-                        ${a.hours ? `<div class="custom-popup-hours">🕐 ${escapeHtml(a.hours)}</div>` : ''}
+                    <div style="font-family: 'Segoe UI', sans-serif; min-width: 200px; background: #1a2332; color: #e8edf3; border-radius: 8px; padding: 4px;">
+                        <div style="font-weight: 700; font-size: 15px; color: #7fc8b5; margin-bottom: 8px;">
+                            🌲 ${escapeHtml(a.name)}
+                        </div>
+                        <div style="font-size: 12px; color: #aab8c2; margin-bottom: 4px;">
+                            <i class="bi bi-geo-alt"></i> ${escapeHtml(a.city)}, ${escapeHtml(a.country)}
+                        </div>
+                        ${a.phone ? `<div style="font-size: 11px; color: #aab8c2; margin-bottom: 4px;"><i class="bi bi-telephone"></i> ${escapeHtml(a.phone)}</div>` : ''}
+                        ${a.hours ? `<div style="font-size: 11px; color: #aab8c2; margin-bottom: 8px;"><i class="bi bi-clock"></i> ${escapeHtml(a.hours)}</div>` : ''}
+                        <div style="font-size: 12px; color: ${a.isOpen === true ? '#00b894' : a.isOpen === false ? '#dc3545' : '#aab8c2'}; margin-bottom: 8px;">
+                            ${a.isOpen === true ? '🟢 Open Now' : a.isOpen === false ? '🔴 Closed' : '⚪ Hours Not Set'}
+                        </div>
+                        <div style="font-size: 12px; color: #f59e0b; margin-bottom: 8px;">
+                            ${a.rating > 0 ? `<i class="bi bi-star-fill"></i> ${a.rating.toFixed(1)} (${a.reviewCount} reviews)` : '⭐ No reviews yet'}
+                        </div>
+                        <hr style="margin: 8px 0; border-color: rgba(255,255,255,0.1);">
+                        <div style="font-size: 11px; color: #7fc8b5;">
+                            <i class="bi bi-shop"></i> CedarPay Authorized Agent
+                        </div>
+                        <button onclick="selectAndRoute(${a.lat}, ${a.lng}, '${escapeHtml(a.name).replace(/'/g, "\\'")}')" 
+                                style="margin-top: 8px; width: 100%; background: #00b894; color: white; border: none; padding: 7px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500;">
+                            <i class="bi bi-signpost-split"></i> Get Directions
+                        </button>
                     </div>
-                `)
+                `, { className: 'dark-popup' })
                 .addTo(map);
-
+            
+            marker.on('click', function() {
+                if (pickLocationMode) return; 
+                highlightMarker(marker);
+                zoomToLocation(a.lat, a.lng, a.name);
+                selectAgent(a.id, a.lat, a.lng, a.name, a.phone, a.hours, a.city, a.country);
+            });
+            
             markers.push({ marker, data: a });
         });
 
-        if (markers.length === 0) {
-            console.log('No agents with valid coordinates found');
+        function sortAgents(sortBy) {
+            currentSort = sortBy;
+            
+            document.querySelectorAll('.sort-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('data-sort') === sortBy) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            const items = Array.from(document.querySelectorAll('.agent-card-item'));
+            
+            items.sort((a, b) => {
+                if (sortBy === 'name') {
+                    const nameA = a.querySelector('.agent-card-name span')?.innerText || '';
+                    const nameB = b.querySelector('.agent-card-name span')?.innerText || '';
+                    return nameA.localeCompare(nameB);
+                } else if (sortBy === 'rating') {
+                    const ratingA = parseFloat(a.getAttribute('data-rating') || '0');
+                    const ratingB = parseFloat(b.getAttribute('data-rating') || '0');
+                    if (ratingA === ratingB) {
+                        const reviewsA = parseInt(a.getAttribute('data-reviews') || '0');
+                        const reviewsB = parseInt(b.getAttribute('data-reviews') || '0');
+                        return reviewsB - reviewsA;
+                    }
+                    return ratingB - ratingA;
+                }
+                return 0;
+            });
+            
+            const container = document.getElementById('agentList');
+            items.forEach(item => container.appendChild(item));
+            
+            applyFiltersAndSort();
         }
 
+        function filterByStatus(status) {
+            currentStatusFilter = status;
+            document.querySelectorAll('.filter-status-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('data-filter') === status) {
+                    btn.classList.add('active');
+                }
+            });
+            applyFiltersAndSort();
+        }
+
+        function applyFiltersAndSort() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            const items = document.querySelectorAll('.agent-card-item');
+            let count = 0;
+            let firstLat = null;
+            let firstLng = null;
+            
+            items.forEach(item => {
+                const name = item.getAttribute('data-name') || '';
+                const city = item.getAttribute('data-city') || '';
+                const status = item.getAttribute('data-status') || '';
+                
+                const matchesSearch = !searchTerm || name.includes(searchTerm) || city.includes(searchTerm);
+                const matchesStatus = currentStatusFilter === 'all' || status === currentStatusFilter;
+                const show = matchesSearch && matchesStatus;
+                
+                item.style.display = show ? 'block' : 'none';
+                
+                if (show && firstLat === null && item.getAttribute('data-lat') && parseFloat(item.getAttribute('data-lat')) !== 0) {
+                    firstLat = parseFloat(item.getAttribute('data-lat'));
+                    firstLng = parseFloat(item.getAttribute('data-lng'));
+                    count++;
+                } else if (show) {
+                    count++;
+                }
+            });
+            
+            document.getElementById('agentCount').textContent = count;
+            
+            if (firstLat && firstLng) {
+                map.flyTo([firstLat, firstLng], 12, { duration: 1.5 });
+            }
+        }
+
+        function highlightMarker(marker) {
+            if (highlightedMarker && highlightedMarker !== marker) {
+                highlightedMarker.setIcon(cedarIcon);
+            }
+            marker.setIcon(cedarIconHighlight);
+            highlightedMarker = marker;
+        }
+
+        function getMarkerForAgent(id, lat, lng) {
+            return markers.find(m =>
+                (id && m.data.id === id) ||
+                (m.data.lat === lat && m.data.lng === lng)
+            );
+        }
+
+        function togglePickLocationMode() {
+            pickLocationMode = !pickLocationMode;
+            const btn = document.getElementById('pickLocationBtn');
+            const hint = document.getElementById('pickLocationHint');
+
+            if (pickLocationMode) {
+                btn.classList.add('btn-pick-location-active');
+                btn.innerHTML = '<i class="bi bi-x-circle"></i> Cancel';
+                hint.style.display = 'block';
+                map.getContainer().style.cursor = 'crosshair';
+            } else {
+                btn.classList.remove('btn-pick-location-active');
+                btn.innerHTML = '<i class="bi bi-cursor-fill"></i> Pick Location';
+                hint.style.display = 'none';
+                map.getContainer().style.cursor = '';
+                if (pickedLocationMarker) {
+                    map.removeLayer(pickedLocationMarker);
+                    pickedLocationMarker = null;
+                }
+            }
+        }
+
+        map.on('click', function(e) {
+            if (!pickLocationMode) return;
+
+            const clickLat = e.latlng.lat;
+            const clickLng = e.latlng.lng;
+
+            if (pickedLocationMarker) map.removeLayer(pickedLocationMarker);
+            pickedLocationMarker = L.marker([clickLat, clickLng], {
+                icon: L.divIcon({
+                    html: `<div style="position:relative; width:28px; height:36px;">
+                        <div style="position:absolute; bottom:0; left:50%; transform:translateX(-50%);
+                            width:0; height:0; border-left:14px solid transparent;
+                            border-right:14px solid transparent; border-top:0;
+                            border-bottom:0;"></div>
+                        <div style="position:absolute; bottom:0; left:50%; transform:translateX(-50%);
+                            width:2px; height:10px; background:#f59e0b;"></div>
+                        <div style="position:absolute; bottom:8px; left:50%; transform:translateX(-50%);
+                            width:20px; height:20px; background:#f59e0b; border-radius:50% 50% 50% 0;
+                            transform:translateX(-50%) rotate(-45deg); box-shadow:0 2px 8px rgba(245,158,11,0.6);"></div>
+                        <div style="position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
+                            width:8px; height:8px; background:white; border-radius:50%; z-index:1;"></div>
+                    </div>`,
+                    className: '',
+                    iconSize: [28, 36],
+                    iconAnchor: [14, 36]
+                })
+            }).bindPopup('<strong>📍 Your chosen location</strong>').addTo(map);
+
+            let nearest = null;
+            let minDist = Infinity;
+            markers.forEach(m => {
+                if (!m.data.lat || !m.data.lng || (m.data.lat === 0 && m.data.lng === 0)) return;
+                const d = haversine(clickLat, clickLng, m.data.lat, m.data.lng);
+                if (d < minDist) { minDist = d; nearest = m; }
+            });
+
+            if (!nearest) {
+                showToast('⚠️ No agents with set locations found.');
+                return;
+            }
+
+            togglePickLocationMode();
+            highlightMarker(nearest.marker);
+            const a = nearest.data;
+            selectAgent(a.id, a.lat, a.lng, a.name, a.phone, a.hours, a.city, a.country);
+            const bounds = L.latLngBounds([[clickLat, clickLng], [a.lat, a.lng]]);
+            map.fitBounds(bounds, { padding: [60, 60] });
+            setTimeout(() => nearest.marker.openPopup(), 600);
+            showToast(`📍 Nearest agent: ${escapeHtml(a.name)} — ${minDist.toFixed(1)} km away`);
+        });
+
+        function haversine(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2)**2 +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2)**2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        }
+
+        function showToast(msg) {
+            let toast = document.getElementById('mapToast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'mapToast';
+                toast.style.cssText = `
+                    position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+                    background: #1a2332; color: #e8edf3; padding: 10px 20px; border-radius: 24px;
+                    font-size: 14px; font-weight: 600; z-index: 9999;
+                    box-shadow: 0 4px 16px rgba(0,0,0,0.4); border: 1px solid rgba(0,184,148,0.4);
+                    transition: opacity 0.4s ease; pointer-events: none;
+                `;
+                document.body.appendChild(toast);
+            }
+            toast.textContent = msg;
+            toast.style.opacity = '1';
+            clearTimeout(toast._timeout);
+            toast._timeout = setTimeout(() => toast.style.opacity = '0', 3500);
+        }
+        
+        function zoomToLocation(lat, lng, name) {
+            if (!lat || !lng || (lat === 0 && lng === 0)) {
+                alert('This agent has not set their location yet.');
+                return;
+            }
+            map.flyTo([lat, lng], 16, { duration: 1.2 });
+        }
+        
+        function selectAgent(id, lat, lng, name, phone, hours, city, country) {
+            selectedAgentLat = lat;
+            selectedAgentLng = lng;
+            selectedAgentName = name;
+            
+            const routePanel = document.getElementById('routePanel');
+            const selectedInfo = document.getElementById('selectedAgentInfo');
+            
+            routePanel.style.display = 'block';
+            selectedInfo.innerHTML = `
+                <strong><i class="bi bi-shop"></i> ${escapeHtml(name)}</strong><br>
+                <small><i class="bi bi-geo-alt"></i> ${escapeHtml(city)}, ${escapeHtml(country)}</small><br>
+                ${phone ? `<small><i class="bi bi-telephone"></i> ${escapeHtml(phone)}</small><br>` : ''}
+                ${hours ? `<small><i class="bi bi-clock"></i> ${escapeHtml(hours)}</small>` : ''}
+            `;
+
+            document.querySelectorAll('.agent-card-item').forEach(el => el.classList.remove('active'));
+            if (id) {
+                const card = document.querySelector(`.agent-card-item[data-id="${id}"]`);
+                if (card) {
+                    card.classList.add('active');
+                    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+                const m = getMarkerForAgent(id, lat, lng);
+                if (m) highlightMarker(m.marker);
+            }
+
+            if (lat && lng && lat !== 0 && lng !== 0) {
+                map.flyTo([lat, lng], 16, { duration: 1.2 });
+            }
+        }
+        
+        function getDirections() {
+            if (!selectedAgentLat || !selectedAgentLng) {
+                alert('Please select an agent first.');
+                return;
+            }
+            
+            if (!navigator.geolocation) {
+                alert('Geolocation is not supported by your browser.');
+                return;
+            }
+
+            const btn = document.getElementById('getDirectionsBtn');
+            btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Getting location...';
+            btn.disabled = true;
+            
+            navigator.geolocation.getCurrentPosition(function(position) {
+                btn.innerHTML = '<i class="bi bi-map"></i> Get Directions from My Location';
+                btn.disabled = false;
+
+                const userLat = position.coords.latitude;
+                const userLng = position.coords.longitude;
+                
+                if (userLocationMarker) {
+                    map.removeLayer(userLocationMarker);
+                }
+                userLocationMarker = L.marker([userLat, userLng], {
+                    icon: L.divIcon({
+                        html: '<div style="background: #dc3545; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 8px rgba(220,53,69,0.6);"></div>',
+                        className: '',
+                        iconSize: [16, 16]
+                    })
+                }).bindPopup('<strong>📍 You are here</strong>').addTo(map);
+                
+                const distance = calculateDistance(userLat, userLng, selectedAgentLat, selectedAgentLng);
+                const distanceInfo = document.getElementById('distanceInfo');
+                distanceInfo.style.display = 'flex';
+                document.getElementById('distanceText').textContent = `Distance: ${distance} km`;
+                
+                if (currentRoute) {
+                    map.removeControl(currentRoute);
+                }
+                
+                currentRoute = L.Routing.control({
+                    waypoints: [
+                        L.latLng(userLat, userLng),
+                        L.latLng(selectedAgentLat, selectedAgentLng)
+                    ],
+                    routeWhileDragging: false,
+                    showAlternatives: false,
+                    collapsible: true,
+                    lineOptions: {
+                        styles: [{ color: '#00b894', weight: 5, opacity: 0.85 }]
+                    },
+                    router: L.Routing.osrmv1({
+                        serviceUrl: 'https://router.project-osrm.org/route/v1'
+                    }),
+                    createMarker: function() { return null; }
+                }).addTo(map);
+                
+                const bounds = L.latLngBounds([[userLat, userLng], [selectedAgentLat, selectedAgentLng]]);
+                map.fitBounds(bounds, { padding: [60, 60] });
+                
+            }, function(error) {
+                btn.innerHTML = '<i class="bi bi-map"></i> Get Directions from My Location';
+                btn.disabled = false;
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        alert('Please enable location access to get directions.');
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        alert('Location information is unavailable.');
+                        break;
+                    case error.TIMEOUT:
+                        alert('Location request timed out.');
+                        break;
+                    default:
+                        alert('An error occurred while getting your location.');
+                }
+            });
+        }
+        
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; 
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return (R * c).toFixed(1);
+        }
+        
+        function clearRoute() {
+            if (currentRoute) {
+                map.removeControl(currentRoute);
+                currentRoute = null;
+            }
+            if (userLocationMarker) {
+                map.removeLayer(userLocationMarker);
+                userLocationMarker = null;
+            }
+            if (pickedLocationMarker) {
+                map.removeLayer(pickedLocationMarker);
+                pickedLocationMarker = null;
+            }
+            if (highlightedMarker) {
+                highlightedMarker.setIcon(cedarIcon);
+                highlightedMarker = null;
+            }
+            document.querySelectorAll('.agent-card-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('routePanel').style.display = 'none';
+            document.getElementById('distanceInfo').style.display = 'none';
+        }
+        
+        function selectAndRoute(lat, lng, name) {
+            selectAgent(null, lat, lng, name, '', '', '', '');
+            getDirections();
+        }
+        
+        function filterAgents(query) {
+            applyFiltersAndSort();
+        }
+        
         function escapeHtml(str) {
             if (!str) return '';
             return str.replace(/[&<>]/g, function(m) {
@@ -203,56 +960,70 @@
                 return m;
             });
         }
+        
+        const locateControl = L.control({ position: 'topleft' });
+        locateControl.onAdd = function(map) {
+            const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+            div.innerHTML = '<button style="background: white; border: none; width: 30px; height: 30px; cursor: pointer; border-radius: 4px; font-size: 16px;" title="Find my location">📍</button>';
+            div.onclick = function() {
+                map.locate({ setView: true, maxZoom: 15 });
+                map.on('locationfound', function(e) {
+                    if (userLocationMarker) map.removeLayer(userLocationMarker);
+                    userLocationMarker = L.marker(e.latlng, {
+                        icon: L.divIcon({
+                            html: '<div style="background: #dc3545; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 8px rgba(220,53,69,0.6);"></div>',
+                            className: '',
+                            iconSize: [14, 14]
+                        })
+                    }).bindPopup('<strong>📍 You are here</strong>').addTo(map);
+                });
+            };
+            return div;
+        };
+        locateControl.addTo(map);
 
-        function flyTo(lat, lng, name) {
-            if (!lat || !lng || (lat === 0 && lng === 0)) {
-                alert('This agent has not set their location yet.');
-                return;
+        const style = document.createElement('style');
+        style.textContent = `
+            .leaflet-popup-content-wrapper {
+                background: #1a2332 !important;
+                color: #e8edf3 !important;
+                border-radius: 10px !important;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
+                border: 1px solid rgba(255,255,255,0.1) !important;
+                padding: 0 !important;
             }
-            map.flyTo([lat, lng], 14, { duration: 1 });
-            markers.forEach(m => {
-                if (m.data.lat === lat && m.data.lng === lng) {
-                    m.marker.openPopup();
-                }
-            });
-        }
-
-        function filterAgents(query) {
-            const q = query.toLowerCase().trim();
-            const items = document.querySelectorAll('.agent-card-item');
-            let count = 0;
-            let firstLat = null;
-            let firstLng = null;
-
-            items.forEach(item => {
-                const name = (item.dataset.name || '').toLowerCase();
-                const city = (item.dataset.city || '').toLowerCase();
-                const show = q === '' || name.includes(q) || city.includes(q);
-
-                item.style.display = show ? 'block' : 'none';
-
-                if (show) {
-                    count++;
-                    if (firstLat === null) {
-                        const lat = parseFloat(item.dataset.lat);
-                        const lng = parseFloat(item.dataset.lng);
-                        if (lat && lng && !(lat === 0 && lng === 0)) {
-                            firstLat = lat;
-                            firstLng = lng;
-                        }
-                    }
-                }
-            });
-
-            document.getElementById('agentCount').textContent = count;
-
-            if (firstLat && firstLng) {
-                map.flyTo([firstLat, firstLng], 12, { duration: 1.5 });
+            .leaflet-popup-content {
+                margin: 14px !important;
+                color: #e8edf3 !important;
             }
-        }
-
-        document.getElementById('searchInput').addEventListener('input', function() {
-            filterAgents(this.value);
-        });
+            .leaflet-popup-tip {
+                background: #1a2332 !important;
+            }
+            .leaflet-popup-close-button {
+                color: #7fc8b5 !important;
+                font-size: 18px !important;
+                top: 6px !important;
+                right: 8px !important;
+            }
+            .leaflet-popup-close-button:hover { color: #fff !important; }
+            @@keyframes bounce {
+                0%, 100% { transform: translateY(0); }
+                40% { transform: translateY(-10px); }
+                60% { transform: translateY(-5px); }
+            }
+            .spin { animation: spin 0.8s linear infinite; display: inline-block; }
+            @@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        `;
+        document.head.appendChild(style);
+        
+        window.sortAgents = sortAgents;
+        window.filterByStatus = filterByStatus;
+        window.selectAgent = selectAgent;
+        window.getDirections = getDirections;
+        window.clearRoute = clearRoute;
+        window.filterAgents = filterAgents;
+        window.zoomToLocation = zoomToLocation;
+        window.selectAndRoute = selectAndRoute;
+        window.togglePickLocationMode = togglePickLocationMode;
     </script>
 }

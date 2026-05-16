@@ -16,17 +16,17 @@ namespace MoneyTransfer.Repositories.Implementations
 
         public async Task<User?> GetByIdAsync(string id)
         {
-            return await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id);
+            return await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
         }
 
         public async Task<User?> GetByEmailAsync(string email)
         {
-            return await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email == email);
+            return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
         }
 
         public async Task<User?> GetByUserWithDetailsAsync(string id)
         {
-            return await _context.Users.AsNoTracking()
+            return await _context.Users
                 .Include(u => u.Accounts)
                     .ThenInclude(a => a.Wallets)
                         .ThenInclude(w => w.Currency)
@@ -37,18 +37,24 @@ namespace MoneyTransfer.Repositories.Implementations
 
         public async Task<IEnumerable<User>> GetAllAsync()
         {
-            return await _context.Users.AsNoTracking().ToListAsync();
+            return await _context.Users.ToListAsync();
         }
 
         public async Task UpdateAsync(User user)
         {
-            _context.Users.Update(user);
+            var existing = await _context.Users.FindAsync(user.Id);
+            if (existing == null)
+            {
+                throw new InvalidOperationException($"User with ID {user.Id} not found.");
+            }
+
+            _context.Entry(existing).CurrentValues.SetValues(user);
             await _context.SaveChangesAsync();
         }
 
         public async Task<bool> ExistsAsync(string id)
         {
-            return await _context.Users.AsNoTracking().AnyAsync(u => u.Id == id);
+            return await _context.Users.AnyAsync(u => u.Id == id);
         }
     }
 }

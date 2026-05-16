@@ -31,15 +31,12 @@ namespace MoneyTransfer.ApiControllers
         }
 
         [HttpGet("rate")]
-        public async Task<IActionResult> GetExchangeRate(
-            [FromQuery] string from,
-            [FromQuery] string to)
+        public async Task<IActionResult> GetExchangeRate([FromQuery] string from, [FromQuery] string to)
         {
             if (string.IsNullOrEmpty(from) || string.IsNullOrEmpty(to))
                 return BadRequest(new { message = "from and to are required." });
 
-            var rate = await _currencyRepository
-                .GetExchangeRateAsync(from.ToUpper(), to.ToUpper());
+            var rate = await _currencyRepository.GetExchangeRateAsync(from.ToUpper(), to.ToUpper());
 
             return Ok(new
             {

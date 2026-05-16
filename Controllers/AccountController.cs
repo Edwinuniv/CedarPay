@@ -19,14 +19,7 @@ namespace MoneyTransfer.Controllers
         private readonly ApplicationDbContext _context;
         private readonly ILogger<AccountController> _logger;
 
-        public AccountController(
-            IUserRepository userRepository,
-            IAgentApplicationRepository applicationRepository,
-            UserManager<User> userManager,
-            ApplicationDbContext context,
-            IWalletRepository walletRepository,
-            ILogger<AccountController> logger)
-            : base(userManager, userRepository)
+        public AccountController(IUserRepository userRepository, IAgentApplicationRepository applicationRepository, UserManager<User> userManager, ApplicationDbContext context, IWalletRepository walletRepository, ILogger<AccountController> logger): base(userManager, userRepository)
         {
             _applicationRepository = applicationRepository;
             _walletRepository = walletRepository;
@@ -40,16 +33,12 @@ namespace MoneyTransfer.Controllers
             var user = await _userRepository.GetByIdAsync(userId);
             if (user == null) return NotFound();
 
-            var applications = (await _applicationRepository
-                .GetByUserIdAsync(userId))
-                .OrderByDescending(a => a.SubmittedAt)
-                .ToList();
+            var applications = (await _applicationRepository.GetByUserIdAsync(userId)).OrderByDescending(a => a.SubmittedAt).ToList();
 
             ViewBag.AgentApplicationStatus = applications.FirstOrDefault()?.Status.ToString();
             ViewBag.AgentApplicationHistory = applications;
 
-            var approvedWallet = await _context.Wallets
-                .AnyAsync(w => w.UserId == userId && w.IsActive);
+            var approvedWallet = await _context.Wallets.AnyAsync(w => w.UserId == userId && w.IsActive);
 
             ViewBag.WalletApproved = approvedWallet;
             ViewBag.EditMode = edit || !user.ProfileCompleted;
@@ -61,8 +50,7 @@ namespace MoneyTransfer.Controllers
             ViewBag.IsAgent = isAgent;
             ViewBag.IsAdmin = isAdmin;
 
-            var kyc = await _context.KYCDocuments
-                .FirstOrDefaultAsync(k => k.UserId == userId);
+            var kyc = await _context.KYCDocuments.FirstOrDefaultAsync(k => k.UserId == userId);
 
             var vm = new ProfileViewModel
             {
@@ -70,9 +58,7 @@ namespace MoneyTransfer.Controllers
                 LastName = user.LastName ?? "",
                 FatherName = user.FatherName ?? "",
                 MotherName = user.MotherName ?? "",
-                DateOfBirth = user.DateOfBirth.Year > 1
-                    ? user.DateOfBirth
-                    : DateTime.Now.AddYears(-18),
+                DateOfBirth = user.DateOfBirth.Year > 1 ? user.DateOfBirth : DateTime.Now.AddYears(-18),
                 PlaceOfBirth = user.PlaceOfBirth ?? "",
                 Gender = user.Gender ?? "",
                 Nationality = user.Nationality ?? "",
@@ -114,21 +100,38 @@ namespace MoneyTransfer.Controllers
 
             if (!ModelState.IsValid)
             {
+                var applications = (await _applicationRepository.GetByUserIdAsync(_userManager.GetUserId(User))).OrderByDescending(a => a.SubmittedAt).ToList();
+                ViewBag.AgentApplicationStatus = applications.FirstOrDefault()?.Status.ToString();
+                ViewBag.AgentApplicationHistory = applications;
+                ViewBag.EditMode = true;
+                var userId = _userManager.GetUserId(User);
+                var roles = await _userManager.GetRolesAsync(await _userManager.FindByIdAsync(userId));
+                ViewBag.IsAgent = roles.Contains("Agent");
+                ViewBag.IsAdmin = roles.Contains("Admin");
                 return View("Profile", vm);
             }
 
-            var userId = _userManager.GetUserId(User);
-            var user = await _userRepository.GetByIdAsync(userId);
-            if (user == null) return NotFound();
-
+            var userIdForUpdate = _userManager.GetUserId(User);
+            var user = await _userManager.FindByIdAsync(userIdForUpdate);
+            if (user == null)
+            {
+                return NotFound();
+            }
             var normalizedPhone = vm.PhoneNumber?.Trim();
             if (!string.IsNullOrEmpty(normalizedPhone))
             {
                 var phoneOwner = await _context.Users
-                    .FirstOrDefaultAsync(u => u.PhoneNumber == normalizedPhone && u.Id != userId);
+                    .FirstOrDefaultAsync(u => u.PhoneNumber == normalizedPhone && u.Id != userIdForUpdate);
                 if (phoneOwner != null)
                 {
                     ModelState.AddModelError("PhoneNumber", "This phone number is already registered to another account.");
+                    var applications = (await _applicationRepository.GetByUserIdAsync(userIdForUpdate)).OrderByDescending(a => a.SubmittedAt).ToList();
+                    ViewBag.AgentApplicationStatus = applications.FirstOrDefault()?.Status.ToString();
+                    ViewBag.AgentApplicationHistory = applications;
+                    ViewBag.EditMode = true;
+                    var roles = await _userManager.GetRolesAsync(user);
+                    ViewBag.IsAgent = roles.Contains("Agent");
+                    ViewBag.IsAdmin = roles.Contains("Admin");
                     return View("Profile", vm);
                 }
             }
@@ -142,13 +145,12 @@ namespace MoneyTransfer.Controllers
                     var base64Data = croppedPicData.Split(',')[1];
                     var imageBytes = Convert.FromBase64String(base64Data);
 
-                    var uploadsFolder = Path.Combine(
-                        Directory.GetCurrentDirectory(), "wwwroot", "uploads", "profiles");
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "profiles");
                     Directory.CreateDirectory(uploadsFolder);
 
                     DeleteFile(user.ProfilePictureUrl);
 
-                    var fileName = $"{userId}_{DateTime.Now.Ticks}.jpg";
+                    var fileName = $"{userIdForUpdate}_{DateTime.Now.Ticks}.jpg";
                     var filePath = Path.Combine(uploadsFolder, fileName);
                     await System.IO.File.WriteAllBytesAsync(filePath, imageBytes);
                     user.ProfilePictureUrl = $"/uploads/profiles/{fileName}";
@@ -157,6 +159,13 @@ namespace MoneyTransfer.Controllers
                 {
                     _logger.LogError(ex, "Failed to save cropped image");
                     ModelState.AddModelError("", "Failed to process cropped image.");
+                    var applications = (await _applicationRepository.GetByUserIdAsync(userIdForUpdate)).OrderByDescending(a => a.SubmittedAt).ToList();
+                    ViewBag.AgentApplicationStatus = applications.FirstOrDefault()?.Status.ToString();
+                    ViewBag.AgentApplicationHistory = applications;
+                    ViewBag.EditMode = true;
+                    var roles = await _userManager.GetRolesAsync(user);
+                    ViewBag.IsAgent = roles.Contains("Agent");
+                    ViewBag.IsAdmin = roles.Contains("Admin");
                     return View("Profile", vm);
                 }
             }
@@ -167,10 +176,17 @@ namespace MoneyTransfer.Controllers
             }
             else if (profilePicture != null && profilePicture.Length > 0)
             {
-                var result = await SaveUploadedFile(profilePicture, userId, "profiles");
+                var result = await SaveUploadedFile(profilePicture, userIdForUpdate, "profiles");
                 if (result.Error != null)
                 {
                     ModelState.AddModelError("", result.Error);
+                    var applications = (await _applicationRepository.GetByUserIdAsync(userIdForUpdate)).OrderByDescending(a => a.SubmittedAt).ToList();
+                    ViewBag.AgentApplicationStatus = applications.FirstOrDefault()?.Status.ToString();
+                    ViewBag.AgentApplicationHistory = applications;
+                    ViewBag.EditMode = true;
+                    var roles = await _userManager.GetRolesAsync(user);
+                    ViewBag.IsAgent = roles.Contains("Agent");
+                    ViewBag.IsAdmin = roles.Contains("Admin");
                     return View("Profile", vm);
                 }
                 DeleteFile(user.ProfilePictureUrl);
@@ -206,43 +222,60 @@ namespace MoneyTransfer.Controllers
             user.AnnualIncomeUSD = vm.AnnualIncomeUSD;
             user.OtherIncomeSource = vm.OtherIncomeSource;
             user.OtherNationality = vm.OtherNationality;
-            user.ProfileCompleted = true;  // ✅ FIX: Mark profile as completed
-
-            await _userRepository.UpdateAsync(user);
+            user.ProfileCompleted = true;
 
             if (!string.IsNullOrEmpty(vm.UserUsername))
             {
                 var cleanUsername = vm.UserUsername.ToLower().Trim();
-                var existingUser = await _context.Users
-                    .FirstOrDefaultAsync(u => u.UserName == cleanUsername && u.Id != userId);
+                var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.UserName == cleanUsername && u.Id != userIdForUpdate);
                 if (existingUser != null)
                 {
                     ModelState.AddModelError("", $"Username '@{cleanUsername}' is already taken.");
+                    var applications = (await _applicationRepository.GetByUserIdAsync(userIdForUpdate)).OrderByDescending(a => a.SubmittedAt).ToList();
+                    ViewBag.AgentApplicationStatus = applications.FirstOrDefault()?.Status.ToString();
+                    ViewBag.AgentApplicationHistory = applications;
+                    ViewBag.EditMode = true;
+                    var roles = await _userManager.GetRolesAsync(user);
+                    ViewBag.IsAgent = roles.Contains("Agent");
+                    ViewBag.IsAdmin = roles.Contains("Admin");
                     return View("Profile", vm);
                 }
-                var userToUpdate = await _userManager.FindByIdAsync(userId);
-                if (userToUpdate != null)
+                await _userManager.SetUserNameAsync(user, cleanUsername);
+            }
+
+            var identityResult = await _userManager.UpdateAsync(user);
+            if (!identityResult.Succeeded)
+            {
+                foreach (var error in identityResult.Errors)
                 {
-                    await _userManager.SetUserNameAsync(userToUpdate, cleanUsername);
-                    user.UserName = cleanUsername;
-                    await _userRepository.UpdateAsync(user);
+                    ModelState.AddModelError("", error.Description);
                 }
+                var applications = (await _applicationRepository.GetByUserIdAsync(userIdForUpdate)).OrderByDescending(a => a.SubmittedAt).ToList();
+                ViewBag.AgentApplicationStatus = applications.FirstOrDefault()?.Status.ToString();
+                ViewBag.AgentApplicationHistory = applications;
+                ViewBag.EditMode = true;
+                var roles = await _userManager.GetRolesAsync(user);
+                ViewBag.IsAgent = roles.Contains("Agent");
+                ViewBag.IsAdmin = roles.Contains("Admin");
+                return View("Profile", vm);
             }
 
             TempData["Success"] = "Profile saved successfully!";
             return RedirectToAction("Profile");
         }
 
-        private async Task<(string? Url, string? Error)> SaveUploadedFile(
-            IFormFile file, string userId, string folder)
+        private async Task<(string? Url, string? Error)> SaveUploadedFile(IFormFile file, string userId, string folder)
         {
             var allowed = new[] { ".jpg", ".jpeg", ".png", ".gif" };
             var ext = Path.GetExtension(file.FileName).ToLower();
             if (!allowed.Contains(ext))
+            {
                 return (null, "Only JPG, PNG and GIF allowed.");
+            }
             if (file.Length > 2 * 1024 * 1024)
+            {
                 return (null, "Image must be under 2MB.");
-
+            }
             var dir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", folder);
             Directory.CreateDirectory(dir);
             var name = $"{userId}_{DateTime.Now.Ticks}{ext}";
@@ -254,10 +287,15 @@ namespace MoneyTransfer.Controllers
 
         private void DeleteFile(string? url)
         {
-            if (string.IsNullOrEmpty(url)) return;
+            if (string.IsNullOrEmpty(url))
+            {
+                return;
+            }
             var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", url.TrimStart('/'));
             if (System.IO.File.Exists(path))
+            {
                 System.IO.File.Delete(path);
+            }
         }
 
         public async Task<IActionResult> DeleteAccount()

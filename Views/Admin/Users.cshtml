@@ -10,6 +10,9 @@
         <p>@Model.Count() total users</p>
     </div>
     <div class="user-management-actions">
+        <button onclick="exportUsers()" class="btn-tp-primary">
+            <i class="bi bi-file-earmark-excel"></i> Export Users
+        </button>
         <form asp-action="CreateGuestUser" method="post">
             @Html.AntiForgeryToken()
             <button type="submit" class="btn-tp-secondary" onclick="return confirm('Create a guest account?')">
@@ -66,6 +69,8 @@
                     data-name="@(u.FirstName?.ToLower()) @(u.LastName?.ToLower())"
                     data-email="@u.Email?.ToLower()"
                     data-phone="@u.PhoneNumber?.ToLower()"
+                    data-date="@u.CreatedAt.ToString("yyyy-MM-dd")"
+                    data-verified="@u.IsVerified.ToString().ToLower()"
                     data-roles="@(ViewBag.UserRoles != null && ((Dictionary<string, List<string>>)ViewBag.UserRoles).ContainsKey(u.Id) ? string.Join(",", ((Dictionary<string, List<string>>)ViewBag.UserRoles)[u.Id]).ToLower() : "user")">
 
                     <td class="user-cell">
@@ -169,17 +174,39 @@
 
             rows.sort((a, b) => {
                 let av = '', bv = '';
-                if (field === 'name') {
-                    av = a.dataset.name || '';
-                    bv = b.dataset.name || '';
-                } else if (field === 'email') {
-                    av = a.dataset.email || '';
-                    bv = b.dataset.email || '';
+
+                switch(field) {
+                    case 'name':
+                        av = a.dataset.name || '';
+                        bv = b.dataset.name || '';
+                        return av.localeCompare(bv);
+
+                    case 'email':
+                        av = a.dataset.email || '';
+                        bv = b.dataset.email || '';
+                        return av.localeCompare(bv);
+
+                    case 'date':
+                        av = a.dataset.date || '';
+                        bv = b.dataset.date || '';
+                        return av.localeCompare(bv);
+
+                    case 'verified':
+                        av = a.dataset.verified === 'true' ? 1 : 0;
+                        bv = b.dataset.verified === 'true' ? 1 : 0;
+                        return bv - av;
+
+                    default:
+                        return 0;
                 }
-                return av.localeCompare(bv);
             });
 
             rows.forEach(r => tbody.appendChild(r));
+        }
+
+        function exportUsers() {
+            const role = document.getElementById('filterRole').value;
+            window.location.href = `/Admin/ExportUsers?role=${role}`;
         }
     </script>
 }

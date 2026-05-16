@@ -18,5 +18,8 @@ namespace MoneyTransfer.ViewModels
         public string? ReceiverBankName { get; set; }
         public string? TransferType { get; set; } = "WalletTransfer";
         public DateTime CreatedAt { get; set; }
+        public string? ReceiverUserId { get; set; }
+        public string? ReceiverProfilePictureUrl { get; set; }
+        public bool IsFavorite { get; set; }
     }
 }

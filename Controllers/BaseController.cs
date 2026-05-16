@@ -11,17 +11,13 @@ namespace MoneyTransfer.Controllers
         protected readonly UserManager<User> _userManager;
         protected readonly IUserRepository _userRepository;
 
-        public BaseController(
-            UserManager<User> userManager,
-            IUserRepository userRepository)
+        public BaseController(UserManager<User> userManager, IUserRepository userRepository)
         {
             _userManager = userManager;
             _userRepository = userRepository;
         }
 
-        public override async Task OnActionExecutionAsync(
-            ActionExecutingContext context,
-            ActionExecutionDelegate next)
+        public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
             if (User.Identity != null && User.Identity.IsAuthenticated && _userRepository != null)
             {

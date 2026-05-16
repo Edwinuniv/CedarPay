@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MoneyTransfer.Data;
 using MoneyTransfer.Models;
+using MoneyTransfer.Repositories.Interfaces;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,12 +13,12 @@ using MoneyTransfer.ViewModels;
 namespace MoneyTransfer.Controllers
 {
     [Authorize(Roles = "Admin")]
-    public class AdminAnalyticsController : Controller
+    public class AdminAnalyticsController : BaseController
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<AdminAnalyticsController> _logger;
 
-        public AdminAnalyticsController(ApplicationDbContext context, ILogger<AdminAnalyticsController> logger)
+        public AdminAnalyticsController(ApplicationDbContext context, ILogger<AdminAnalyticsController> logger, UserManager<User> userManager, IUserRepository userRepository) : base(userManager, userRepository)
         {
             _context = context;
             _logger = logger;
@@ -91,6 +93,34 @@ namespace MoneyTransfer.Controllers
             return View(vm);
         }
 
+        public async Task<IActionResult> CashHistory()
+        {
+            var now = DateTime.Now;
+            var startOfMonth = new DateTime(now.Year, now.Month, 1);
+
+            var cashTransactions = await _context.Transactions
+                .Include(t => t.SenderWallet)
+                    .ThenInclude(w => w.User)
+                .Include(t => t.ReceiverWallet)
+                    .ThenInclude(w => w.User)
+                .Include(t => t.SenderCurrency)
+                .Include(t => t.ReceiverCurrency)
+                .Where(t => t.CreatedAt >= startOfMonth)
+                .OrderByDescending(t => t.CreatedAt)
+                .Take(200)
+                .ToListAsync();
+
+            var totalVolume = cashTransactions.Sum(t => t.Amount);
+            var totalFees = cashTransactions.Where(t => !t.FeeWaived).Sum(t => t.FeeAmount);
+
+            ViewBag.TotalTransactions = cashTransactions.Count;
+            ViewBag.TotalVolume = totalVolume;
+            ViewBag.TotalFees = totalFees;
+            ViewBag.CurrentMonth = now.ToString("MMMM yyyy");
+
+            return View(cashTransactions);
+        }
+
         public async Task<IActionResult> ReviewsAnalytics()
         {
             var vm = new ReviewsAnalyticsViewModel
@@ -135,6 +165,16 @@ namespace MoneyTransfer.Controllers
 
             var startDate = new DateTime(targetYear, targetMonth, 1);
             var endDate = startDate.AddMonths(1);
+
+            var dailyStats = await GetDailyStats(startDate, endDate);
+
+            var transactions = await _context.Transactions
+                .Include(t => t.SenderWallet).ThenInclude(w => w.User)
+                .Include(t => t.ReceiverWallet).ThenInclude(w => w.User)
+                .Include(t => t.SenderCurrency)
+                .Where(t => t.CreatedAt >= startDate && t.CreatedAt < endDate)
+                .OrderByDescending(t => t.CreatedAt)
+                .ToListAsync();
 
             var vm = new MonthlyReportViewModel
             {
@@ -184,7 +224,8 @@ namespace MoneyTransfer.Controllers
                     .Take(10)
                     .ToListAsync(),
 
-                DailyBreakdown = await GetDailyStats(startDate, endDate),
+                DailyBreakdown = dailyStats,
+                MonthlyTransactions = transactions
             };
 
             return View(vm);
@@ -276,11 +317,17 @@ namespace MoneyTransfer.Controllers
                 stats.Add(new DailyBreakdownViewModel
                 {
                     Date = date,
+                    Day = date.Day,
                     Transactions = await _context.Transactions
                         .CountAsync(t => t.CreatedAt >= date && t.CreatedAt < nextDay),
                     Volume = await _context.Transactions
                         .Where(t => t.CreatedAt >= date && t.CreatedAt < nextDay)
                         .SumAsync(t => t.Amount),
+                    Count = await _context.Transactions
+                        .CountAsync(t => t.CreatedAt >= date && t.CreatedAt < nextDay),
+                    Fees = await _context.Transactions
+                        .Where(t => t.CreatedAt >= date && t.CreatedAt < nextDay && !t.FeeWaived)
+                        .SumAsync(t => t.FeeAmount),
                     NewUsers = await _context.Users
                         .CountAsync(u => u.CreatedAt >= date && u.CreatedAt < nextDay),
                     Reviews = await _context.Reviews

@@ -24,16 +24,7 @@ namespace MoneyTransfer.Controllers
         private readonly ApplicationDbContext _context;
 
 
-        public DashboardController(
-            IUserRepository userRepository,
-            IWalletRepository walletRepository,
-            IBeneficiaryRepository beneficiaryRepository,
-            IAccountRepository accountRepository,
-            IAgentRepository agentRepository,
-            IAgentApplicationRepository applicationRepository,
-            UserManager<User> userManager,
-            ApplicationDbContext context)
-            : base(userManager, userRepository)
+        public DashboardController(IUserRepository userRepository, IWalletRepository walletRepository, IBeneficiaryRepository beneficiaryRepository, IAccountRepository accountRepository, IAgentRepository agentRepository, IAgentApplicationRepository applicationRepository, UserManager<User> userManager, ApplicationDbContext context): base(userManager, userRepository)
         {
             _walletRepository = walletRepository;
             _beneficiaryRepository = beneficiaryRepository;
@@ -52,7 +43,6 @@ namespace MoneyTransfer.Controllers
             var user = await _userRepository.GetByIdAsync(userId);
             if (user == null) return NotFound();
 
-            // Get admin statistics if user is admin
             if (User.IsInRole(Roles.Admin))
             {
                 var users = await _userRepository.GetAllAsync();
@@ -72,12 +62,10 @@ namespace MoneyTransfer.Controllers
                 ViewBag.PendingAgentsCount = pendingApps.Count();
             }
 
-            // Get agent statistics if user is agent or admin (who is also an agent)
             if (User.IsInRole(Roles.Agent) || User.IsInRole(Roles.Admin))
             {
                 var agentList = (await _agentRepository.GetByUserIdAsync(userId)).ToList();
 
-                // Get selected store from cookie
                 Agent? selectedAgent = null;
                 if (Request.Cookies.TryGetValue("SelectedAgentId", out var cookieId) &&
                     int.TryParse(cookieId, out var agentId))
@@ -106,7 +94,6 @@ namespace MoneyTransfer.Controllers
                 }
             }
 
-            // Profile check for regular users only (admins and agents bypass)
             if (!user.ProfileCompleted
                 && !User.IsInRole(Roles.Admin)
                 && !User.IsInRole(Roles.Agent))
@@ -314,14 +301,12 @@ namespace MoneyTransfer.Controllers
                 _ => t.ToString()
             };
 
-        // In DashboardController.cs
         public async Task<IActionResult> TestEmail()
         {
             try
             {
                 var emailService = HttpContext.RequestServices.GetRequiredService<IEmailService>();
 
-                // Try to send email
                 await emailService.SendAsync(
                     "edwinmouawad82@gmail.com",
                     "Test User",
@@ -333,10 +318,8 @@ namespace MoneyTransfer.Controllers
             }
             catch (Exception ex)
             {
-                // This will now catch the REAL error
                 TempData["Error"] = $"Email failed: {ex.Message}";
 
-                // Log full details
                 Console.WriteLine($"ERROR TYPE: {ex.GetType().Name}");
                 Console.WriteLine($"ERROR MESSAGE: {ex.Message}");
 
@@ -359,7 +342,6 @@ namespace MoneyTransfer.Controllers
                 var userManager = HttpContext.RequestServices.GetRequiredService<UserManager<User>>();
                 var emailService = HttpContext.RequestServices.GetRequiredService<IEmailService>();
 
-                // Find a user (use your email)
                 var user = await userManager.FindByEmailAsync("edwinmouawad82@gmail.com");
 
                 if (user == null)
@@ -371,7 +353,6 @@ namespace MoneyTransfer.Controllers
 
                 results.Add($"✅ User found: {user.Email}");
 
-                // Generate reset token
                 var code = await userManager.GeneratePasswordResetTokenAsync(user);
                 code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
 
@@ -388,7 +369,6 @@ namespace MoneyTransfer.Controllers
             <p>Click the button below to reset your password:</p>
             <a href='{callbackUrl}' style='background:#00b894;color:#fff;padding:10px 20px;text-decoration:none;border-radius:5px;'>Reset Password</a>";
 
-                // Send email
                 await emailService.SendAsync(
                     user.Email,
                     $"{user.FirstName} {user.LastName}",
@@ -404,7 +384,6 @@ namespace MoneyTransfer.Controllers
                 results.Add($"Stack: {ex.StackTrace}");
                 TempData["Error"] = string.Join(" | ", results);
 
-                // Log full error
                 Console.WriteLine($"ERROR: {ex.ToString()}");
             }
 
@@ -426,9 +405,8 @@ namespace MoneyTransfer.Controllers
                 results.Add($"Sending from: {fromEmail}");
                 results.Add($"Using username: {username}");
 
-                // Send to your personal email to test
                 await emailService.SendAsync(
-                    "edwinmouawad82@gmail.com",  // Your personal email
+                    "edwinmouawad82@gmail.com", 
                     "Edwin",
                     "Test from New CedarPay Email",
                     "<h1>✅ Success!</h1><p>This email was sent from the new CedarPay notifications account!</p>" +
@@ -452,7 +430,6 @@ namespace MoneyTransfer.Controllers
         {
             var results = new List<string>();
 
-            // Check if email is null or empty
             if (string.IsNullOrEmpty(email))
             {
                 results.Add("❌ No email provided. Please add ?email=user@example.com to the URL");
@@ -462,10 +439,8 @@ namespace MoneyTransfer.Controllers
 
             try
             {
-                // Decode the email in case of URL encoding
                 email = System.Web.HttpUtility.UrlDecode(email);
 
-                // Find the user
                 var user = await _userManager.FindByEmailAsync(email);
 
                 if (user == null)
@@ -485,7 +460,6 @@ namespace MoneyTransfer.Controllers
                 results.Add($"Access Failed Count: {user.AccessFailedCount}");
                 results.Add($"Password Hash: {(string.IsNullOrEmpty(user.PasswordHash) ? "NO PASSWORD" : "Has Password")}");
 
-                // Check if user is locked out
                 if (await _userManager.IsLockedOutAsync(user))
                 {
                     results.Add($"⚠️ Account IS LOCKED OUT!");
@@ -522,17 +496,14 @@ namespace MoneyTransfer.Controllers
                 results.Add($"✅ User found: {user.Email}");
                 results.Add($"Current Email Confirmed: {user.EmailConfirmed}");
 
-                // Generate email confirmation token
                 var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 
-                // Confirm the email
                 var result = await _userManager.ConfirmEmailAsync(user, token);
 
                 if (result.Succeeded)
                 {
                     results.Add($"✅ Email confirmed successfully!");
 
-                    // Also unlock the account if locked
                     await _userManager.SetLockoutEndDateAsync(user, null);
                     results.Add($"✅ Lockout removed");
 
@@ -567,14 +538,12 @@ namespace MoneyTransfer.Controllers
                     return RedirectToAction(nameof(Index));
                 }
 
-                // Remove existing password
                 var removeResult = await _userManager.RemovePasswordAsync(user);
                 if (removeResult.Succeeded)
                 {
                     results.Add("✅ Old password removed");
                 }
 
-                // Add new password
                 var addResult = await _userManager.AddPasswordAsync(user, newPassword);
                 if (addResult.Succeeded)
                 {
@@ -611,7 +580,7 @@ namespace MoneyTransfer.Controllers
                     return RedirectToAction(nameof(Index));
                 }
 
-                results.Add($"=== USER ACCOUNT STATUS ===");
+                results.Add($"USER ACCOUNT STATUS");
                 results.Add($"Email: {user.Email}");
                 results.Add($"User ID: {user.Id}");
                 results.Add($"UserName: {user.UserName}");
@@ -623,16 +592,13 @@ namespace MoneyTransfer.Controllers
                 results.Add($"Two Factor Enabled: {user.TwoFactorEnabled}");
                 results.Add($"Has Password Hash: {(string.IsNullOrEmpty(user.PasswordHash) ? "NO" : "YES")}");
 
-                // Test if user can login with a known password
                 var testPassword = "Test123!";
                 var isValid = await _userManager.CheckPasswordAsync(user, testPassword);
                 results.Add($"Password '{testPassword}' valid: {isValid}");
 
-                // Check if user is in any roles
                 var roles = await _userManager.GetRolesAsync(user);
                 results.Add($"Roles: {(roles.Any() ? string.Join(", ", roles) : "None")}");
 
-                // Check if signin is allowed
                 var canSignIn = await _userManager.IsEmailConfirmedAsync(user) &&
                                 !await _userManager.IsLockedOutAsync(user);
                 results.Add($"Can Sign In (by rules): {canSignIn}");
@@ -663,24 +629,20 @@ namespace MoneyTransfer.Controllers
                     return RedirectToAction(nameof(Index));
                 }
 
-                results.Add($"=== RESETTING PASSWORD FOR {user.Email} ===");
+                results.Add($"RESETTING PASSWORD FOR {user.Email}");
 
-                // Generate password reset token
                 var token = await _userManager.GeneratePasswordResetTokenAsync(user);
                 results.Add($"✅ Token generated");
 
-                // Reset password using token
                 var resetResult = await _userManager.ResetPasswordAsync(user, token, newPassword);
 
                 if (resetResult.Succeeded)
                 {
                     results.Add($"✅ Password successfully reset to: {newPassword}");
 
-                    // Verify the password works
                     var verifyResult = await _userManager.CheckPasswordAsync(user, newPassword);
                     results.Add($"Password verification: {(verifyResult ? "✅ SUCCESS" : "❌ FAILED")}");
 
-                    // Disable lockout
                     user.LockoutEnabled = false;
                     user.AccessFailedCount = 0;
                     await _userManager.UpdateAsync(user);
@@ -709,7 +671,6 @@ namespace MoneyTransfer.Controllers
 
             try
             {
-                // Find the user
                 var user = await _userManager.FindByEmailAsync(email);
 
                 if (user == null)
@@ -719,15 +680,13 @@ namespace MoneyTransfer.Controllers
                     return RedirectToAction(nameof(Index));
                 }
 
-                results.Add($"=== RECREATING ACCOUNT FOR {email} ===");
+                results.Add($"RECREATING ACCOUNT FOR {email}");
 
-                // Save important info
                 var userId = user.Id;
                 var userName = user.UserName;
                 var firstName = user.FirstName;
                 var lastName = user.LastName;
 
-                // Delete the user
                 var deleteResult = await _userManager.DeleteAsync(user);
 
                 if (!deleteResult.Succeeded)
@@ -739,7 +698,6 @@ namespace MoneyTransfer.Controllers
 
                 results.Add($"✅ User deleted");
 
-                // Create new user with same info
                 var newUser = new User
                 {
                     UserName = userName,
@@ -748,8 +706,8 @@ namespace MoneyTransfer.Controllers
                     LastName = lastName,
                     CreatedAt = DateTime.Now,
                     IsActive = true,
-                    EmailConfirmed = true,  // Confirm immediately
-                    LockoutEnabled = false   // Disable lockout
+                    EmailConfirmed = true,
+                    LockoutEnabled = false
                 };
 
                 var createResult = await _userManager.CreateAsync(newUser, newPassword);
@@ -762,7 +720,6 @@ namespace MoneyTransfer.Controllers
                     results.Add($"✅ Email confirmed");
                     results.Add($"✅ Lockout disabled");
 
-                    // Add to User role
                     await _userManager.AddToRoleAsync(newUser, "User");
                     results.Add($"✅ Role 'User' added");
 
@@ -788,7 +745,6 @@ namespace MoneyTransfer.Controllers
 
             try
             {
-                // Create a completely new user with a unique email
                 var newEmail = $"testuser_{DateTime.Now.Ticks}@example.com";
                 var password = "Test123!";
 
@@ -816,7 +772,6 @@ namespace MoneyTransfer.Controllers
                     results.Add($"---");
                     results.Add($"PLEASE TRY LOGGING IN WITH THESE CREDENTIALS");
 
-                    // Verify the password works immediately
                     var verified = await _userManager.CheckPasswordAsync(newUser, password);
                     results.Add($"Password verification: {(verified ? "✅ PASSED" : "❌ FAILED")}");
 

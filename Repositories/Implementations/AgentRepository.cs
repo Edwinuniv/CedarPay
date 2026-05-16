@@ -11,9 +11,7 @@ namespace MoneyTransfer.Repositories.Implementations
 
         public async Task<IEnumerable<Agent>> GetApprovedAgentsAsync()
         {
-            return await _context.Agents
-                .Where(a => a.Status == AgentStatus.Approved)
-                .ToListAsync();
+            return await _context.Agents.Where(a => a.Status == AgentStatus.Approved).ToListAsync();
         }
 
         public async Task<IEnumerable<Agent>> GetPendingAgentsAsync()
@@ -26,9 +24,7 @@ namespace MoneyTransfer.Repositories.Implementations
 
         public async Task<IEnumerable<Agent>> GetByUserIdAsync(string userId)
         {
-            return await _context.Agents
-                .Where(a => a.UserId == userId)
-                .ToListAsync();
+            return await _context.Agents.Where(a => a.UserId == userId).ToListAsync();
         }
 
         public async Task<IEnumerable<Agent>> GetByCityAsync(string city)
@@ -41,10 +37,7 @@ namespace MoneyTransfer.Repositories.Implementations
 
         public async Task<IEnumerable<Agent>> GetByCountryAsync(string country)
         {
-            return await _context.Agents
-                .Where(a => a.Country == country
-                         && a.Status == AgentStatus.Approved)
-                .ToListAsync();
+            return await _context.Agents.Where(a => a.Country == country && a.Status == AgentStatus.Approved).ToListAsync();
         }
 
         public async Task<Agent?> GetAgentWithCommissionsAsync(int id)

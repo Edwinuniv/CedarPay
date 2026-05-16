@@ -1,4 +1,4 @@
-﻿using MoneyTransfer.Controllers;
+﻿using MoneyTransfer.Models;
 
 namespace MoneyTransfer.ViewModels
 {
@@ -23,7 +23,7 @@ namespace MoneyTransfer.ViewModels
         public double AverageRatingThisMonth { get; set; }
 
         public List<TopAgentViewModel> TopAgents { get; set; }
-
         public List<DailyBreakdownViewModel> DailyBreakdown { get; set; }
+        public List<Transaction> MonthlyTransactions { get; set; } 
     }
 }

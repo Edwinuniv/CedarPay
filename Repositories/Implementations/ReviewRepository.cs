@@ -11,10 +11,8 @@ namespace MoneyTransfer.Repositories.Implementations
 
         public async Task<IEnumerable<Review>> GetByUserIdAsync(string userId)
         {
-            return await _context.Reviews
-                .Where(r => r.UserId == userId)
-                .OrderByDescending(r => r.CreatedAt)
-                .ToListAsync();
+            return await _context.Reviews.Where(r => r.UserId == userId).OrderByDescending(r => r.CreatedAt).ToListAsync();
+            return await _context.Reviews.Where(r => r.UserId == userId).OrderByDescending(r => r.CreatedAt).ToListAsync();
         }
 
         public async Task<IEnumerable<Review>> GetByAgentIdAsync(int agentId)
@@ -37,26 +35,20 @@ namespace MoneyTransfer.Repositories.Implementations
 
         public async Task<double> GetAverageRatingForAgentAsync(int agentId)
         {
-            var hasReviews = await _context.Reviews
-                .AnyAsync(r => r.AgentId == agentId);
+            var hasReviews = await _context.Reviews.AnyAsync(r => r.AgentId == agentId);
 
             if (!hasReviews) return 0;
 
-            return await _context.Reviews
-                .Where(r => r.AgentId == agentId)
-                .AverageAsync(r => r.Rating);
+            return await _context.Reviews.Where(r => r.AgentId == agentId).AverageAsync(r => r.Rating);
         }
 
         public async Task<double> GetAverageAppRatingAsync()
         {
-            var hasReviews = await _context.Reviews
-                .AnyAsync(r => r.Target == ReviewTarget.App);
+            var hasReviews = await _context.Reviews.AnyAsync(r => r.Target == ReviewTarget.App);
 
             if (!hasReviews) return 0;
 
-            return await _context.Reviews
-                .Where(r => r.Target == ReviewTarget.App)
-                .AverageAsync(r => r.Rating);
+            return await _context.Reviews.Where(r => r.Target == ReviewTarget.App).AverageAsync(r => r.Rating);
         }
     }
 }

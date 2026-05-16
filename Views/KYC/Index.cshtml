@@ -36,7 +36,6 @@
             </div>
         }
 
-        <!-- KYC STATUS BANNER -->
         @if (kyc != null)
         {
             <div class="tp-card mb-3 kyc-status-banner @(isApproved ? "approved" : isPending ? "pending" : "rejected")">
@@ -80,7 +79,6 @@
 
         @if (!isApproved)
         {
-            <!-- SUBMIT / RESUBMIT FORM -->
             <div class="tp-card mb-3 kyc-form-section">
                 <div class="kyc-form-header">
                     <i class="bi bi-file-earmark-person"></i>
@@ -165,7 +163,6 @@
             </div>
         }
 
-        <!-- INFO BOX -->
         <div class="tp-card kyc-info-box">
             <div class="kyc-info-header">
                 <i class="bi bi-info-circle"></i>

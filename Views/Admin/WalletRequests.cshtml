@@ -9,18 +9,13 @@
         <h2>Wallet Approval Requests</h2>
         <p>Review and approve user wallet creation requests</p>
     </div>
-    <a asp-action="Index" class="btn-tp-secondary">
-        <i class="bi bi-arrow-left"></i> Back
-    </a>
+    <a asp-action="Index" class="btn-tp-secondary"><i class="bi bi-arrow-left"></i> Back</a>
 </div>
 
 @if (!Model.Any())
 {
     <div class="tp-card">
-        <div class="empty-state">
-            <i class="bi bi-wallet2"></i>
-            <p>No pending wallet requests.</p>
-        </div>
+        <div class="empty-state"><i class="bi bi-wallet2"></i><p>No pending wallet requests.</p></div>
     </div>
 }
 else
@@ -30,52 +25,43 @@ else
         {
             <div class="tp-card wallet-request-card">
                 <div class="wallet-request-header">
-                    <div class="ben-avatar wallet-request-avatar">
-                        @r.User?.FirstName?.Substring(0, 1)
-                    </div>
+                    @if (!string.IsNullOrEmpty(r.User?.ProfilePictureUrl))
+                    {
+                        <img src="@r.User.ProfilePictureUrl" class="wallet-request-avatar" style="border-radius:50%;object-fit:cover;" />
+                    }
+                    else
+                    {
+                        <div class="ben-avatar wallet-request-avatar">
+                            @r.User?.FirstName?.Substring(0, 1)@r.User?.LastName?.Substring(0, 1)
+                        </div>
+                    }
                     <div class="wallet-request-user-info">
-                        <div class="wallet-request-user-name">
-                            @r.User?.FirstName @r.User?.LastName
-                        </div>
-                        <div class="wallet-request-user-email">
-                            @r.User?.Email
-                        </div>
+                        <div class="wallet-request-user-name">@r.User?.FirstName @r.User?.LastName</div>
+                        <div class="wallet-request-user-email">@r.User?.Email</div>
                     </div>
                     <div class="wallet-request-currency-info">
-                        <div class="wallet-request-currency-code">
-                            @r.Currency?.Code
-                        </div>
-                        <div class="wallet-request-currency-name">
-                            @r.Currency?.Name
-                        </div>
+                        <div class="wallet-request-currency-code">@r.Currency?.Code</div>
+                        <div class="wallet-request-currency-name">@r.Currency?.Name</div>
                     </div>
                 </div>
 
                 @if (!string.IsNullOrEmpty(r.Description))
                 {
-                    <div class="wallet-request-description">
-                        "@r.Description"
-                    </div>
+                    <div class="wallet-request-description">"@r.Description"</div>
                 }
 
-                <div class="wallet-request-date">
-                    Requested @r.RequestedAt.ToString("MMM dd, yyyy HH:mm")
-                </div>
+                <div class="wallet-request-date">Requested @r.RequestedAt.ToString("MMM dd, yyyy HH:mm")</div>
 
                 <div class="wallet-request-actions">
                     <form asp-action="ApproveWallet" asp-route-id="@r.Id" method="post">
+                        @Html.AntiForgeryToken()
                         <button type="submit" class="btn-tp-success wallet-request-approve-btn">
                             <i class="bi bi-check-lg"></i> Approve Wallet
                         </button>
                     </form>
-                    <form asp-action="RejectWallet"
-                          asp-route-id="@r.Id"
-                          method="post"
-                          class="wallet-request-reject-form"
-                          onsubmit="return confirm('Reject this wallet request?')">
-                        <input type="text" name="reason"
-                               class="form-control wallet-request-reject-input"
-                               placeholder="Rejection reason (optional)" />
+                    <form asp-action="RejectWallet" asp-route-id="@r.Id" method="post" class="wallet-request-reject-form" onsubmit="return confirm('Reject this wallet request?')">
+                        @Html.AntiForgeryToken()
+                        <input type="text" name="reason" class="form-control wallet-request-reject-input" placeholder="Rejection reason (optional)" />
                         <button type="submit" class="btn-tp-danger wallet-request-reject-btn">
                             <i class="bi bi-x-lg"></i> Reject
                         </button>

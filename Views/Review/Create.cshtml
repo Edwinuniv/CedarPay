@@ -26,7 +26,6 @@
             </div>
         }
 
-        <!-- Display what the user is reviewing -->
         <div class="tp-card mb-3" style="background: var(--surface-2);">
             <div class="reviewing-info">
                 <i class="bi bi-info-circle-fill" style="color: var(--teal);"></i>
@@ -52,7 +51,6 @@
             <form asp-controller="Review" asp-action="Store" method="post" class="tp-form">
                 @Html.AntiForgeryToken()
 
-                <!-- Hidden fields for IDs -->
                 <input type="hidden" name="AgentId" value="@Model.AgentId" />
                 <input type="hidden" name="TransactionId" value="@Model.TransactionId" />
                 <input type="hidden" name="Target" value="@Model.Target" />

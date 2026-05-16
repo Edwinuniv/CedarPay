@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MoneyTransfer.Models
 {
@@ -44,7 +45,49 @@ namespace MoneyTransfer.Models
         public string UserId { get; set; }
 
         public User User { get; set; }
-        public ICollection <Commission> Commissions { get; set; } = new List<Commission>();
+        public ICollection<Commission> Commissions { get; set; } = new List<Commission>();
         public ICollection<Review> Reviews { get; set; } = new List<Review>();
+
+        [NotMapped]
+        public double AverageRating { get; set; }
+
+        [NotMapped]
+        public int ReviewCount { get; set; }
+
+        [NotMapped]
+        public bool? IsOpenNow
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(WorkingHours))
+                {
+                    return null;
+                }
+                var dash = WorkingHours.IndexOf('-');
+                if (dash < 0)
+                {
+                    return null;
+                }
+                var openStr = WorkingHours.Substring(0, dash).Trim();
+                var closeStr = WorkingHours.Substring(dash + 1).Trim();
+                if (!TimeOnly.TryParse(openStr, out var open))
+                {
+                    return null;
+                }
+                if (!TimeOnly.TryParse(closeStr, out var close))
+                {
+                    return null;
+                }
+                var now = TimeOnly.FromDateTime(DateTime.Now);
+                if (open <= close)
+                {
+                    return now >= open && now <= close;
+                }
+                return now >= open || now <= close;
+            }
+        }
+
+        [NotMapped]
+        public string WorkingHoursDisplay => string.IsNullOrEmpty(WorkingHours) ? "Hours not set" : WorkingHours;
     }
 }

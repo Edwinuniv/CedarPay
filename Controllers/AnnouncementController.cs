@@ -13,11 +13,9 @@ namespace MoneyTransfer.Controllers
     {
         private readonly ApplicationDbContext _context;
 
-        public AnnouncementController(ApplicationDbContext context, UserManager<User> userManager, IUserRepository userRepository)
-            : base(userManager, userRepository)
+        public AnnouncementController(ApplicationDbContext context, UserManager<User> userManager, IUserRepository userRepository): base(userManager, userRepository)
         { _context = context; }
 
-        // ── PUBLIC: all logged-in users see active announcements ──────
         public async Task<IActionResult> Index()
         {
             var now = DateTime.Now;
@@ -28,7 +26,6 @@ namespace MoneyTransfer.Controllers
             return View(list);
         }
 
-        // ── ADMIN CRUD ────────────────────────────────────────────────
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Manage()
         {
@@ -111,7 +108,6 @@ namespace MoneyTransfer.Controllers
             return RedirectToAction(nameof(Manage));
         }
 
-        // ── JSON endpoint for Layout banner ──────────────────────────
         [AllowAnonymous]
         public async Task<IActionResult> Active()
         {

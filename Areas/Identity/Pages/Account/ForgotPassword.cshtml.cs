@@ -19,10 +19,7 @@ namespace MoneyTransfer.Areas.Identity.Pages.Account
         private readonly IEmailService _emailService;
         private readonly ILogger<ForgotPasswordModel> _logger;
 
-        public ForgotPasswordModel(
-            UserManager<User> userManager,
-            IEmailService emailService,
-            ILogger<ForgotPasswordModel> logger)
+        public ForgotPasswordModel(UserManager<User> userManager, IEmailService emailService, ILogger<ForgotPasswordModel> logger)
         {
             _userManager = userManager;
             _emailService = emailService;
@@ -41,7 +38,7 @@ namespace MoneyTransfer.Areas.Identity.Pages.Account
 
         public async Task<IActionResult> OnPostAsync()
         {
-            _logger.LogInformation("=== FORGOT PASSWORD POST STARTED ===");
+            _logger.LogInformation("FORGOT PASSWORD POST STARTED");
             _logger.LogInformation("Email submitted: {Email}", Input?.Email);
 
             if (!ModelState.IsValid)
@@ -59,14 +56,18 @@ namespace MoneyTransfer.Areas.Identity.Pages.Account
                 {
                     _logger.LogInformation("Generating password reset token for {Email}", Input.Email);
 
-                    // Generate reset token
                     var code = await _userManager.GeneratePasswordResetTokenAsync(user);
                     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
 
                     var callbackUrl = Url.Page(
                         "/Account/ResetPassword",
                         pageHandler: null,
-                        values: new { area = "Identity", code },
+                        values: new
+                        {
+                            area = "Identity",
+                            code = code,
+                            email = Input.Email  
+                        },
                         protocol: Request.Scheme);
 
                     _logger.LogInformation("Reset URL generated: {Url}", callbackUrl);
@@ -103,19 +104,17 @@ namespace MoneyTransfer.Areas.Identity.Pages.Account
 
                     _logger.LogInformation("Sending email to {Email}...", Input.Email);
 
-                    // Send email directly - NO Task.Run
                     await _emailService.SendAsync(
                         Input.Email,
                         $"{user.FirstName} {user.LastName}",
                         "CedarPay — Reset Your Password",
                         html);
 
-                    _logger.LogInformation("✅ Password reset email sent successfully to {Email}", Input.Email);
+                    _logger.LogInformation("Password reset email sent successfully to {Email}", Input.Email);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "❌ Failed to send password reset email to {Email}", Input.Email);
-                    // Don't throw - we don't want to reveal that user exists
+                    _logger.LogError(ex, "Failed to send password reset email to {Email}", Input.Email);
                 }
             }
             else

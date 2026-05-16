@@ -1,0 +1,220 @@
+﻿@{
+    ViewData["Title"] = "Features - CedarPay";
+    Layout = null;
+    var returnUrl = ViewBag.ReturnUrl as string;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Features - CedarPay</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/transferpay.css" asp-append-version="true" />
+
+    <script>
+        (function() {
+            if (localStorage.getItem('darkMode') === '1') {
+                document.documentElement.classList.add('dark-mode');
+                if (document.body) document.body.classList.add('dark-mode');
+            }
+        })();
+    </script>
+</head>
+<body class="home-page">
+
+    <nav class="public-nav">
+        <div class="sidebar-brand" style="padding:0;margin:0">
+            <div class="brand-icon">
+                <img src="/images/cedarpay-logo.png" alt="CedarPay" style="width:28px;height:28px;object-fit:contain" />
+            </div>
+            <span class="brand-name">
+                Cedar<span class="brand-accent">Pay</span>
+            </span>
+        </div>
+        <div class="public-nav-links">
+            <a asp-controller="Home" asp-action="Index" class="btn-login">Home</a>
+            <a asp-controller="Home" asp-action="Features" class="btn-login">Features</a>
+            <a asp-controller="Home" asp-action="AboutUs" class="btn-login">About</a>
+            <a asp-controller="Home" asp-action="SecurityPolicy" class="btn-login">Security</a>
+            <a asp-controller="Home" asp-action="ContactUs" class="btn-login">Contact</a>
+            <a asp-area="Identity" asp-page="/Account/Login" class="btn-login">Login</a>
+            <a asp-area="Identity" asp-page="/Account/Register" class="btn-register">Register</a>
+        </div>
+    </nav>
+
+    <div class="home-container">
+        @if (!string.IsNullOrEmpty(returnUrl) && returnUrl.Contains("/Settings"))
+        {
+            <div class="mb-3">
+                <a href="@returnUrl" class="btn-tp-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Settings
+                </a>
+            </div>
+        }
+
+        <div class="home-hero">
+            <div class="home-hero-icon">✨</div>
+            <h1 class="home-title">CedarPay <span class="home-title-accent">Features</span></h1>
+            <p class="home-subtitle">Everything you need to manage your money</p>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="tp-card home-feature-card text-center">
+                    <div class="home-feature-icon">💸</div>
+                    <h3 class="home-feature-title">Instant Transfers</h3>
+                    <p class="home-feature-text">Send money to any wallet or mobile number in seconds. Real-time processing with instant confirmation.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="tp-card home-feature-card text-center">
+                    <div class="home-feature-icon">🌍</div>
+                    <h3 class="home-feature-title">Multi-Currency</h3>
+                    <p class="home-feature-text">Hold and transfer in USD, EUR, LBP, AED, GBP, and more. Automatic currency conversion.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="tp-card home-feature-card text-center">
+                    <div class="home-feature-icon">🔒</div>
+                    <h3 class="home-feature-title">Secure Payments</h3>
+                    <p class="home-feature-text">Bank-grade encryption and fraud protection for all your transactions.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="tp-card home-feature-card text-center">
+                    <div class="home-feature-icon">🏪</div>
+                    <h3 class="home-feature-title">Agent Network</h3>
+                    <p class="home-feature-text">Access cash-in/cash-out services through our network of authorized agents across Lebanon.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="tp-card home-feature-card text-center">
+                    <div class="home-feature-icon">⭐</div>
+                    <h3 class="home-feature-title">Reviews & Ratings</h3>
+                    <p class="home-feature-text">Rate your transactions and agents. Help build trust in the community.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="tp-card home-feature-card text-center">
+                    <div class="home-feature-icon">📊</div>
+                    <h3 class="home-feature-title">Analytics Dashboard</h3>
+                    <p class="home-feature-text">Track your spending, view transaction history, and generate financial reports.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="tp-card mb-4">
+            <div class="row align-items-center">
+                <div class="col-md-7">
+                    <h2 style="color: var(--cedar-gold); margin-bottom: 20px;">Agent Dashboard</h2>
+                    <p style="font-size: 16px; line-height: 1.6;">
+                        For our agent partners, we provide a comprehensive dashboard to manage:
+                    </p>
+                    <ul style="margin-top: 15px;">
+                        <li>Cash-in/cash-out operations</li>
+                        <li>Transaction history and tracking</li>
+                        <li>Commission earnings and payouts</li>
+                        <li>Store location management on map</li>
+                        <li>Working hours and contact information</li>
+                        <li>Multiple store management</li>
+                    </ul>
+                </div>
+                <div class="col-md-5 text-center">
+                    <div style="font-size: 80px;">📊</div>
+                    <span class="badge-tp success mt-2">Agent Program</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="tp-card mb-4">
+            <div class="row align-items-center">
+                <div class="col-md-5 text-center">
+                    <div style="font-size: 80px;">👑</div>
+                    <span class="badge-tp info mt-2">Admin Panel</span>
+                </div>
+                <div class="col-md-7">
+                    <h2 style="color: var(--cedar-gold); margin-bottom: 20px;">Admin Control Center</h2>
+                    <p style="font-size: 16px; line-height: 1.6;">
+                        Full platform management capabilities:
+                    </p>
+                    <ul style="margin-top: 15px;">
+                        <li>User and agent management</li>
+                        <li>KYC verification review</li>
+                        <li>Wallet approval workflow</li>
+                        <li>Fee structure configuration</li>
+                        <li>Platform analytics and reporting</li>
+                        <li>Announcement management</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="tp-card mb-4">
+            <h2 style="color: var(--cedar-gold); margin-bottom: 20px;">More Features</h2>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="text-center p-3">
+                        <i class="bi bi-credit-card" style="font-size: 48px; color: var(--teal);"></i>
+                        <h4 class="mt-2">Digital Wallet Card</h4>
+                        <p class="text-muted">Virtual card for online purchases</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center p-3">
+                        <i class="bi bi-robot" style="font-size: 48px; color: var(--teal);"></i>
+                        <h4 class="mt-2">AI Chatbot</h4>
+                        <p class="text-muted">24/7 intelligent support</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center p-3">
+                        <i class="bi bi-whatsapp" style="font-size: 48px; color: var(--teal);"></i>
+                        <h4 class="mt-2">Social Payments</h4>
+                        <p class="text-muted">Send money via WhatsApp</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="home-cta">
+            <h3 class="home-cta-title">Ready to get started?</h3>
+            <p class="home-cta-text">Join thousands of satisfied CedarPay users today.</p>
+            <div class="home-cta-buttons">
+                <a asp-area="Identity" asp-page="/Account/Register" class="btn-tp-primary home-cta-btn-primary">
+                    <i class="bi bi-person-plus-fill"></i> Create Free Account
+                </a>
+                <a asp-area="Identity" asp-page="/Account/Login" class="btn-tp-secondary home-cta-btn-secondary">
+                    <i class="bi bi-box-arrow-in-right"></i> Sign In
+                </a>
+            </div>
+        </div>
+
+        <div class="home-footer">
+            <div class="home-footer-links">
+                <a asp-controller="Home" asp-action="Index" class="home-footer-link">Home</a>
+                <span class="home-footer-separator">•</span>
+                <a asp-controller="Home" asp-action="Features" class="home-footer-link">Features</a>
+                <span class="home-footer-separator">•</span>
+                <a asp-controller="Home" asp-action="AboutUs" class="home-footer-link">About</a>
+                <span class="home-footer-separator">•</span>
+                <a asp-controller="Home" asp-action="SecurityPolicy" class="home-footer-link">Security</a>
+                <span class="home-footer-separator">•</span>
+                <a asp-controller="Home" asp-action="ContactUs" class="home-footer-link">Contact</a>
+                <span class="home-footer-separator">•</span>
+                <a asp-controller="Home" asp-action="Privacy" class="home-footer-link">Privacy</a>
+                <span class="home-footer-separator">•</span>
+                <a asp-controller="Home" asp-action="Terms" class="home-footer-link">Terms</a>
+            </div>
+            <p class="home-footer-copyright">© @DateTime.Now.Year CedarPay — Licensed by Banque du Liban</p>
+        </div>
+    </div>
+
+</body>
+</html>
