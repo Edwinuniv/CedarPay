@@ -217,9 +217,9 @@ This project was designed and developed entirely by me as a full-stack software 
 
 | Role | Email | Password |
 |------|-------|----------|
-| Admin | `admin@cedarpay.com` | `Admin@123` |
-| User | `user@cedarpay.com` | `User@123` |
-| Agent | `agent@cedarpay.com` | `Agent@123` |
+| Admin | `admin@cederpay.com` | `Admin@123` |
+| User | `user@cederpay.com` | `User@123` |
+| Agent | `agent@cederpay.com` | `Agent@123` |
 
 > ⚠️ **Security Note:** Change these credentials immediately in any non-development environment.
 
