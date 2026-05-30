@@ -404,7 +404,3 @@ This project is licensed under the MIT License.
 *Built with ❤️ for Lebanon*
 
 </div>
-```
-- **No custom anchors** – we rely on GitHub’s native heading linking, which is 100% reliable when the heading text matches the link.
-
-After you replace your README with this version, **commit and push**. Then click any TOC link – it will jump to the correct section.
