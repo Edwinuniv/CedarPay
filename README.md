@@ -15,22 +15,22 @@
 
 ## 📋 Table of Contents
 
-- [Project Highlights](#-project-highlights)
-- [Project Statistics](#-project-statistics)
-- [My Role](#-my-role)
-- [Features](#-features)
-- [Tech Stack](#-tech-stack)
-- [Skills Demonstrated](#-skills-demonstrated)
-- [Getting Started](#-getting-started)
-- [Project Structure](#-project-structure)
-- [User Roles](#-user-roles)
-- [API Endpoints](#-api-endpoints)
-- [Configuration](#-configuration)
-- [Database Schema](#-database-schema)
-- [Architecture Overview](#-architecture-overview)
-- [Contributing](#-contributing)
-- [License](#-license)
-- [Contact](#-contact)
+- [Project Highlights](#project-highlights)
+- [Project Statistics](#project-statistics)
+- [My Role](#my-role)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Skills Demonstrated](#skills-demonstrated)
+- [Getting Started](#getting-started)
+- [Project Structure](#project-structure)
+- [User Roles](#user-roles)
+- [API Endpoints](#api-endpoints)
+- [Configuration](#configuration)
+- [Database Schema](#database-schema-key-entities)
+- [Architecture Overview](#architecture-overview)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
 
 ---
 
