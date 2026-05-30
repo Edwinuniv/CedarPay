@@ -26,7 +26,7 @@
 - [User Roles](#user-roles)
 - [API Endpoints](#api-endpoints)
 - [Configuration](#configuration)
-- [Database Schema](#database-schema-key-entities)
+- [Database Schema](#database-schema)
 - [Architecture Overview](#architecture-overview)
 - [Contributing](#contributing)
 - [License](#license)
@@ -34,7 +34,7 @@
 
 ---
 
-## 🌟 Project Highlights
+## Project Highlights
 
 • Full-stack financial platform built with ASP.NET Core 9  
 • Multi-currency wallet ecosystem  
@@ -49,7 +49,7 @@
 
 ---
 
-## 📈 Project Statistics
+## Project Statistics
 
 • 30+ Entity Models  
 • 20+ Controllers  
@@ -64,7 +64,7 @@
 
 ---
 
-## 👨‍💻 My Role
+## My Role
 
 This project was designed and developed entirely by me as a full-stack software engineering project.
 
@@ -85,7 +85,7 @@ This project was designed and developed entirely by me as a full-stack software 
 
 ---
 
-## ✨ Features
+## Features
 
 ### 💸 Core Banking
 
@@ -139,7 +139,7 @@ This project was designed and developed entirely by me as a full-stack software 
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 |-------|------------|
@@ -158,7 +158,7 @@ This project was designed and developed entirely by me as a full-stack software 
 
 ---
 
-## 🎯 Skills Demonstrated
+## Skills Demonstrated
 
 • ASP.NET Core MVC  
 • Entity Framework Core  
@@ -175,7 +175,7 @@ This project was designed and developed entirely by me as a full-stack software 
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -225,7 +225,7 @@ This project was designed and developed entirely by me as a full-stack software 
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 CedarPay/
@@ -256,7 +256,7 @@ CedarPay/
 
 ---
 
-## 👥 User Roles
+## User Roles
 
 ### 🔵 User
 Wallets, transfers, beneficiaries, KYC, reviews, chat, bot access, referrals, reports, scheduled transfers.
@@ -269,7 +269,7 @@ Full platform access: user management, KYC review, fee configuration, analytics,
 
 ---
 
-## 🔌 API Endpoints
+## API Endpoints
 
 | Endpoint | Description | Auth |
 |----------|-------------|------|
@@ -288,7 +288,7 @@ Full platform access: user management, KYC review, fee configuration, analytics,
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 All settings live in `appsettings.json`. Sensitive values should be stored in environment variables or [.NET User Secrets](https://docs.microsoft.com/en-us/aspnet/core/security/app-secrets).
 
@@ -329,7 +329,7 @@ All settings live in `appsettings.json`. Sensitive values should be stored in en
 
 ---
 
-## 🗄️ Database Schema (Key Entities)
+## Database Schema
 
 ```
 User          ──< Wallet        ──< Transaction
@@ -353,7 +353,7 @@ ActivityLog
 
 ---
 
-## 🏗 Architecture Overview
+## Architecture Overview
 
 ```
 Client Browser
@@ -369,7 +369,7 @@ Server  Hub    API
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/amazing-feature`
@@ -379,13 +379,13 @@ Server  Hub    API
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License.
 
 ---
 
-## 📞 Contact
+## Contact
 
 **Edwin Mouawad**
 
@@ -405,3 +405,6 @@ This project is licensed under the MIT License.
 
 </div>
 ```
+- **No custom anchors** – we rely on GitHub’s native heading linking, which is 100% reliable when the heading text matches the link.
+
+After you replace your README with this version, **commit and push**. Then click any TOC link – it will jump to the correct section.
